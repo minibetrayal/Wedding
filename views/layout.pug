@@ -1,0 +1,54 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+
+    title
+      block title
+        | Alex and Martin
+
+    //- Google Fonts: Inter (body), Playfair Display (headings)
+    link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap")
+
+    //- Bootstrap Icons
+    link(rel="stylesheet", href="/icons/bootstrap-icons.min.css")
+
+    //- App styles
+    link(rel="stylesheet", href="/styles/main.css")
+  body.d-flex.flex-column.min-vh-100
+    nav.navbar.navbar-expand-lg.bg-body.border-bottom.sticky-top(role="navigation")
+      .container 
+        a.navbar-brand.fw-semibold(href="/") A&M 
+
+        button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#main-nav" aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation")
+          span.navbar-toggler-icon
+
+        #main-nav.collapse.navbar-collapse
+          ul.navbar-nav.ms-auto
+            li.nav-item
+              a.nav-link(href="/details") Details
+            li.nav-item
+              a.nav-link(href="/rsvp") RSVP
+            li.nav-item
+              a.nav-link(href="/guestbook") Guestbook
+
+    block top
+
+    main.flex-fill 
+      .container.py-3.pt-0
+        block content
+
+    footer.mt-5.py-1.text-center.text-muted.border-top 
+      .container 
+        small.mb-1 &copy; #{new Date().getFullYear()} Alex and Martin
+        br
+        small 
+          | Made with 
+          a.text-decoration-none(href="/admin") ❤️
+          |  for our wedding
+
+    block modal
+    
+    script(src="/js/bootstrap.bundle.min.js")
+    block script

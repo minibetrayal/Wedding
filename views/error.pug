@@ -1,0 +1,14 @@
+extends /layout
+
+block title
+  | #{title}
+
+block content
+  .row.justify-content-center.pt-5.pb-4
+    .col-12.col-md-8.col-lg-6.text-center
+      .display-1.fw-bold.text-primary.mb-2= status
+      h2.h4.mb-3= title
+      if originalUrl
+        p.text-muted.small.mb-4
+          code= originalUrl
+      a.btn.btn-primary(href="/") Back to home
