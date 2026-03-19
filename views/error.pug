@@ -8,7 +8,11 @@ block content
     .col-12.col-md-8.col-lg-6.text-center
       .display-1.fw-bold.text-primary.mb-2= status
       h2.h4.mb-3= title
+      if message
+        p.text-muted.mb-2= message
       if originalUrl
-        p.text-muted.small.mb-4
+        p.text-muted.small.mb-2
           code= originalUrl
+      if context && Object.keys(context).length
+        pre.small.text-start.text-muted.bg-light.p-3.rounded.mb-4= JSON.stringify(context, null, 2)
       a.btn.btn-primary(href="/") Back to home

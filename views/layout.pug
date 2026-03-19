@@ -6,7 +6,7 @@ html(lang="en")
 
     title
       block title
-        | Alex and Martin
+        | #{coupleNamesShort}
 
     //- Google Fonts: Inter (body), Playfair Display (headings)
     link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap")
@@ -16,10 +16,13 @@ html(lang="en")
 
     //- App styles
     link(rel="stylesheet", href="/styles/main.css")
+    
+    block styles
+    
   body.d-flex.flex-column.min-vh-100
     nav.navbar.navbar-expand-lg.bg-body.border-bottom.sticky-top(role="navigation")
       .container 
-        a.navbar-brand.fw-semibold(href="/") A&M 
+        a.navbar-brand.fw-semibold(href="/") #{coupleNamesShort} 
 
         button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#main-nav" aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation")
           span.navbar-toggler-icon
@@ -41,7 +44,7 @@ html(lang="en")
 
     footer.mt-5.py-1.text-center.text-muted.border-top 
       .container 
-        small.mb-1 &copy; #{new Date().getFullYear()} Alex and Martin
+        small.mb-1 &copy; #{new Date().getFullYear()} #{coupleNamesShort}
         br
         small 
           | Made with 

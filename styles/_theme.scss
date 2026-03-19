@@ -1,0 +1,12 @@
+// Shared theme variables – import in main.scss and any partial (e.g. hero.scss)
+// that needs $emerald, $sapphire, $primary, $secondary, or font variables.
+
+@import "bootstrap/scss/functions";
+
+$emerald: #238a6f;
+$sapphire: #1f4bd8;
+$primary:   $emerald;
+$secondary: $sapphire;
+
+$font-family-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+$headings-font-family:   "Playfair Display", Georgia, "Times New Roman", serif;

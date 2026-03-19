@@ -1,0 +1,35 @@
+// Hero mixin – loaded only on pages that use the hero mixin (via block styles).
+// Uses theme variables from _theme.scss.
+
+@import "theme";
+
+.hero {
+  background:
+    radial-gradient(900px circle at 10% 0%, rgba($sapphire, 0.18), transparent 55%),
+    radial-gradient(900px circle at 90% 20%, rgba($emerald, 0.18), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.60));
+  border: 1px solid rgba(0, 0, 0, 0.06);
+
+  img {    
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  
+  @media (prefers-reduced-motion: no-preference) {
+    &.animate-hero {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: hero-in 1000ms ease-out forwards;
+    }
+
+    @keyframes hero-in {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+}

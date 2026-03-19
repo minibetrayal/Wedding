@@ -2,7 +2,9 @@ import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 
-import { createHttpError, HttpError } from './util/errors';
+import { HttpError } from './types/HttpError';
+import { STATUS_CODES } from 'http';
+import locals from './middleware/locals';
 
 import adminRoutes from './routes/admin/admin';
 import detailsRoutes from './routes/details';
@@ -26,6 +28,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+app.use(locals);
+
 // Routes
 app.use('/admin', adminRoutes);
 app.use('/details', detailsRoutes);
@@ -37,33 +41,44 @@ app.get('/', (req, res) => res.render('pages/index'));
 
 // Catch-all: no route matched
 app.use((req, _res, next) => {
-  next(createHttpError(404));
+  next(new HttpError(404));
 });
 
 // Error handler: catches errors passed to next(err)
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   let message = err.message;
   let status = 500;
+  let title = STATUS_CODES[status];
   let context: Record<string, unknown> | undefined;
 
   if (err instanceof HttpError) {
+    title = STATUS_CODES[err.status];
     status = err.status;
     message = err.message;
     context = err.context;
   }
 
   if (Math.floor(status / 100) === 5) console.error(err);
+
   res.status(status);
-  if (process.env.NODE_ENV === 'development' || (err instanceof HttpError && err.isPublic())) {
+  
+  if (process.env.NODE_ENV === 'development') {
     res.render('error', {
-      title: message,
+      title,
+      message,
       status,
       originalUrl: req.originalUrl,
-      ...context,
+      context,
+    });
+  } else if (err instanceof HttpError && err.isPublic()) {
+    res.render('error', {
+      title,
+      status,
+      message
     });
   } else {
     res.render('error', {
-      title: 'Something Went Wrong',
+      title,
       status,
     });
   }

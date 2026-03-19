@@ -1,8 +1,13 @@
 extends /layout
+include /mixins/hero
+include /mixins/style
 
-block title 
+block title
   | Home
 
+block styles
+  +style('hero')
+
 block content
-  h1 Welcome
-  p Your Express + TypeScript + Pug app is running.
+  .container.py-4 
+    +hero(heroImages)

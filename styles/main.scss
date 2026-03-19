@@ -2,19 +2,45 @@
 // they will each compile to public/styles/<same-name>.css
 // Google Fonts (Inter, Playfair Display) are loaded in the layout template.
 
-// Bootstrap: functions first (required before variables)
-@import "bootstrap/scss/functions";
-
-// Custom theme colors – override Bootstrap’s primary/secondary before its variables load.
-// All derived colors (hover, active, focus, emphasis, subtle bg/border) use these via
-// $theme-colors and Bootstrap’s color functions (shade-color, tint-color, etc.).
-$emerald: #238a6f;
-$sapphire: #1f4bd8;
-$primary:   $emerald;
-$secondary: $sapphire;
-
-// Default fonts: Inter for body, Playfair Display for headings
-$font-family-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-$headings-font-family:   "Playfair Display", Georgia, "Times New Roman", serif;
+@import "theme";
 
 @import "bootstrap/scss/bootstrap";
+
+.heading-script { font-family: $headings-font-family; }
+
+.gem-line {
+  position: relative;
+  overflow: hidden;    
+  height: 4px;
+  border-radius: 999px;    
+  background: linear-gradient(
+    90deg,
+    #1f4bd8 0%,
+    #1f4bd8 38%,
+    #1b6b57 62%,
+    #1b6b57 100%
+  );
+  opacity: 0.9;
+
+  @media (prefers-reduced-motion: no-preference) {
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      transform: translateX(-120%);
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,0.25),
+        transparent
+      );
+      animation: shimmer 10s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 55% { transform: translateX(-120%); }
+      75%     { transform: translateX( 120%); }
+      100%    { transform: translateX( 120%); }
+    }
+  }
+}

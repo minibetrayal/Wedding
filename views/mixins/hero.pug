@@ -1,0 +1,20 @@
+mixin hero(images)
+  .hero.animate-hero.p-4.p-md-5.rounded-4 
+    .d-flex.justify-content-around.flex-wrap.gap-2 
+      div 
+        h1.text-center.display-5.mb-2 Alex & Martin 
+        p.small.text-muted.text-center.mb-2.heading-script 
+          | #{locations.islandShort}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          if eventDateParts
+            | #{eventDateParts.day} · #{eventDateParts.month} · #{eventDateParts.year}
+          else
+            | Date TBC
+
+    .gem-line.mb-3 
+
+    .hero-carousel.carousel.slide.carousel-fade.hero-img.w-100(data-bs-ride="carousel", data-bs-interval=5000)
+      .carousel-inner 
+        if images.length
+          each image, index in images
+            .carousel-item(class=index === 0 ? 'active' : '')
+              img.w-100(src=image.url alt=coupleNamesShort, style=image.style)

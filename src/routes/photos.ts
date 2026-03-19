@@ -1,6 +1,6 @@
 import express from 'express';
 import database, { DbError, DbNotFoundError } from '../data/database';
-import { createHttpError } from '../util/errors';
+import { HttpError } from '../types/HttpError';
 
 const router = express.Router();
 
@@ -37,9 +37,9 @@ router.get('/:photoId', async (req, res, next) => {
         res.type(photo.mimeType);
         res.send(file);
     } catch (err) {
-        if (err instanceof DbNotFoundError) next(createHttpError(404, err.message));
-        else if (err instanceof DbError) next(createHttpError(400, err.message));
-        else next(createHttpError(500, err instanceof Error ? err.message : undefined));
+        if (err instanceof DbNotFoundError) next(new HttpError(404, err.message));
+        else if (err instanceof DbError) next(new HttpError(400, err.message));
+        else next(new HttpError(500, err instanceof Error ? err.message : undefined));
     }
 });
 
