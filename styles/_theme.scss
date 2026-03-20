@@ -1,10 +1,8 @@
 // Shared theme variables – import in main.scss and any partial (e.g. hero.scss)
-// that needs $emerald, $sapphire, $primary, $secondary, or font variables.
-
-@import "bootstrap/scss/functions";
 
 $emerald: #238a6f;
 $sapphire: #1f4bd8;
+$dark: #6c757d;
 $primary:   $emerald;
 $secondary: $sapphire;
 

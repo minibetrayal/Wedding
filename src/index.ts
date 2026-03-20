@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import path from 'path';
 
@@ -6,6 +7,7 @@ import { HttpError } from './types/HttpError';
 import { STATUS_CODES } from 'http';
 import locals from './middleware/locals';
 
+import { database } from './data/database';
 import adminRoutes from './routes/admin/admin';
 import detailsRoutes from './routes/details';
 import guestbookRoutes from './routes/guestbook';
@@ -24,6 +26,7 @@ app.set('views', viewsPath);
 app.locals.basedir = viewsPath;
 
 // Middleware
+app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
@@ -84,6 +87,14 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+async function start(): Promise<void> {
+  await database.init(); // eager init: seed / future DB connect before accepting traffic
+  app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+  });
+}
+
+start().catch((err) => {
+  console.error('Failed to start server', err);
+  process.exit(1);
 });

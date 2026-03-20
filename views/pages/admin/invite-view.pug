@@ -1,0 +1,137 @@
+//-
+  Read-only admin view for one invite.
+  Locals: invite; websiteUrl (res.locals, e.g. from WEBSITE_URL) for RSVP QR link
+
+extends /layout
+
+block title
+  | #{invite.name || 'Invitation'} — Admin
+
+block content
+  -
+    const inv = invite
+    const phoneDisplay = inv.phone && String(inv.phone).trim() ? inv.phone : null
+    const emailDisplay = inv.email && String(inv.email).trim() ? inv.email : null
+    const notesDisplay = inv.notes && String(inv.notes).trim() ? inv.notes : null
+    const baseUrl = typeof websiteUrl === 'string' ? websiteUrl.replace(/\/+$/, '') : ''
+    const rsvpUrl = baseUrl ? `${baseUrl}/rsvp/${inv.id}` : ''
+    const qrImgSrc = rsvpUrl
+      ? `https://api.qrserver.com/v1/create-qr-code/?margin=15&size=300x300&ecc=M&data=${encodeURIComponent(rsvpUrl)}`
+      : ''
+
+  .container.py-4
+    nav.mb-3(aria-label="Breadcrumb")
+      ol.breadcrumb.mb-0
+        li.breadcrumb-item
+          a.link-secondary(href="/admin") Admin
+        li.breadcrumb-item
+          a.link-secondary(href="/admin/invites") Invitations
+        li.breadcrumb-item.active(aria-current="page") #{inv.name || 'Invitation'}
+
+    .d-flex.flex-column.flex-sm-row.align-items-stretch.align-items-sm-start.justify-content-between.gap-3.mb-4
+      div
+        h1.h3.mb-2 #{inv.name || 'Invitation'}
+        .d-flex.flex-wrap.gap-2
+          if inv.seen
+            span.badge.rounded-pill.text-bg-secondary Seen
+          else
+            span.badge.rounded-pill.text-bg-light.text-dark.border Not seen
+          if inv.responded
+            span.badge.rounded-pill.text-bg-primary Responded
+          else
+            span.badge.rounded-pill.text-bg-light.text-dark.border Awaiting response
+      a.btn.btn-primary.d-inline-flex.align-items-center.gap-2.align-self-stretch.align-self-sm-auto(
+        href=`/admin/invites/${inv.id}/edit`
+      )
+        i.bi.bi-pencil-square(aria-hidden="true")
+        | Edit invitation
+
+    .card.border.shadow-sm.mb-4
+      .card-body
+        h2.h6.text-uppercase.text-muted.mb-3 Invitation
+        dl.row.mb-0
+          dt.col-sm-3.text-muted.small Invite ID
+          dd.col-sm-9.mb-3
+            .d-flex.flex-wrap.align-items-center.gap-2
+              code.user-select-all.fs-6 #{inv.id}
+              button.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.gap-1(
+                type="button",
+                data-bs-toggle="modal",
+                data-bs-target="#invite-qr-modal"
+              )
+                i.bi.bi-qr-code(aria-hidden="true")
+                | RSVP QR code
+          dt.col-sm-3.text-muted.small Recipient name
+          dd.col-sm-9.mb-3 #{inv.name || '—'}
+          dt.col-sm-3.text-muted.small Phone
+          dd.col-sm-9.mb-3
+            if phoneDisplay
+              a(href=`tel:${phoneDisplay}`) #{phoneDisplay}
+            else
+              span.text-muted Not provided
+          dt.col-sm-3.text-muted.small Email
+          dd.col-sm-9.mb-3
+            if emailDisplay
+              a(href=`mailto:${emailDisplay}`) #{emailDisplay}
+            else
+              span.text-muted Not provided
+          dt.col-sm-3.text-muted.small Notes from guest
+          dd.col-sm-9.mb-0
+            if notesDisplay
+              | #{notesDisplay}
+            else
+              span.text-muted The guest has not provided any notes.
+
+    .card.border.shadow-sm.mb-4
+      .card-body
+        h2.h6.text-uppercase.text-muted.mb-3 Guests
+        if inv.invitees && inv.invitees.length
+          ul.list-group.list-group-flush.mx-n3.mb-n3.rounded-bottom
+            each guest in inv.invitees
+              li.list-group-item.px-3.py-3
+                .fw-semibold.text-body.mb-2 #{guest.name}
+                dl.row.mb-0.small
+                  dt.col-sm-3.text-muted Attending
+                  dd.col-sm-9.mb-2
+                    if guest.attending === true
+                      span.text-success Yes
+                    else if guest.attending === false
+                      span.text-danger No
+                    else
+                      span.text-muted Not answered
+                  dt.col-sm-3.text-muted Dietary
+                  dd.col-sm-9.mb-0
+                    if guest.dietaryRestrictions && String(guest.dietaryRestrictions).trim()
+                      | #{guest.dietaryRestrictions}
+                    else
+                      span.text-muted None specified
+        else
+          p.text-muted.small.mb-0 No guests on this invitation.
+
+    a.btn.btn-outline-secondary(href="/admin/invites") ← Back to all invitations
+
+block modal
+  #invite-qr-modal.modal.fade(
+    tabindex="-1",
+    aria-labelledby="invite-qr-modal-label",
+    aria-hidden="true"
+  )
+    .modal-dialog.modal-dialog-centered
+      .modal-content
+        .modal-header
+          h5#invite-qr-modal-label.modal-title RSVP QR code
+          button.btn-close(
+            type="button",
+            data-bs-dismiss="modal",
+            aria-label="Close"
+          )
+        .modal-body.text-center.px-3.pb-4
+          img.img-fluid.mx-auto.d-block.border.rounded(
+            src=qrImgSrc,
+            alt=`QR code for RSVP link for invite ${inv.id}`,
+            width=300,
+            height=300
+          )
+          p.small.text-muted.mt-3.mb-0
+            | Points to&nbsp;
+            code.small #{rsvpUrl}

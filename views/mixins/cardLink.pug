@@ -1,0 +1,11 @@
+mixin cardLink(href, icon, title)
+  a.d-block.text-decoration-none.text-body.rounded-3(href=href)
+    .card.shadow-sm.border.rounded-3
+      .card-body.d-flex.align-items-center.gap-3.py-3.px-3
+        .flex-shrink-0.d-flex.align-items-center.justify-content-center.rounded-3.bg-primary-subtle.text-primary.p-3
+          i.bi.fs-4(aria-hidden="true", class=`bi-${icon}`)
+        .flex-grow-1.min-w-0
+          .fw-semibold.lh-sm #{title}
+          .small.text-muted.mt-1
+            block
+        i.bi.bi-chevron-right.text-muted.fs-5.flex-shrink-0(aria-hidden="true")

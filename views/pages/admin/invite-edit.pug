@@ -1,0 +1,477 @@
+//-
+  Shared shape for "edit existing" and "create new" (pass isNew: true + empty invite).
+  Expected locals:
+  - invite: { id?, name, phone?, email?, notes?, seen?, responded?, invitees?: { id?, name, attending?, dietaryRestrictions? }[] }
+    attending: true | false | undefined (undefined = guest has not answered yet)
+  - isNew: boolean — true for create flow (affects headings, submit label, form action default)
+  Optional overrides:
+  - formAction: string — POST target (defaults: /admin/invites if isNew, else /admin/invites/:id/edit)
+  - htmlFormId: string — DOM id for the form (default: invite-edit-form)
+  websiteUrl is available from res.locals for reference (optional)
+
+extends /layout
+include /mixins/inclusions
+
+block title
+  if isNew
+    | New invitation — Admin
+  else
+    | Edit invitation — Admin
+
+block content
+  -
+    const inv = typeof invite !== 'undefined' && invite ? invite : {}
+    const defaultAction = isNew
+      ? '/admin/invites'
+      : '/admin/invites/' + (inv.id || '') + '/edit'
+    const actionUrl = typeof formAction === 'string' ? formAction : defaultAction
+    const resolvedFormId =
+      typeof htmlFormId === 'string' && htmlFormId.length ? htmlFormId : 'invite-edit-form'
+    const guestRows =
+      inv.invitees && inv.invitees.length
+        ? inv.invitees
+        : [{ id: '', name: '' }]
+
+  .container.py-4
+    nav.mb-3(aria-label="Breadcrumb")
+      ol.breadcrumb.mb-0
+        li.breadcrumb-item
+          a.link-secondary(href="/admin") Admin
+        li.breadcrumb-item
+          a.link-secondary(href="/admin/invites") Invitations
+        if isNew 
+          li.breadcrumb-item.active(aria-current="page") New invitation
+        else
+          li.breadcrumb-item
+            a.link-secondary(href=`/admin/invites/${inv.id || ''}`) #{inv.name || 'Invitation'}
+          li.breadcrumb-item.active(aria-current="page") Edit
+
+    .mb-4
+      if isNew
+        h1.h3.mb-1 Create invitation
+        p.text-muted.small.mb-0
+          | Add a recipient name for the invite (e.g. couple or family) and each guest who should appear on it. You can add more details after saving.
+      else
+        h1.h3.mb-1 Edit invitation
+        p.text-muted.small.mb-0
+          | Update the invitation details and guest list. Phone, email, and notes are normally filled in by guests when they RSVP; you can adjust them here if needed.
+
+    form(
+      id=resolvedFormId,
+      method="post",
+      action=actionUrl,
+      novalidate
+    )
+      .card.border.shadow-sm.mb-4
+        .card-body
+          h2.h6.text-uppercase.text-muted.mb-3 Invitation
+          if !isNew && inv.id
+            .mb-3
+              .small.text-muted.mb-1 Invite ID
+              code.user-select-all.fs-6.d-block #{inv.id}
+          .mb-3
+            label.form-label(for="invite-name") Recipient name
+              span.text-danger(aria-hidden="true") &nbsp;*
+            input#invite-name.form-control(
+              type="text",
+              name="name",
+              required,
+              autocomplete="off",
+              placeholder='e.g. Alex & Jordan',
+              value=inv.name || ''
+            )
+            .invalid-feedback Please enter a recipient name for this invitation.
+            .form-text Shown on your list and to guests where relevant.
+
+          .row.g-3
+            .col-md-6
+              label.form-label(for="invite-phone") Phone
+                span.visually-hidden (from guest)
+              input#invite-phone.form-control(
+                type="tel",
+                name="phone",
+                autocomplete="tel",
+                placeholder="Not Provided",
+                value=inv.phone || ''
+              )
+              .form-text.small Supplied by the guest when they RSVP.
+            .col-md-6
+              label.form-label(for="invite-email") Email
+                span.visually-hidden (from guest)
+              input#invite-email.form-control(
+                type="email",
+                name="email",
+                autocomplete="email",
+                placeholder="Not Provided",
+                value=inv.email || ''
+              )
+              .form-text.small Optionally supplied by the guest when they RSVP.
+          .mb-0.mt-3
+            label.form-label(for="invite-notes") Notes from guest
+              span.visually-hidden (optional)
+            textarea#invite-notes.form-control(
+              name="notes",
+              rows="2",
+              placeholder="The guest has not provided any notes"
+            ) #{inv.notes || ''}
+            .form-text.small Message or notes the guest leaves when responding.
+
+          fieldset.mt-3.mb-0.border-0.p-0
+            legend.form-label.small.text-muted.mb-2.px-0 RSVP status
+              span.visually-hidden (optional overrides)
+            p.small.text-muted.mb-2
+              | Normally set when the guest opens the invite or submits an RSVP. Adjust here if you need to correct or reset state.
+            .form-check.mb-2
+              input#invite-seen.form-check-input(
+                type="checkbox",
+                name="seen",
+                value="1",
+                checked=!!inv.seen
+              )
+              label.form-check-label(for="invite-seen") Invite has been seen (guest opened the invite)
+            .form-check.mb-0
+              input#invite-responded.form-check-input(
+                type="checkbox",
+                name="responded",
+                value="1",
+                checked=!!inv.responded
+              )
+              label.form-check-label(for="invite-responded") Guest has responded (RSVP submitted)
+
+      .card.border.shadow-sm.mb-4
+        .card-body
+          .d-flex.flex-wrap.align-items-center.justify-content-between.gap-2.mb-3
+            div
+              h2.h6.text-uppercase.text-muted.mb-0 Guests
+              p.small.text-muted.mb-0
+                | At least one guest is required.
+            button.add-invitee.btn.btn-outline-secondary.btn-sm.d-inline-flex.align-items-center.gap-1(
+              type="button"
+            )
+              i.bi.bi-plus-lg(aria-hidden="true")
+              | Add guest
+
+          .invitee-rows.d-flex.flex-column.gap-2
+            each invitee, index in guestRows
+              .invitee-row.card.card-body.py-3.px-3.border(data-invitee-row)
+                input.invitee-id-input(
+                  type="hidden",
+                  name=`invitees[${index}][id]`,
+                  value=invitee.id || ''
+                )
+                - const attendUnset = invitee.attending !== true && invitee.attending !== false
+                .row.g-2.align-items-start
+                  .col.min-w-0
+                    label.form-label.small.mb-1(for=`invitee-${index}-name`) Guest name
+                      span.text-danger(aria-hidden="true") &nbsp;*
+                    input.form-control.invitee-name-input(
+                      id=`invitee-${index}-name`,
+                      type="text",
+                      name=`invitees[${index}][name]`,
+                      required,
+                      autocomplete="name",
+                      placeholder="Full name",
+                      value=invitee.name || ''
+                    )
+                    .invalid-feedback Please enter this guest's name.
+                  .col-12.col-sm-auto
+                    fieldset.p-0.m-0.border-0
+                      legend.form-label.small.mb-1.px-0 Attending
+                      .btn-group.invitee-attending-group.w-100.w-sm-auto.rounded-pill.overflow-hidden(
+                        role="group",
+                        aria-label=`Attending status for guest ${index + 1}`
+                      )
+                        input.btn-check.invitee-attending-radio(
+                          type="radio",
+                          name=`invitees[${index}][attending]`,
+                          id=`invitee-${index}-attend-no`,
+                          value="false",
+                          checked=invitee.attending === false
+                        )
+                        label.btn.btn-outline-danger(for=`invitee-${index}-attend-no`) No
+                        input.btn-check.invitee-attending-radio(
+                          type="radio",
+                          name=`invitees[${index}][attending]`,
+                          id=`invitee-${index}-attend-none`,
+                          value="",
+                          checked=attendUnset
+                        )
+                        label.btn.btn-outline-dark(for=`invitee-${index}-attend-none`) Not answered
+                        input.btn-check.invitee-attending-radio(
+                          type="radio",
+                          name=`invitees[${index}][attending]`,
+                          id=`invitee-${index}-attend-yes`,
+                          value="true",
+                          checked=invitee.attending === true
+                        )
+                        label.btn.btn-outline-primary(for=`invitee-${index}-attend-yes`) Yes
+                .row.g-2.mt-1
+                  .col-12
+                    label.form-label.small.mb-1(for=`invitee-${index}-dietary`) Dietary requirements
+                    textarea.form-control.invitee-dietary-input(
+                      id=`invitee-${index}-dietary`,
+                      name=`invitees[${index}][dietaryRestrictions]`,
+                      rows="2",
+                      placeholder="The guest has not specified any dietary requirements"
+                    ) #{invitee.dietaryRestrictions || ''}
+                .row.mt-2
+                  .col-12.d-flex.justify-content-end
+                    button.btn.btn-outline-danger.remove-invitee(
+                      type="button",
+                      title="Remove guest",
+                      aria-label="Remove guest"
+                    )
+                      i.bi.bi-trash.me-1(aria-hidden="true")
+                      | Remove guest
+
+      .d-flex.flex-wrap.align-items-center.gap-2
+        button.btn.btn-primary.d-inline-flex.align-items-center.gap-2(type="submit")
+          i.bi.bi-check-lg(aria-hidden="true")
+          if isNew
+            | Create invitation
+          else
+            | Save changes
+        a.btn.btn-outline-secondary(href="/admin/invites") Cancel
+
+    if !isNew && inv.id
+      hr.my-4.opacity-25
+      section.border.border-danger.rounded-3.p-3.p-md-4.mb-4(aria-labelledby="delete-invite-section-title")
+        h2#delete-invite-section-title.h6.text-danger.mb-2 Danger zone
+        p.small.text-muted.mb-3
+          | Permanently delete this invitation and all guest data attached to it. This cannot be undone.
+        button#delete-invite-open.btn.btn-outline-danger.d-inline-flex.align-items-center.gap-2(
+          type="button",
+          data-bs-toggle="modal",
+          data-bs-target="#delete-invite-modal"
+        )
+          i.bi.bi-trash(aria-hidden="true")
+          | Delete invitation
+      form#delete-invite-form.visually-hidden(
+        method="post",
+        action=`/admin/invites/${inv.id}/delete`,
+        aria-hidden="true",
+        tabindex="-1"
+      )
+
+block modal
+  #remove-guest-modal.modal.fade(
+    tabindex="-1",
+    aria-labelledby="remove-guest-modal-label",
+    aria-describedby="remove-guest-modal-lead",
+    aria-hidden="true"
+  )
+    .modal-dialog.modal-dialog-centered
+      .modal-content
+        .modal-header
+          h5#remove-guest-modal-label.modal-title Remove guest
+          button.btn-close(
+            type="button",
+            data-bs-dismiss="modal",
+            aria-label="Close"
+          )
+        .modal-body
+          p#remove-guest-modal-lead.mb-2
+          p#remove-guest-modal-hint.small.text-muted.mb-0
+            | You can reload the page before saving to undo this change.
+        .modal-footer
+          button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+          button#remove-guest-modal-confirm.btn.btn-danger(type="button") Remove guest
+
+  if !isNew && inv.id
+    #delete-invite-modal.modal.fade(
+      tabindex="-1",
+      aria-labelledby="delete-invite-modal-label",
+      aria-describedby="delete-invite-modal-body",
+      aria-hidden="true"
+    )
+      .modal-dialog.modal-dialog-centered
+        .modal-content.border-danger
+          .modal-header
+            h5#delete-invite-modal-label.modal-title.text-danger Delete invitation?
+            button.btn-close(
+              type="button",
+              data-bs-dismiss="modal",
+              aria-label="Close"
+            )
+          #delete-invite-modal-body.modal-body
+            p.fw-semibold.mb-2
+              | This will permanently delete the invitation for&nbsp;
+              strong #{inv.name || 'this recipient'}
+              |  and every guest on it.
+            p.small.text-muted.mb-0
+              | RSVP answers, notes, and links using invite ID #[code #{inv.id}] will stop working. This cannot be undone.
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button#delete-invite-modal-confirm.btn.btn-danger(type="button") Yes, delete invitation
+
+block script
+  +script('formValidate')
+  -
+    const scriptFormId =
+      typeof htmlFormId === 'string' && htmlFormId.length ? htmlFormId : 'invite-edit-form'
+  script.
+    (function () {
+      var formId = !{JSON.stringify(scriptFormId)};
+      var rowsContainer = document.querySelector('#' + formId + ' .invitee-rows');
+      var form = document.getElementById(formId);
+      var addBtn = form ? form.querySelector('.add-invitee') : null;
+      if (!rowsContainer || !addBtn || !form) return;
+
+      var removeModalEl = document.getElementById('remove-guest-modal');
+      var removeModalLead = document.getElementById('remove-guest-modal-lead');
+      var removeModalConfirm = document.getElementById('remove-guest-modal-confirm');
+      var removeModal =
+        removeModalEl && typeof bootstrap !== 'undefined'
+          ? bootstrap.Modal.getOrCreateInstance(removeModalEl)
+          : null;
+      var pendingRemoveRow = null;
+
+      if (removeModalEl) {
+        removeModalEl.addEventListener('hidden.bs.modal', function () {
+          pendingRemoveRow = null;
+        });
+      }
+
+      if (removeModalConfirm && removeModal) {
+        removeModalConfirm.addEventListener('click', function () {
+          if (!pendingRemoveRow) return;
+          var row = pendingRemoveRow;
+          pendingRemoveRow = null;
+          removeModal.hide();
+          row.remove();
+          reindexRows();
+          syncRemoveButtons();
+        });
+      }
+
+      function nextIndex() {
+        return rowsContainer.querySelectorAll('[data-invitee-row]').length;
+      }
+
+      function syncRemoveButtons() {
+        var rows = rowsContainer.querySelectorAll('[data-invitee-row]');
+        var showRemove = rows.length > 1;
+        rows.forEach(function (row) {
+          var btn = row.querySelector('.remove-invitee');
+          if (btn) btn.classList.toggle('d-none', !showRemove);
+        });
+      }
+
+      function addRow() {
+        var i = nextIndex();
+        var wrap = document.createElement('div');
+        wrap.className = 'invitee-row card card-body py-3 px-3 border';
+        wrap.setAttribute('data-invitee-row', '');
+        wrap.innerHTML =
+          '<input type="hidden" class="invitee-id-input" name="invitees[' + i + '][id]" value="">' +
+          '<div class="row g-2 align-items-start">' +
+          '<div class="col min-w-0">' +
+          '<label class="form-label small mb-1" for="invitee-' + i + '-name">Guest name' +
+          '<span class="text-danger" aria-hidden="true">&nbsp;*</span></label>' +
+          '<input class="form-control invitee-name-input" id="invitee-' + i + '-name" type="text" ' +
+          'name="invitees[' + i + '][name]" required autocomplete="name" placeholder="Full name">' +
+          '<div class="invalid-feedback">Please enter this guest\'s name.</div>' +
+          '</div>' +
+          '<div class="col-12 col-sm-auto">' +
+          '<fieldset class="p-0 m-0 border-0">' +
+          '<legend class="form-label small mb-1 px-0">Attending</legend>' +
+          '<div class="btn-group invitee-attending-group w-100 w-sm-auto rounded-pill overflow-hidden" role="group" aria-label="Attending status for guest">' +
+          '<input class="btn-check invitee-attending-radio" type="radio" name="invitees[' + i + '][attending]" id="invitee-' + i + '-attend-no" value="false">' +
+          '<label class="btn btn-outline-danger" for="invitee-' + i + '-attend-no">No</label>' +
+          '<input class="btn-check invitee-attending-radio" type="radio" name="invitees[' + i + '][attending]" id="invitee-' + i + '-attend-none" value="" checked>' +
+          '<label class="btn btn-outline-dark" for="invitee-' + i + '-attend-none">Not answered</label>' +
+          '<input class="btn-check invitee-attending-radio" type="radio" name="invitees[' + i + '][attending]" id="invitee-' + i + '-attend-yes" value="true">' +
+          '<label class="btn btn-outline-primary" for="invitee-' + i + '-attend-yes">Yes</label>' +
+          '</div></fieldset>' +
+          '</div></div>' +
+          '<div class="row g-2 mt-1">' +
+          '<div class="col-12">' +
+          '<label class="form-label small mb-1" for="invitee-' + i + '-dietary">Dietary requirements</label>' +
+          '<textarea class="form-control invitee-dietary-input" id="invitee-' + i + '-dietary" name="invitees[' + i + '][dietaryRestrictions]" rows="2" placeholder="The guest has not specified any dietary requirements"></textarea>' +
+          '</div></div>' +
+          '<div class="row mt-2">' +
+          '<div class="col-12 d-flex justify-content-end">' +
+          '<button class="btn btn-outline-danger remove-invitee" type="button" title="Remove guest" aria-label="Remove guest">' +
+          '<i class="bi bi-trash me-1" aria-hidden="true"></i>Remove guest</button>' +
+          '</div></div>';
+        rowsContainer.appendChild(wrap);
+        syncRemoveButtons();
+        var input = wrap.querySelector('.invitee-name-input');
+        if (input) input.focus();
+      }
+
+      rowsContainer.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t.closest) return;
+        var remove = t.closest('.remove-invitee');
+        if (!remove) return;
+        var row = remove.closest('[data-invitee-row]');
+        if (!row || rowsContainer.querySelectorAll('[data-invitee-row]').length <= 1) return;
+        var nameInput = row.querySelector('.invitee-name-input');
+        var nameVal = (nameInput && nameInput.value ? nameInput.value : '').trim();
+        var question = nameVal
+          ? 'Remove "' + nameVal.replace(/"/g, "'") + '" from this invitation? You can reload before saving to undo.'
+          : 'Remove this guest from this invitation? You can reload before saving to undo.';
+        if (!removeModal || !removeModalLead) {
+          if (!window.confirm(question)) return;
+          row.remove();
+          reindexRows();
+          syncRemoveButtons();
+          return;
+        }
+        removeModalLead.textContent = nameVal
+          ? 'Remove "' + nameVal.replace(/"/g, "'") + '" from this invitation?'
+          : 'Remove this guest from this invitation?';
+        pendingRemoveRow = row;
+        removeModal.show();
+      });
+
+      function reindexRows() {
+        var attendSuffixes = ['no', 'none', 'yes'];
+        rowsContainer.querySelectorAll('[data-invitee-row]').forEach(function (row, i) {
+          var nameInput = row.querySelector('.invitee-name-input');
+          var idInput = row.querySelector('.invitee-id-input');
+          var dietary = row.querySelector('.invitee-dietary-input');
+          var labels = row.querySelectorAll('label.form-label');
+          var group = row.querySelector('.invitee-attending-group');
+          if (idInput) idInput.name = 'invitees[' + i + '][id]';
+          if (nameInput) {
+            nameInput.name = 'invitees[' + i + '][name]';
+            nameInput.id = 'invitee-' + i + '-name';
+          }
+          row.querySelectorAll('input.invitee-attending-radio').forEach(function (radio, ri) {
+            radio.name = 'invitees[' + i + '][attending]';
+            radio.id = 'invitee-' + i + '-attend-' + attendSuffixes[ri];
+          });
+          row.querySelectorAll('.invitee-attending-group label').forEach(function (lbl, li) {
+            lbl.setAttribute('for', 'invitee-' + i + '-attend-' + attendSuffixes[li]);
+          });
+          if (group) {
+            group.setAttribute('aria-label', 'Attending status for guest ' + (i + 1));
+          }
+          if (dietary) {
+            dietary.name = 'invitees[' + i + '][dietaryRestrictions]';
+            dietary.id = 'invitee-' + i + '-dietary';
+          }
+          if (labels[0]) labels[0].setAttribute('for', 'invitee-' + i + '-name');
+          if (labels[1]) labels[1].setAttribute('for', 'invitee-' + i + '-dietary');
+        });
+      }
+
+      addBtn.addEventListener('click', function () {
+        addRow();
+      });
+
+      syncRemoveButtons();
+
+      var deleteForm = document.getElementById('delete-invite-form');
+      var deleteModalConfirm = document.getElementById('delete-invite-modal-confirm');
+      var deleteModalEl = document.getElementById('delete-invite-modal');
+      if (deleteForm && deleteModalConfirm && deleteModalEl && typeof bootstrap !== 'undefined') {
+        var deleteModalInstance = bootstrap.Modal.getOrCreateInstance(deleteModalEl);
+        deleteModalConfirm.addEventListener('click', function () {
+          deleteModalInstance.hide();
+          deleteForm.submit();
+        });
+      }
+    })();

@@ -5,7 +5,7 @@ node_modules/
 dist/
 build/
 public/styles/
-public/js/
+public/js/bootstrap.bundle.min.js
 public/icons/
 *.tsbuildinfo
 

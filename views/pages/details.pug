@@ -1,5 +1,4 @@
 extends /layout
-include /mixins/style
 include /mixins/mapButton
 include /mixins/detailsCard
 include /mixins/tableOfContents
@@ -162,9 +161,6 @@ block content
           
       //- Accommodation
       +detailsCard('Accommodation', 'house')
-        p.small.mb-2 
-          | (optional)
-
         p.small.mb-2 
           | If you'd like to stay on #{locations.islandShort}, there are a handful of holiday rentals available.
 

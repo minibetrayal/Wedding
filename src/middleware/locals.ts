@@ -107,6 +107,8 @@ export default async function locals(req: express.Request, res: express.Response
             }
         }
     }
+    // Public site origin (no trailing slash required) — QR codes, absolute links, etc.
+    res.locals.websiteUrl = process.env.WEBSITE_URL;
     res.locals.coupleNamesShort = process.env.COUPLE_NAMES_SHORT;
     res.locals.coupleNames = process.env.COUPLE_NAMES;
     res.locals.contactName = process.env.CONTACT_NAME;

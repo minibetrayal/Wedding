@@ -8,8 +8,9 @@ import { Settings } from './types/Settings';
 import { Invitee } from './types/Invitee';
 import { Photo } from './types/Photo';
 
-const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const alpha = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const photosDir = path.join(process.cwd(), 'photos');
+
 
 class TempStore {
     invites: Invite[] = [];
@@ -50,49 +51,39 @@ class InviteConnection {
         return tempStore.invites;
     }
 
-    async create(name: string, numAdditional: number, invitees: Invitee[]): Promise<Invite> {
-        const invite = new Invite(tempStore.createSimpleId(), name, numAdditional, invitees);
+    async create(name: string, invitees: Invitee[]): Promise<Invite> {
+        const invite = new Invite(tempStore.createSimpleId(), name, invitees);
         tempStore.invites.push(invite);
         return invite;
     }
 
     async delete(inviteId: string): Promise<void> {
+        const before = tempStore.invites.length;
         tempStore.invites = tempStore.invites.filter(inv => inv.id !== inviteId);
+        if (tempStore.invites.length === before) throw new DbNotFoundError('Invite');
     }
 
     async update(
         inviteId: string,
-        additionalInvitees: Invitee[],
         phone?: string,
         email?: string,
         notes?: string
     ): Promise<void> {
         const existingInvite = tempStore.invites.find(i => i.id === inviteId);
         if (!existingInvite) throw new DbNotFoundError('Invite');
-        if (additionalInvitees.length > existingInvite.numAdditional) {
-            throw new DbError('Number of invitees exceeds number of additional invitees');
-        }
         existingInvite.phone = phone;
         existingInvite.email = email;
         existingInvite.notes = notes;
-        existingInvite.additionalInvitees = additionalInvitees;
     }
 
     async updateInvite(
         inviteId: string,
         name: string,
-        numAdditional: number,
         invitees: Invitee[]
     ): Promise<void> {
         const existingInvite = tempStore.invites.find(i => i.id === inviteId);
         if (!existingInvite) throw new DbNotFoundError('Invite');
-        if (numAdditional < existingInvite.additionalInvitees.length) {
-            throw new DbError(
-                'Number of additional invitees cannot be less than the number of additional invitees'
-            );
-        }
         existingInvite.name = name;
-        existingInvite.numAdditional = numAdditional;
         existingInvite.invitees = invitees;
     }
 
@@ -247,8 +238,8 @@ class InviteeConnection {
         return tempStore.invitees;
     }
 
-    async create(name: string, dietaryRestrictions?: string): Promise<Invitee> {
-        const invitee = new Invitee(tempStore.createUuid(), name, dietaryRestrictions);
+    async create(name: string, attending?: boolean, dietaryRestrictions?: string): Promise<Invitee> {
+        const invitee = new Invitee(tempStore.createUuid(), name, attending, dietaryRestrictions);
         tempStore.invitees.push(invitee);
         return invitee;
     }
@@ -283,9 +274,32 @@ class DatabaseConnection {
     settings = new SettingsConnection();
     photos = new PhotoConnection();
     invitees = new InviteeConnection();
+
+    private isInitialized = false;
+    /** Ensures only one init runs if many handlers call `database()` at once */
+    private initPromise: Promise<this> | null = null;
+
+    async init(): Promise<this> {
+        if (this.isInitialized) return this;
+        if (!this.initPromise) {
+            this.initPromise = (async () => {
+                try {
+                    const dummyData = new DummyData();
+                    await dummyData.createInvites(this);
+                    this.isInitialized = true;
+                    return this;
+                } catch (err) {
+                    this.initPromise = null;
+                    throw err;
+                }
+            })();
+        }
+        return this.initPromise;
+    }
 }
 
-export default new DatabaseConnection();
+export const database = new DatabaseConnection();
+
 export class DbNotFoundError extends Error {
     constructor(itemType: string) {
         super(`${itemType} not found`);
@@ -296,5 +310,49 @@ export class DbError extends Error {
     constructor(message: string) {
         super(message);
         this.name = 'DbError';
+    }
+}
+
+
+class DummyData {
+    invitee(id: string, name: string, attending?: boolean): Invitee {
+        const i = new Invitee(id, name);
+        if (attending !== undefined) i.attending = attending;
+        return i;
+    }
+
+    async createInvites(db: DatabaseConnection) {
+        const inv1 = await db.invites.create('Alex & Jordan', [
+            await db.invitees.create('Alex', true),
+            await db.invitees.create('Jordan', false),
+        ]);
+        inv1.seen = true;
+        inv1.responded = true;
+        
+        const inv2 = await db.invites.create('The Chen family', [
+            await db.invitees.create('Pat', false),
+            await db.invitees.create('Kim', false),
+            await db.invitees.create('Lee', false),
+        ]);
+        inv2.seen = true;
+        inv2.responded = true;
+
+        const inv3 = await db.invites.create('Sam Taylor', [
+            await db.invitees.create('Sam'),
+        ]);
+        inv3.seen = true;
+
+        const inv4 = await db.invites.create('Morgan Lee + guest', [
+            await db.invitees.create('Morgan'),
+            await db.invitees.create('Plus-one'),
+        ]);
+
+        const inv5 = await db.invites.create('Priya & Dev', [
+            await db.invitees.create('Priya', true),
+            await db.invitees.create('Dev', true),
+            await db.invitees.create('Asha', true),
+        ]);
+        inv5.seen = true;
+        inv5.responded = true;
     }
 }

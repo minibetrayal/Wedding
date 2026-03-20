@@ -1,5 +1,5 @@
 import express from 'express';
-import database, { DbError, DbNotFoundError } from '../data/database';
+import { database, DbError, DbNotFoundError } from '../data/database';
 import { HttpError } from '../types/HttpError';
 
 const router = express.Router();

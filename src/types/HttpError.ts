@@ -7,9 +7,7 @@ export class HttpError extends Error {
     constructor(status: number, message?: string, context?: Record<string, unknown>) {
         super(message ?? defaultMessage);
         this.status = status;
-        // if (context != null) this.context = context;
-        // else 
-        this.context = { testing: 'testing', number: 123, object: { nested: 'nested' }, array: [1, 2, 3] };
+        this.context = context;
     }
 
     isPublic(): boolean {
