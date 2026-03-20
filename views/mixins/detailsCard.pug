@@ -1,0 +1,17 @@
+include /mixins/gemline
+
+mixin detailsCardStyle
+  +gemlineStyle
+
+mixin detailsCard(title, icon)
+  //- Comma in .replace(/ /g, '-') must not sit in one attr list — Pug treats commas as attribute separators
+  - const detailsCardId = title.toLowerCase().replace(/\s+/g, '-')
+  .card.shadow-sm.toc-target(id=detailsCardId, title=title)
+    .card-body.p-4 
+      h2.h4.mb-3 
+        i.bi.me-2.text-primary(class=`bi-${icon}`)
+        | #{title}
+
+      +gemline
+
+      block

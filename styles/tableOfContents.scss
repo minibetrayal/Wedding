@@ -1,0 +1,18 @@
+
+
+.page-toc-container {
+  .page-toc-chevron {
+    transition: transform 0.2s ease;
+  }
+
+  .card-header:has(button.collapsed) {
+    border-bottom-left-radius: var(--bs-card-inner-border-radius);
+    border-bottom-right-radius: var(--bs-card-inner-border-radius);
+  }
+
+  button:not(.collapsed) {
+    .page-toc-chevron {
+      transform: rotate(180deg);
+    }
+  }
+}

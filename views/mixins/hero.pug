@@ -1,3 +1,10 @@
+include /mixins/gemline
+include /mixins/style
+
+mixin heroStyle 
+  +gemlineStyle
+  +style('hero')
+
 mixin hero(images)
   .hero.animate-hero.p-4.p-md-5.rounded-4 
     .d-flex.justify-content-around.flex-wrap.gap-2 
@@ -10,9 +17,9 @@ mixin hero(images)
           else
             | Date TBC
 
-    .gem-line.mb-3 
+    +gemline(0, 3)
 
-    .hero-carousel.carousel.slide.carousel-fade.hero-img.w-100(data-bs-ride="carousel", data-bs-interval=5000)
+    .hero-carousel.carousel.slide.carousel-fade.hero-img.w-100(data-bs-ride="carousel", data-bs-interval=15000)
       .carousel-inner 
         if images.length
           each image, index in images

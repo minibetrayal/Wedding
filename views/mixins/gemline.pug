@@ -1,0 +1,9 @@
+include /mixins/style
+
+mixin gemlineStyle
+  +style('gemline')
+
+mixin gemline(mt = 2, mb = -1)
+  if mb === -1
+    - mb = mt
+  .gem-line(class=`mt-${mt} mb-${mb}`)

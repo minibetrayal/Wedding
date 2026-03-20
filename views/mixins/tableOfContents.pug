@@ -1,0 +1,51 @@
+include /mixins/style
+include /mixins/gemline
+
+mixin tableOfContentsStyle
+  +style('tableOfContents')
+  +gemlineStyle
+
+mixin tableOfContents
+  .card.shadow-sm.mb-3.page-toc-container
+    .card-header.bg-body.border-bottom-0.py-0.px-0
+      button.btn.btn-link.w-100.text-start.text-decoration-none.d-flex.justify-content-between.align-items-center.py-3.px-4.collapsed(
+        type='button',
+        data-bs-toggle='collapse',
+        data-bs-target='#page-toc',
+        aria-expanded='false',
+        aria-controls='page-toc'
+      )
+        span.fw-semibold.text-body
+          i.bi.bi-list.me-2.text-primary
+          | On this page
+        i.bi.bi-chevron-down.page-toc-chevron.text-muted
+    #page-toc.collapse
+      .card-body.pt-0.pb-4.px-4
+        +gemline
+        ul.list-unstyled.small.row.row-cols-1.row-cols-sm-2.gy-1.mb-0#toc-list 
+
+mixin tableOfContentsScript
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      const tocLinks = document.getElementById('toc-list');
+      if (!tocLinks) return;
+      const nav = document.querySelector('nav');
+      const navbarHeight = nav?.offsetHeight ?? 3;
+      const targets = document.querySelectorAll('.toc-target[id]');
+      if (!targets || !targets.length) {
+        //- Hide the TOC container if there are no targets
+        document.querySelector('.page-toc-container').style.display = 'none';
+        return;
+      }
+      targets.forEach(function (target) {
+        //- Set the scroll margin top such that the sticky navbar doesn't obscure the target
+        target.style.scrollMarginTop = (navbarHeight + 3) + 'px';
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.className = 'link-primary';
+        a.href = '#' + target.id;
+        a.textContent = target.getAttribute('title') || target.id;
+        li.appendChild(a);
+        tocLinks.appendChild(li);
+      });
+    });

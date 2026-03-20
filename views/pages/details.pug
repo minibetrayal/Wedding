@@ -1,9 +1,14 @@
 extends /layout
 include /mixins/style
 include /mixins/mapButton
+include /mixins/detailsCard
+include /mixins/tableOfContents
+include /mixins/gemline
 
 block styles
-  +style('schedule')
+  +tableOfContentsStyle
+  +detailsCardStyle
+  +gemlineStyle
 
 block title
   | Details
@@ -12,310 +17,247 @@ block content
   .container 
     h1.h4.mb-1.mt-4 Wedding Details 
     p.text-muted.mb-4 Everything you need to know for the day 
+    
+    +tableOfContents
 
     .vstack.gap-3
       //- When and Where
-      .card.shadow-sm 
-        .card-body.p-4 
-          h2.h4.mb-3 
-            i.bi.bi-calendar-event.me-2.text-primary 
-            | When & Where 
+      +detailsCard('When & Where', 'calendar-event')
+        p.mb-4
+          if eventDate
+            strong #{eventDate}
+          else
+            | Date TBC
 
-          p.mb-4
-            if eventDate
-              strong #{eventDate}
-            else
-              | Date TBC
+        if (eventDate && eventTimezoneLabel)
+          p.small.text-muted All times are in #{eventTimezoneLabel}
 
-          if (eventDate && eventTimezoneLabel)
-            p.small.text-muted All times are in #{eventTimezoneLabel}
+        +gemline(1, 2)
+        
+        h3.h5 Ceremony 
+        p.mb-3 
+          if ceremonyKey 
+            | Begins at 
+            strong #{scheduledEvents.find(event => event.key === ceremonyKey).time}
+          else
+            | Time TBC
 
-          .gem-line.mt-1.mb-2
-          
-          h3.h5 Ceremony 
-          p.mb-3 
-            if ceremonyKey 
-              | Begins at 
-              strong #{scheduledEvents.find(event => event.key === ceremonyKey).time}
-            else
-              | Time TBC
+        p.mb-0
+          if locations.ceremony 
+            | #{locations.ceremony}
+          else
+            | Location TBC
 
-          p.mb-0
-            if locations.ceremony 
-              | #{locations.ceremony}
-            else
-              | Location TBC
+        .my-2 
+          +mapButton(locations.ceremony)
 
-          .my-2 
-            +mapButton(locations.ceremony)
+        +gemline(4, 2)
 
-          .gem-line.mt-4.mb-2
+        h3.h5 Dinner & Reception 
+        p.mb-3 
+          if receptionKey 
+            | Begins at 
+            strong #{scheduledEvents.find(event => event.key === receptionKey).time}
+          else
+            | Time TBC
 
-          h3.h5 Dinner & Reception 
-          p.mb-3 
-            if receptionKey 
-              | Begins at 
-              strong #{scheduledEvents.find(event => event.key === receptionKey).time}
-            else
-              | Time TBC
+        p.mb-0
+          if locations.reception 
+            | #{locations.reception}
+          else
+            | Location TBC
 
-          p.mb-0
-            if locations.reception 
-              | #{locations.reception}
-            else
-              | Location TBC
-
-          .my-2 
-            +mapButton(locations.reception)
+        .my-2 
+          +mapButton(locations.reception)
 
       //- Dress Code
-      .card.shadow-sm 
-        .card-body.p-4 
-          h2.h4.mb-3 
-            i.bi.bi-person-check.me-2.text-primary 
-            | Dress Code 
+      +detailsCard('Dress Code', 'person-check')
+        p.small.mb-2
+          strong Cocktail / Semi-Formal 
 
-          .gem-line.my-2 
-
-          p.small.mb-2
-            strong Cocktail / Semi-Formal 
-
-          ul.small
-            li.mb-2
-              | Please&nbsp;
-              strong
-                em avoid 
-              | &nbsp;black and white outfits. If you'd like to match the happy couple, blues and greens are perfect.
-            li.mb-2
-              | The ceremony will be outdoors, so please dress appropriately for the weather. Also bear in mind that 
-              | there is a walk to and from the ceremony location from the ferry terminal, so wear comfortable shoes!
-          
+        ul.small
+          li.mb-2
+            | Please&nbsp;
+            strong
+              em avoid 
+            | &nbsp;black and white outfits. If you'd like to match the happy couple, blues and greens are perfect.
+          li.mb-2
+            | The ceremony will be outdoors, so please dress appropriately for the weather. Also bear in mind that 
+            | there is a walk to and from the ceremony location from the ferry terminal, so wear comfortable shoes!
 
       //- Schedule
-      .card.shadow-sm 
-        .card-body.p-4 
-          h2.h4.mb-3 
-            i.bi.bi-calendar-event.me-2.text-primary 
-            | Schedule 
+      +detailsCard('Schedule', 'calendar-event')
+        if (eventDate && eventTimezoneLabel)
+          p.small.text-muted All times are in #{eventTimezoneLabel}
 
-          .gem-line.my-2 
+        if scheduledEvents.length
+          ul.small.mb-2 
+            each event, index in scheduledEvents
+              li.d-flex.mb-1 
+                span.fw-semibold(style=`width: 4rem; flex: 0 0 auto;`) #{event.time}
+                span — &nbsp;#{event.description}
+        else
+          | Schedule TBC
 
-          if (eventDate && eventTimezoneLabel)
-            p.small.text-muted All times are in #{eventTimezoneLabel}
-
-          if scheduledEvents.length
-            ul.small.mb-2 
-              each event, index in scheduledEvents
-                li.d-flex.mb-1 
-                  span.schedule-time.fw-semibold #{event.time}
-                  span — &nbsp;#{event.description}
-          else
-            | Schedule TBC
-
-          p.small.text-muted.mb-0
-            | We'll keep the formalities short - the goal is a relaxed, fun day for everyone.
+        p.small.text-muted.mb-0
+          | We'll keep the formalities short - the goal is a relaxed, fun day for everyone.
 
       //- Getting There
-      .card.shadow-sm 
-        .card-body.p-4 
-          h2.h4.mb-3 
-            i.bi.bi-car-front.me-2.text-primary 
-            | Getting There 
-
-          .gem-line.my-2 
-
-          ul.small
-            li.mb-2
-              | Travel to #{locations.islandShort} is by ferry from #{locations.mainlandShort}. 
-              +mapButton(locations.mainland)
-            li.mb-2
-              | #{locations.mainlandShort} also has a bus station with regular services throughout the day.
-              | There is also a bus service to the marina from #{locations.trainStationShort}, which takes 
-              | about #{times.trainToMainland} minutes.
-              +mapButton(locations.trainStation)
-            li.mb-2
-              | There is parking available at #{locations.mainlandShort}, but it is limited and may be subject 
-              | to availability. We suggest using the overflow parking, at the nearby #{locations.carParkShort}, 
-              | from which there is about a #{times.carParkToIsland} minute walk across a footbridge to 
-              | #{locations.islandShort}.
-              +mapButton(locations.carPark)
+      +detailsCard('Getting There', 'car-front')
+        ul.small
+          li.mb-2
+            | Travel to #{locations.islandShort} is by ferry from #{locations.mainlandShort}. 
+            +mapButton(locations.mainland)
+          li.mb-2
+            | #{locations.mainlandShort} also has a bus station with regular services throughout the day.
+            | There is also a bus service to the marina from #{locations.trainStationShort}, which takes 
+            | about #{times.trainToMainland} minutes.
+            +mapButton(locations.trainStation)
+          li.mb-2
+            | There is parking available at #{locations.mainlandShort}, but it is limited and may be subject 
+            | to availability. We suggest using the overflow parking, at the nearby #{locations.carParkShort}, 
+            | from which there is about a #{times.carParkToIsland} minute walk across a footbridge to 
+            | #{locations.islandShort}.
+            +mapButton(locations.carPark)
 
       //- Ferry
-      .card.shadow-sm 
-        .card-body.p-4 
-          h2.h4.mb-3 
-            i.bi.bi-water.me-2.text-primary 
-            | Ferry 
+      +detailsCard('Ferry', 'water')
+        ul.small 
+          li.mb-2
+            | The ferry service to #{locations.islandShort} takes #{times.mainlandToIsland} minutes,
+            | depending on the direction of travel.
+          li.mb-2
+            | You are welcome to arrive any time after&nbsp;
+            strong #{scheduledEvents.find(event => event.key === arrivalTimeKey).time}
+            | ,&nbsp;but the official event does not start until&nbsp;
+            strong #{scheduledEvents.find(event => event.key === ceremonyKey).time}
+            | .&nbsp;The ferry service operates daily, with regular services throughout the day.
+            | Bear this in mind as you plan your journey.
+          li.mb-2
+            | We suggest one of the following services: 
+            ul.mt-2 
+              each service in ferryServicesToIsland 
+                li.mb-2
+                  strong #{service.platform}
+                  | &nbsp;@&nbsp;
+                  strong #{service.time}
+                  br
+                  | via&nbsp;
+                  strong #{service.via}
+                  br
+                  | arriving @&nbsp;
+                  strong #{service.arriving}
+          li.mb-2
+            | The cost for the ferry crossing is #{costs.ferry} per person each way.
+            | Tickets are available for purchase from the ferry terminal, or on the boat itself.
+            | If paying by credit/debit card, simply tap your card or phone to the reader when you board and 
+            | disembark the ferry.
 
-          .gem-line.my-2 
-
-          ul.small 
-            li.mb-2
-              | The ferry service to #{locations.islandShort} takes #{times.mainlandToIsland} minutes,
-              | depending on the direction of travel.
-            li.mb-2
-              | You are welcome to arrive any time after&nbsp;
-              strong #{scheduledEvents.find(event => event.key === arrivalTimeKey).time}
-              | ,&nbsp;but the official event does not start until&nbsp;
-              strong #{scheduledEvents.find(event => event.key === ceremonyKey).time}
-              | .&nbsp;The ferry service operates daily, with regular services throughout the day.
-              | Bear this in mind as you plan your journey.
-            li.mb-2
-              | We suggest one of the following services: 
-              ul.mt-2 
-                each service in ferryServicesToIsland 
-                  li.mb-2
-                    strong #{service.platform}
-                    | &nbsp;@&nbsp;
-                    strong #{service.time}
-                    br
-                    | via&nbsp;
-                    strong #{service.via}
-                    br
-                    | arriving @&nbsp;
-                    strong #{service.arriving}
-            li.mb-2
-              | The cost for the ferry crossing is #{costs.ferry} per person each way.
-              | Tickets are available for purchase from the ferry terminal, or on the boat itself.
-              | If paying by credit/debit card, simply tap your card or phone to the reader when you board and 
-              | disembark the ferry.
-
-            div 
-              a.small.fw-semibold.link-primary(
-                  href=links.ferryTimetable,
-                  target="_blank",
-                  rel="noopener"
-              ) Ferry timetable
-            
+          div 
+            a.small.fw-semibold.link-primary(
+                href=links.ferryTimetable,
+                target="_blank",
+                rel="noopener"
+            ) Ferry timetable
+          
       //- Accommodation
-      .card.shadow-sm 
-        .card-body.p-4 
-          h2.h4.mb-3 
-            i.bi.bi-house.me-2.text-primary 
-            | Accommodation  (optional)
+      +detailsCard('Accommodation', 'house')
+        p.small.mb-2 
+          | (optional)
 
-          .gem-line.my-2 
+        p.small.mb-2 
+          | If you'd like to stay on #{locations.islandShort}, there are a handful of holiday rentals available.
 
-          p.small.mb-2 
-            | If you'd like to stay on #{locations.islandShort}, there are a handful of holiday rentals available.
-
-          ul.small 
-            li.mb-2
-              | Search for&nbsp;
-              strong “#{locations.islandShort}”
-              | &nbsp;on Airbnb, Stayz, Booking.com, or similar.
-            li.mb-2
-              | If you plan to stay overnight, we suggest booking early — options on the island can be limited.
-            li.mb-2
-              | If you’re staying on the island, keep ferry times in mind for your return to the island after the reception.
-              | You don't want to miss the last boat and get stuck on the mainland!
+        ul.small 
+          li.mb-2
+            | Search for&nbsp;
+            strong “#{locations.islandShort}”
+            | &nbsp;on Airbnb, Stayz, Booking.com, or similar.
+          li.mb-2
+            | If you plan to stay overnight, we suggest booking early — options on the island can be limited.
+          li.mb-2
+            | If you’re staying on the island, keep ferry times in mind for your return to the island after the reception.
+            | You don't want to miss the last boat and get stuck on the mainland!
 
       //- On the Island
-      .card.shadow-sm 
-        .card-body.p-4 
-          h2.h4.mb-3 
-            i.bi.bi-person-walking.me-2.text-primary 
-            | On the Island 
-
-          .gem-line.my-2 
-
-          ul.small 
-            li.mb-2
-              | When you arrive at #{locations.islandShort}, there is a #{times.islandToCeremony} minute walk to 
-              | the ceremony location. If you'd like to enjoy this walk, please take this time into account.
-            li.mb-2
-              | If you'd prefer to avoid the walk (which includes a steep hill), let us know in your RSVP,
-              | and we can arrange for a taxi to pick you up from the ferry terminal and take you to the ceremony location.
-            li.mb-2
-              | The ceremony will take place on our beautiful island property, at #{locations.ceremonyShort}.
-              +mapButton(locations.ceremony)
+      +detailsCard('On the Island', 'person-walking')
+        ul.small 
+          li.mb-2
+            | When you arrive at #{locations.islandShort}, there is a #{times.islandToCeremony} minute walk to 
+            | the ceremony location. If you'd like to enjoy this walk, please take this time into account.
+          li.mb-2
+            | If you'd prefer to avoid the walk (which includes a steep hill), let us know in your RSVP,
+            | and we can arrange for a taxi to pick you up from the ferry terminal and take you to the ceremony location.
+          li.mb-2
+            | The ceremony will take place on our beautiful island property, at #{locations.ceremonyShort}.
+            +mapButton(locations.ceremony)
 
       //- Ceremony
-      .card.shadow-sm 
-        .card-body.p-4 
-          h2.h4.mb-3 
-            i.bi.bi-gem.me-2.text-primary 
-            | Ceremony 
-
-          .gem-line.my-2 
-
-          ul.small 
-            li.mb-2
-              | When you arrive, please feel free to introduce yourself to the other guests and mingle.
-              | We'll have some drinks and nibbles available, but please feel free to bring your own if you'd like.
-            li.mb-2
-              | The ceremony will commence at&nbsp;
-              strong #{scheduledEvents.find(event => event.key === ceremonyKey).time}
-              | .&nbsp;Please arrive at the ceremony location by this time.
-            li.mb-2
-              | After the ceremony, we'll be taking some photos, so please stick around for this.
+      +detailsCard('Ceremony', 'gem')
+        ul.small 
+          li.mb-2
+            | When you arrive, please feel free to introduce yourself to the other guests and mingle.
+            | We'll have some drinks and nibbles available, but please feel free to bring your own if you'd like.
+          li.mb-2
+            | The ceremony will commence at&nbsp;
+            strong #{scheduledEvents.find(event => event.key === ceremonyKey).time}
+            | .&nbsp;Please arrive at the ceremony location by this time.
+          li.mb-2
+            | After the ceremony, we'll be taking some photos, so please stick around for this.
 
       //- Reception
-      .card.shadow-sm 
-        .card-body.p-4 
-          h2.h4.mb-3 
-            i.bi.bi-cake.me-2.text-primary 
-            | Reception 
+      +detailsCard('Reception', 'cake')
+        ul.small 
+          li.mb-2
+            | After the ceremony, we'll head back to the #{locations.islandShort} ferry terminal and back to the mainland.
+            | From there, please make your own way to the reception venue.
+          li.mb-2
+            | There's about a #{times.mainlandToReception} minute drive from #{locations.mainlandShort} to 
+            | #{locations.receptionShort}.
+            +mapButton(locations.reception)
+          li.mb-2
+            | If you are unable to make your own way to the reception, let us know in your RSVP, 
+            | and we can arrange carpooling.
+          li.mb-2
+            | After #{coupleNames} arrive at the reception, there will be some more photos taken before dinner is served.
+          li.mb-2
+            | Be sure to stick around after the dinner for the dancing and fun!
 
-          .gem-line.my-2 
-
-          ul.small 
-            li.mb-2
-              | After the ceremony, we'll head back to the #{locations.islandShort} ferry terminal and back to the mainland.
-              | From there, please make your own way to the reception venue.
-            li.mb-2
-              | There's about a #{times.mainlandToReception} minute drive from #{locations.mainlandShort} to 
-              | #{locations.receptionShort}.
-              +mapButton(locations.reception)
-            li.mb-2
-              | If you are unable to make your own way to the reception, let us know in your RSVP, 
-              | and we can arrange carpooling.
-            li.mb-2
-              | After #{coupleNames} arrive at the reception, there will be some more photos taken before dinner is served.
-            li.mb-2
-              | Be sure to stick around after the dinner for the dancing and fun!
+      //- Guestbook and Photos
+      +detailsCard('Guestbook and Photos', 'camera')
+        ul.small 
+          li.mb-2
+            | There will be a professional photographer at the ceremony and reception, but please feel free to 
+            | take your own photos on the day
+          li.mb-2
+            | You can also write a message for us in our 
+            a.link-primary(href="/guestbook") digital guestbook
+            | , where you can upload photos too.
 
       //- Menu
-      .card.shadow-sm 
-        .card-body.p-4 
-          h2.h4.mb-3 
-            i.bi.bi-fork-knife.me-2.text-primary 
-            | Menu 
+      +detailsCard('Menu', 'fork-knife')
+        each course in receptionMenu 
+          p.mb-2 
+            strong #{course.name}
+          ul.small 
+            each item in course.items
+              li.mb-1 #{item}
 
-          .gem-line.my-2 
-
-          each course in receptionMenu 
-            p.mb-2 
-              strong #{course.name}
-            ul.small 
-              each item in course.items
-                li.mb-1 #{item}
+        p.small.text-muted.mb-0
+          | If you have any dietary requirements, please let us know in your RSVP.
               
       //- Gifts
-      .card.shadow-sm 
-        .card-body.p-4 
-          h2.h4.mb-3 
-            i.bi.bi-gift.me-2.text-primary 
-            | Gifts 
-
-          .gem-line.my-2 
-
-          p.small.mb-2
-            | We already have a home full of everything we need. If you'd like to give something, a cash 
-            | contribution towards our future together would be very much appreciated.
-
+      +detailsCard('Gifts', 'gift')
+        p.small.mb-2
+          | We already have a home full of everything we need. If you'd like to give something, a cash 
+          | contribution towards our future together would be very much appreciated.
+      
       //- ON THE DAY
-      .card.shadow-sm
-        .card-body.p-4
-          h2.h4.mb-3
-            i.bi.bi-telephone.me-2.text-primary
-            | Contact on the day
-
-          .gem-line.my-2 
-
-          p.small.mb-2
-            | If you get delayed, lost, or have a last-minute question, contact our MC #{contactName} on 
-            a.link-primary(href=`tel:${contactPhone.replace(/\s/g, '')}`) !{contactPhone.replace(/\s/g, '&nbsp;')}
+      +detailsCard('Contact on the day', 'telephone')
+        p.small.mb-2
+          | If you get delayed, lost, or have a last-minute question, contact our MC #{contactName} on 
+          a.link-primary(href=`tel:${contactPhone.replace(/\s/g, '')}`) !{contactPhone.replace(/\s/g, '&nbsp;')}
 
 block script 
   +mapButtonScript
+  +tableOfContentsScript
