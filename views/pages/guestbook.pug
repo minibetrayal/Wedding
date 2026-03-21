@@ -1,7 +1,61 @@
 extends /layout
+include /mixins/hero
 
 block title
   | #{coupleNamesShort} — Guestbook
 
+block styles
+  +heroStyle
+
 block content
-  h1 Guestbook
+  .container.py-4
+    +hero('Guestbook')
+
+    //- Primary actions (routes to be implemented)
+    .row.justify-content-center.mt-4
+      .col-12.col-lg-10.col-xl-8
+        .d-flex.flex-column.flex-sm-row.gap-2.gap-sm-3.mb-4.mb-lg-5
+          a.btn.btn-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+            href="/guestbook/new"
+          )
+            i.bi.bi-pencil-square(aria-hidden="true")
+            | Write a message
+          a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+            href="/guestbook/mine"
+          )
+            i.bi.bi-person-lines-fill(aria-hidden="true")
+            | My posts
+
+        //- Public list (server will pass `entries`; visible + not hidden)
+        - const guestbookList = Array.isArray(entries) ? entries : []
+
+        h2.h4.text-body-secondary.mb-3 Messages from everyone
+        if guestbookList.length === 0
+          .card.border-0.shadow-sm
+            .card-body.p-4.p-md-5.text-center.text-muted
+              i.bi.bi-journal-richtext.display-4.d-block.mb-3.opacity-50(aria-hidden="true")
+              p.lead.mb-2 No messages yet.
+              p.small.mb-0 Be the first to leave a note for #{coupleNames}.
+        else
+          ul.list-unstyled.d-flex.flex-column.gap-3.mb-0
+            each entry in guestbookList
+              li
+                article.card.border-0.shadow-sm
+                  .card-body.p-4
+                    header.d-flex.flex-wrap.align-items-baseline.justify-content-between.gap-2.mb-2
+                      .fw-semibold
+                        if entry.displayName && entry.displayName.trim()
+                          | #{entry.displayName.trim()}
+                        else
+                          span.text-muted Guest
+                      time.small.text-muted(datetime=entry.created ? entry.created.toISOString() : undefined)
+                        //- Rough: swap for a formatted local date from locals when wired
+                        if entry.created
+                          | #{entry.created.toLocaleString()}
+                    .guestbook-entry-body
+                      p.mb-0.text-break #{entry.content}
+                    if entry.photo
+                      .mt-3.pt-3.border-top
+                        p.small.text-muted.mb-0
+                          i.bi.bi-image.me-1(aria-hidden="true")
+                          | Photo attached (preview TBD)

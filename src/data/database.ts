@@ -287,6 +287,7 @@ class DatabaseConnection {
                 try {
                     const dummyData = new DummyData();
                     await dummyData.createInvites(this);
+                    await dummyData.createGuestbookEntries(this);
                     this.isInitialized = true;
                     return this;
                 } catch (err) {
@@ -316,81 +317,183 @@ export class DbError extends Error {
 
 
 class DummyData {
-    invitee(id: string, name: string, attending?: boolean): Invitee {
-        const i = new Invitee(id, name);
-        if (attending !== undefined) i.attending = attending;
-        return i;
-    }
+    private readonly inviteSeeds: Array<{
+        name: string;
+        guests: Array<{
+            name: string;
+            attending?: boolean;
+            dietaryRestrictions?: string;
+        }>;
+        seen?: boolean;
+        responded?: boolean;
+        notes?: string;
+        phone?: string;
+        email?: string;
+    }> = [
+        {
+            name: 'Alex & Jordan',
+            guests: [
+                { name: 'Alex', attending: true, dietaryRestrictions: 'Vegetarian — no fish, please.' },
+                { name: 'Jordan', attending: false },
+            ],
+            seen: true,
+            responded: true,
+        },
+        {
+            name: 'The Chen family',
+            guests: [
+                { name: 'Pat', attending: false },
+                { name: 'Kim', attending: false },
+                { name: 'Lee', attending: false },
+            ],
+            seen: true,
+            responded: true,
+        },
+        {
+            name: 'Sam Taylor',
+            guests: [{ name: 'Sam' }],
+            seen: true,
+            notes: 'So excited — let us know if you need anything from us!',
+        },
+        {
+            name: 'Morgan Lee + guest',
+            guests: [{ name: 'Morgan' }, { name: 'Plus-one' }],
+            seen: true,
+            notes: 'Plus-one’s full name to follow; they’ll share dietary needs once confirmed.',
+        },
+        {
+            name: 'Priya & Dev',
+            guests: [
+                { name: 'Priya', attending: true, dietaryRestrictions: 'Vegan.' },
+                { name: 'Dev', attending: true },
+                { name: 'Asha', attending: true, dietaryRestrictions: 'Severe peanut allergy — carries epinephrine.' },
+            ],
+            seen: true,
+            responded: true,
+        },
+        {
+            name: 'The Okafor family',
+            guests: [
+                { name: 'Chioma', attending: true },
+                { name: 'David', attending: true, dietaryRestrictions: 'Diabetic — low-sugar dessert appreciated if possible.' },
+                { name: 'Zara', attending: false },
+            ],
+            seen: true,
+            responded: true,
+            notes: 'Please let us know if a kids’ meal option is available.',
+        },
+        {
+            name: 'Elena Vasquez',
+            guests: [{ name: 'Elena', attending: true, dietaryRestrictions: 'Halal preferred where possible.' }],
+            seen: true,
+            responded: true,
+        },
+        {
+            name: 'Ben Carter',
+            guests: [{ name: 'Ben', attending: true }],
+            seen: true,
+            responded: true,
+            notes: 'Flying in that morning — may be ceremony-only if the flight is delayed.',
+        },
+        {
+            name: 'River & Jamie',
+            guests: [
+                { name: 'River', attending: true, dietaryRestrictions: 'Coeliac — strictly gluten free, cross-contamination matters.' },
+                { name: 'Jamie', attending: true },
+            ],
+            seen: true,
+            responded: true,
+            notes: 'One of us is GF (River); Jamie has no restrictions.',
+        },
+        {
+            name: 'Uncle Theo',
+            guests: [{ name: 'Theo' }],
+        },
+    ];
+
+    private readonly guestbookSeeds: Array<{
+        displayName?: string;
+        content: string;
+        visible: boolean;
+        daysAgo: number;
+    }> = [
+        {
+            displayName: 'The Chen family',
+            content:
+                'We are so happy for you both! Thank you for letting us share in your day — we cannot wait to celebrate on the island.',
+            visible: true,
+            daysAgo: 2,
+        },
+        {
+            displayName: 'Sam T.',
+            content: 'Still smiling from the save-the-date. Counting down!',
+            visible: true,
+            daysAgo: 5,
+        },
+        {
+            displayName: 'Priya',
+            content:
+                'Wishing you a lifetime of laughter and good food. The little ones are already practising their dance moves.',
+            visible: true,
+            daysAgo: 8,
+        },
+        {
+            content:
+                'From everyone at the office — congratulations! We will raise a glass to you on the big day.',
+            visible: true,
+            daysAgo: 11,
+        },
+        {
+            displayName: 'River',
+            content:
+                'Thank you for thinking of every detail for guests with dietary needs. It means more than you know.',
+            visible: true,
+            daysAgo: 14,
+        },
+        {
+            displayName: 'Uncle Theo',
+            content: 'Would not miss it. See you there.',
+            visible: true,
+            daysAgo: 18,
+        },
+        {
+            displayName: 'Morgan & guest',
+            content:
+                'So excited to watch you two tie the knot. Here is to sunshine, good music, and an unforgettable weekend.',
+            visible: true,
+            daysAgo: 21,
+        },
+    ];
 
     async createInvites(db: DatabaseConnection) {
-        const inv1 = await db.invites.create('Alex & Jordan', [
-            await db.invitees.create('Alex', true, 'Vegetarian — no fish, please.'),
-            await db.invitees.create('Jordan', false),
-        ]);
-        inv1.seen = true;
-        inv1.responded = true;
+        for (const row of this.inviteSeeds) {
+            const invitees: Invitee[] = [];
+            for (const g of row.guests) {
+                invitees.push(
+                    await db.invitees.create(g.name, g.attending, g.dietaryRestrictions)
+                );
+            }
+            const invite = await db.invites.create(row.name, invitees);
+            await db.invites.updateStatus(invite.id, 
+                row.seen !== undefined ? row.seen : false, 
+                row.responded !== undefined ? row.responded : false);
+            await db.invites.update(invite.id, row.notes, row.phone, row.email);
+        }
+    }
 
-        const inv2 = await db.invites.create('The Chen family', [
-            await db.invitees.create('Pat', false),
-            await db.invitees.create('Kim', false),
-            await db.invitees.create('Lee', false),
-        ]);
-        inv2.seen = true;
-        inv2.responded = true;
-
-        const inv3 = await db.invites.create('Sam Taylor', [
-            await db.invitees.create('Sam'),
-        ]);
-        inv3.seen = true;
-        inv3.notes = "So excited — let us know if you need anything from us!";
-
-        const inv4 = await db.invites.create('Morgan Lee + guest', [
-            await db.invitees.create('Morgan'),
-            await db.invitees.create('Plus-one'),
-        ]);
-        inv4.seen = true;
-        inv4.notes = "Plus-one’s full name to follow; they’ll share dietary needs once confirmed.";
-
-        const inv5 = await db.invites.create('Priya & Dev', [
-            await db.invitees.create('Priya', true, 'Vegan.'),
-            await db.invitees.create('Dev', true),
-            await db.invitees.create('Asha', true, 'Severe peanut allergy — carries epinephrine.'),
-        ]);
-        inv5.seen = true;
-        inv5.responded = true;
-
-        const inv6 = await db.invites.create('The Okafor family', [
-            await db.invitees.create('Chioma', true),
-            await db.invitees.create('David', true, 'Diabetic — low-sugar dessert appreciated if possible.'),
-            await db.invitees.create('Zara', false),
-        ]);
-        inv6.seen = true;
-        inv6.responded = true;
-        inv6.notes = "Please let us know if a kids’ meal option is available.";
-
-        const inv7 = await db.invites.create('Elena Vasquez', [
-            await db.invitees.create('Elena', true, 'Halal preferred where possible.'),
-        ]);
-        inv7.seen = true;
-        inv7.responded = true;
-
-        const inv8 = await db.invites.create('Ben Carter', [
-            await db.invitees.create('Ben', true),
-        ]);
-        inv8.seen = true;
-        inv8.responded = true;
-        inv8.notes = "Flying in that morning — may be ceremony-only if the flight is delayed.";
-
-        const inv9 = await db.invites.create('River & Jamie', [
-            await db.invitees.create('River', true, 'Coeliac — strictly gluten free, cross-contamination matters.'),
-            await db.invitees.create('Jamie', true),
-        ]);
-        inv9.seen = true;
-        inv9.responded = true;
-        inv9.notes = "One of us is GF (River); Jamie has no restrictions.";
-
-        const inv10 = await db.invites.create('Uncle Theo', [
-            await db.invitees.create('Theo'),
-        ]);
+    async createGuestbookEntries(db: DatabaseConnection) {
+        for (const row of this.guestbookSeeds) {
+            const author = await db.authors.create();
+            const entry = await db.guestbook.create(
+                author,
+                row.visible,
+                row.content,
+                row.displayName
+            );
+            const created = new Date();
+            created.setDate(created.getDate() - row.daysAgo);
+            entry.created = created;
+            entry.updated = created;
+        }
     }
 }
