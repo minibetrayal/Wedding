@@ -1,0 +1,20 @@
+//- Expects res.locals.flash: { success: string[], error: string[], info: string[] }
+mixin flashMessages
+  if flash
+    .container.mt-3
+      .container
+        if flash.success && flash.success.length
+          each msg in flash.success
+            .alert.alert-success.alert-dismissible.fade.show(role="status")
+              = msg
+              button.btn-close(type="button", data-bs-dismiss="alert", aria-label="Dismiss")
+        if flash.error && flash.error.length
+          each msg in flash.error
+            .alert.alert-danger.alert-dismissible.fade.show(role="alert")
+              = msg
+              button.btn-close(type="button", data-bs-dismiss="alert", aria-label="Dismiss")
+        if flash.info && flash.info.length
+          each msg in flash.info
+            .alert.alert-info.alert-dismissible.fade.show(role="status")
+              = msg
+              button.btn-close(type="button", data-bs-dismiss="alert", aria-label="Dismiss")

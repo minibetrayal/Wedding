@@ -1,10 +1,13 @@
 import 'dotenv/config';
 import cookieParser from 'cookie-parser';
+import flash from 'connect-flash';
 import express from 'express';
+import session from 'express-session';
 import path from 'path';
 
 import { HttpError } from './types/HttpError';
 import { STATUS_CODES } from 'http';
+import flashLocals from './middleware/flashLocals';
 import locals from './middleware/locals';
 
 import { database } from './data/database';
@@ -29,6 +32,26 @@ app.locals.basedir = viewsPath;
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const sessionSecret = process.env.SESSION_SECRET || process.env.COOKIE_SECRET;
+
+app.use(
+  session({
+    name: 'sid',
+    secret: sessionSecret || 'development-session-secret-change-me',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    },
+  })
+);
+app.use(flash());
+app.use(flashLocals);
+
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use(locals);

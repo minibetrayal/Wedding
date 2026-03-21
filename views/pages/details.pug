@@ -10,7 +10,7 @@ block styles
   +gemlineStyle
 
 block title
-  | Details
+  | #{coupleNamesShort} — Details
 
 block content
   .container 
@@ -93,7 +93,7 @@ block content
           ul.small.mb-2 
             each event, index in scheduledEvents
               li.d-flex.mb-1 
-                span.fw-semibold(style=`width: 4rem; flex: 0 0 auto;`) #{event.time}
+                span.fw-semibold.d-flex(style=`width: 4.5rem`) #{event.time}
                 span — &nbsp;#{event.description}
         else
           | Schedule TBC

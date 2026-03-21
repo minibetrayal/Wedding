@@ -8,6 +8,10 @@ function toHttpDate(date: Date): string {
     return new Date(date).toUTCString();
 }
 
+router.get('/', (req, res) => {
+    res.render('pages/photos');
+});
+
 router.get('/:photoId', async (req, res, next) => {
     const { photoId } = req.params;
     try {

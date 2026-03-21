@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const okay = [
                 () => form.checkValidity(),
                 ...(form.customValidationFunctions || [])
-            ].every(fn => fn());
+            ].map(fn => fn()).every(Boolean);
 
             if (!okay) {
                 event.preventDefault();

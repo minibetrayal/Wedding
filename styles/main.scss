@@ -7,6 +7,7 @@
 @import "bootstrap/scss/bootstrap";
 
 .heading-script { font-family: $headings-font-family; }
+.vibes-script { font-family: "Great Vibes", cursive; }
 
 .btn-group.rounded-pill {
     &> .btn:first-of-type {
@@ -17,5 +18,17 @@
     &> .btn:last-of-type {
         border-top-right-radius: var(--bs-border-radius-pill);
         border-bottom-right-radius: var(--bs-border-radius-pill);
+    }
+}
+
+button {
+    .collapse-chevron {
+        transition: transform 0.2s ease;
+    }
+
+    &.collapsed {
+        .collapse-chevron {
+            transform: rotate(-90deg);
+        }
     }
 }

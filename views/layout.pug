@@ -1,4 +1,6 @@
 doctype html
+include /mixins/flash
+
 html(lang="en")
   head
     meta(charset="UTF-8")
@@ -8,8 +10,8 @@ html(lang="en")
       block title
         | #{coupleNamesShort}
 
-    //- Google Fonts: Inter (body), Playfair Display (headings)
-    link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap")
+    //- Google Fonts: Inter (body), Playfair Display (headings), Great Vibes (fancy)
+    link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Great+Vibes&display=swap")
 
     //- Bootstrap Icons
     link(rel="stylesheet", href="/icons/bootstrap-icons.min.css")
@@ -35,6 +37,11 @@ html(lang="en")
               a.nav-link(href="/rsvp") RSVP
             li.nav-item
               a.nav-link(href="/guestbook") Guestbook
+            li.nav-item
+              a.nav-link(href="/photos") Photos
+
+    
+    +flashMessages 
 
     block top
 

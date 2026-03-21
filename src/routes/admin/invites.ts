@@ -1,7 +1,6 @@
 import express from 'express';
 
 import { database, DbNotFoundError } from '../../data/database';
-import { HttpError } from '../../types/HttpError';
 
 const router = express.Router();
 
@@ -24,13 +23,14 @@ router.get('/new', (_req, res) => {
 });
 
 router.get('/:inviteId/edit', async (req, res, next) => {
+    const inviteId = req.params.inviteId;
     try {
-        const invite = await database.invites.get(req.params.inviteId);
+        const invite = await database.invites.get(inviteId);
         res.render('pages/admin/invite-edit', { invite, isNew: false });
     } catch (err) {
         if (err instanceof DbNotFoundError) {
-            next(new HttpError(404, err.message));
-            return;
+            req.flash('error', 'Invitation not found');
+            return res.redirect(302, '/admin/invites');
         }
         next(err);
     }
@@ -39,11 +39,12 @@ router.get('/:inviteId/edit', async (req, res, next) => {
 router.post('/:inviteId/delete', async (req, res, next) => {
     try {
         await database.invites.delete(req.params.inviteId);
+        req.flash('success', 'Invitation deleted.');
         res.redirect(302, '/admin/invites');
     } catch (err) {
         if (err instanceof DbNotFoundError) {
-            next(new HttpError(404, err.message));
-            return;
+            req.flash('error', 'Invitation not found');
+            return res.redirect(302, '/admin/invites');
         }
         next(err);
     }
@@ -55,9 +56,124 @@ router.get('/:inviteId', async (req, res, next) => {
         res.render('pages/admin/invite-view', { invite });
     } catch (err) {
         if (err instanceof DbNotFoundError) {
-            next(new HttpError(404, err.message));
-            return;
+            req.flash('error', 'Invitation not found');
+            return res.redirect(302, '/admin/invites');
         }
+        next(err);
+    }
+});
+
+router.post('/', async (req, res, next) => {
+    try {
+        const bodyInvitees = req.body.invitees;
+        if (!bodyInvitees || bodyInvitees.length === 0) {
+            req.flash('error', 'Invitees are required');
+            return res.redirect(302, '/admin/invites/new');
+        }
+        const invitees = [];
+        for (const bodyInvitee of bodyInvitees) {
+            const name = bodyInvitee.name;
+            const attending: boolean | undefined = bodyInvitee.attending === 'true' 
+                ? true 
+                : bodyInvitee.attending === 'false' 
+                    ? false 
+                    : undefined;
+            const dietaryRestrictions: string | undefined = bodyInvitee.dietaryRestrictions || undefined;
+            if (!name) {
+                req.flash('error', 'Guest Name is required');
+                return res.redirect(302, '/admin/invites/new');
+            }
+            const invitee = await database.invitees.create(name, attending, dietaryRestrictions);
+            invitees.push(invitee);
+        }
+        const name = req.body.name;
+        const phone = req.body.phone;
+        const email = req.body.email;
+        const notes = req.body.notes;
+        if (!name) {
+            req.flash('error', 'Recipient Name is required');
+            return res.redirect(302, '/admin/invites/new');
+        }
+        const invite = await database.invites.create(name, invitees);
+        if (phone || email || notes) {
+            await database.invites.update(invite.id, phone || undefined, email || undefined, notes || undefined);
+        }
+        await database.invites.updateStatus(invite.id, req.body.seen === '1', req.body.responded === '1');
+        req.flash('success', 'Invitation created successfully');
+        res.redirect(302, `/admin/invites/${invite.id}`);
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.post('/:inviteId/edit', async (req, res, next) => {
+    try {
+        const inviteId = req.params.inviteId;
+        let invite;
+        try {
+            invite = await database.invites.get(inviteId);
+        } catch (err) {
+            if (err instanceof DbNotFoundError) {
+                req.flash('error', 'Invitation not found');
+                return res.redirect(302, '/admin/invites');
+            }
+            throw err;
+        }
+
+        const bodyInvitees = req.body.invitees;
+        if (!bodyInvitees || bodyInvitees.length === 0) {
+            req.flash('error', 'Invitees are required');
+            return res.redirect(302, `/admin/invites/${inviteId}/edit`);
+        }
+
+        const nextInvitees = [];
+        for (const bodyInvitee of bodyInvitees) {
+            const id = bodyInvitee.id;
+            const name = bodyInvitee.name;
+            const attending: boolean | undefined = bodyInvitee.attending === 'true' 
+                ? true 
+                : bodyInvitee.attending === 'false' 
+                    ? false 
+                    : undefined;
+            const dietaryRestrictions: string | undefined = bodyInvitee.dietaryRestrictions || undefined;
+            if (!name) {
+                req.flash('error', 'Guest Name is required');
+                return res.redirect(302, `/admin/invites/${inviteId}/edit`);
+            }
+            const existing = id ? invite.invitees.find(i => i.id === id) : undefined;
+            if (existing) {
+                await database.invitees.update(existing.id, name, attending, dietaryRestrictions);
+                nextInvitees.push(existing);
+            } else {
+                const created = await database.invitees.create(name, attending, dietaryRestrictions);
+                nextInvitees.push(created);
+            }
+        }
+        const keptIds = new Set(nextInvitees.map((i) => i.id));
+        for (const previous of invite.invitees) {
+            if (!keptIds.has(previous.id)) {
+                await database.invitees.delete(previous.id);
+            }
+        }
+        const name = req.body.name;
+        const phone = req.body.phone;
+        const email = req.body.email;
+        const notes = req.body.notes;
+        if (!name) {
+            req.flash('error', 'Recipient Name is required');
+            return res.redirect(302, `/admin/invites/${inviteId}/edit`);
+        }
+        await database.invites.updateInvite(inviteId, name, nextInvitees);
+        await database.invites.update(
+            invite.id,
+            typeof phone === 'string' && phone.trim() ? phone.trim() : undefined,
+            typeof email === 'string' && email.trim() ? email.trim() : undefined,
+            typeof notes === 'string' && notes.trim() ? notes.trim() : undefined
+        );
+        await database.invites.updateStatus(inviteId, req.body.seen === '1', req.body.responded === '1');
+        req.flash('success', 'Invitation updated successfully');
+        res.redirect(302, `/admin/invites/${invite.id}`);
+    } catch (err) {
         next(err);
     }
 });

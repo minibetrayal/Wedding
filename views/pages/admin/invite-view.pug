@@ -61,6 +61,11 @@ block content
               )
                 i.bi.bi-qr-code(aria-hidden="true")
                 | RSVP QR code
+              a.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.gap-1(
+                href=`/rsvp/${inv.id}`
+              )
+                i.bi.bi-eye(aria-hidden="true")
+                | Go to RSVP page
           dt.col-sm-3.text-muted.small Recipient name
           dd.col-sm-9.mb-3 #{inv.name || '—'}
           dt.col-sm-3.text-muted.small Phone

@@ -1,0 +1,26 @@
+extends /layout
+include /mixins/hero
+
+block title
+  | #{coupleNamesShort} — Photos
+
+block styles
+  +heroStyle
+
+block content
+  .container.py-4
+    +hero('Photo gallery')
+    .row.justify-content-center.mt-4
+      .col-12.col-lg-8.col-xl-7
+        .card.border-0.shadow-sm.overflow-hidden
+          .card-body.p-4.p-md-5
+            p.lead.mb-3.mb-md-4
+              | The professional photo gallery will be uploaded here after the event.
+            p.text-muted.mb-4.mb-md-5
+              | If you would like to share your own photos with us, visit our digital guestbook — we would love to see the day through your eyes.
+            .d-flex.flex-column.flex-sm-row.align-items-stretch.align-items-sm-center.justify-content-center.gap-2
+              a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2(
+                href="/guestbook"
+              )
+                i.bi.bi-journal-text(aria-hidden="true")
+                | Open the guestbook

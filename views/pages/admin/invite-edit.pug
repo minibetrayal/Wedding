@@ -8,6 +8,8 @@
   - formAction: string — POST target (defaults: /admin/invites if isNew, else /admin/invites/:id/edit)
   - htmlFormId: string — DOM id for the form (default: invite-edit-form)
   websiteUrl is available from res.locals for reference (optional)
+  UI: recipient name + each guest name stay visible; other invitation fields and per-guest RSVP/dietary
+  sit in Bootstrap collapses (same field names/POST shape as before).
 
 extends /layout
 include /mixins/inclusions
@@ -50,11 +52,11 @@ block content
       if isNew
         h1.h3.mb-1 Create invitation
         p.text-muted.small.mb-0
-          | Add a recipient name for the invite (e.g. couple or family) and each guest who should appear on it. You can add more details after saving.
+          | Add a recipient name and each guest. Use “more” on each block to open contact info, RSVP flags, and per-guest details when you need to correct them.
       else
         h1.h3.mb-1 Edit invitation
         p.text-muted.small.mb-0
-          | Update the invitation details and guest list. Phone, email, and notes are normally filled in by guests when they RSVP; you can adjust them here if needed.
+          | Recipient and guest names are shown first. Expand the sections below when you need to modify phone, email, notes, RSVP state, or dietary details.
 
     form(
       id=resolvedFormId,
@@ -65,10 +67,6 @@ block content
       .card.border.shadow-sm.mb-4
         .card-body
           h2.h6.text-uppercase.text-muted.mb-3 Invitation
-          if !isNew && inv.id
-            .mb-3
-              .small.text-muted.mb-1 Invite ID
-              code.user-select-all.fs-6.d-block #{inv.id}
           .mb-3
             label.form-label(for="invite-name") Recipient name
               span.text-danger(aria-hidden="true") &nbsp;*
@@ -77,66 +75,83 @@ block content
               name="name",
               required,
               autocomplete="off",
-              placeholder='e.g. Alex & Jordan',
+              placeholder='Recipient Name',
               value=inv.name || ''
             )
             .invalid-feedback Please enter a recipient name for this invitation.
             .form-text Shown on your list and to guests where relevant.
 
-          .row.g-3
-            .col-md-6
-              label.form-label(for="invite-phone") Phone
-                span.visually-hidden (from guest)
-              input#invite-phone.form-control(
-                type="tel",
-                name="phone",
-                autocomplete="tel",
-                placeholder="Not Provided",
-                value=inv.phone || ''
-              )
-              .form-text.small Supplied by the guest when they RSVP.
-            .col-md-6
-              label.form-label(for="invite-email") Email
-                span.visually-hidden (from guest)
-              input#invite-email.form-control(
-                type="email",
-                name="email",
-                autocomplete="email",
-                placeholder="Not Provided",
-                value=inv.email || ''
-              )
-              .form-text.small Optionally supplied by the guest when they RSVP.
-          .mb-0.mt-3
-            label.form-label(for="invite-notes") Notes from guest
-              span.visually-hidden (optional)
-            textarea#invite-notes.form-control(
-              name="notes",
-              rows="2",
-              placeholder="The guest has not provided any notes"
-            ) #{inv.notes || ''}
-            .form-text.small Message or notes the guest leaves when responding.
+          button#invite-edit-invitation-extra-toggle.btn.btn-outline-secondary.d-inline-flex.align-items-center.gap-2.collapsed(
+            type="button",
+            data-bs-toggle="collapse",
+            data-bs-target="#invite-edit-invitation-extra",
+            aria-expanded="false",
+            aria-controls="invite-edit-invitation-extra"
+          )
+            .bi.bi-sliders(aria-hidden="true")
+            span More
+            i.bi.bi-chevron-down.small.collapse-chevron(aria-hidden="true")
 
-          fieldset.mt-3.mb-0.border-0.p-0
-            legend.form-label.small.text-muted.mb-2.px-0 RSVP status
-              span.visually-hidden (optional overrides)
-            p.small.text-muted.mb-2
-              | Normally set when the guest opens the invite or submits an RSVP. Adjust here if you need to correct or reset state.
-            .form-check.mb-2
-              input#invite-seen.form-check-input(
-                type="checkbox",
-                name="seen",
-                value="1",
-                checked=!!inv.seen
-              )
-              label.form-check-label(for="invite-seen") Invite has been seen (guest opened the invite)
-            .form-check.mb-0
-              input#invite-responded.form-check-input(
-                type="checkbox",
-                name="responded",
-                value="1",
-                checked=!!inv.responded
-              )
-              label.form-check-label(for="invite-responded") Guest has responded (RSVP submitted)
+          #invite-edit-invitation-extra.collapse.mt-3
+            .pt-3.border-top
+              if !isNew && inv.id
+                .mb-3
+                  .small.text-muted.mb-1 Invite ID
+                  code.user-select-all.fs-6.d-block #{inv.id}
+              .row.g-3
+                .col-md-6
+                  label.form-label(for="invite-phone") Phone
+                    span.visually-hidden (from guest)
+                  input#invite-phone.form-control(
+                    type="tel",
+                    name="phone",
+                    autocomplete="tel",
+                    placeholder="Not Provided",
+                    value=inv.phone || ''
+                  )
+                  .form-text.small Supplied by the guest when they RSVP.
+                .col-md-6
+                  label.form-label(for="invite-email") Email
+                    span.visually-hidden (from guest)
+                  input#invite-email.form-control(
+                    type="email",
+                    name="email",
+                    autocomplete="email",
+                    placeholder="Not Provided",
+                    value=inv.email || ''
+                  )
+                  .form-text.small Optionally supplied by the guest when they RSVP.
+              .mb-0.mt-3
+                label.form-label(for="invite-notes") Notes from guest
+                  span.visually-hidden (optional)
+                textarea#invite-notes.form-control(
+                  name="notes",
+                  rows="2",
+                  placeholder="Not Provided"
+                ) #{inv.notes || ''}
+                .form-text.small Message or notes the guest leaves when responding.
+
+              fieldset.mt-3.mb-0.border-0.p-0
+                legend.form-label.small.text-muted.mb-2.px-0 RSVP status
+                  span.visually-hidden (optional overrides)
+                p.small.text-muted.mb-2
+                  | Normally set when the guest opens the invite or submits an RSVP. Adjust here if you need to correct or reset state.
+                .form-check.mb-2
+                  input#invite-seen.form-check-input(
+                    type="checkbox",
+                    name="seen",
+                    value="1",
+                    checked=!!inv.seen
+                  )
+                  label.form-check-label(for="invite-seen") Invite has been seen (guest opened the invite)
+                .form-check.mb-0
+                  input#invite-responded.form-check-input(
+                    type="checkbox",
+                    name="responded",
+                    value="1",
+                    checked=!!inv.responded
+                  )
+                  label.form-check-label(for="invite-responded") Guest has responded (RSVP submitted)
 
       .card.border.shadow-sm.mb-4
         .card-body
@@ -145,7 +160,7 @@ block content
               h2.h6.text-uppercase.text-muted.mb-0 Guests
               p.small.text-muted.mb-0
                 | At least one guest is required.
-            button.add-invitee.btn.btn-outline-secondary.btn-sm.d-inline-flex.align-items-center.gap-1(
+            button.add-invitee.btn.btn-outline-secondary.d-inline-flex.align-items-center.gap-1(
               type="button"
             )
               i.bi.bi-plus-lg(aria-hidden="true")
@@ -160,8 +175,9 @@ block content
                   value=invitee.id || ''
                 )
                 - const attendUnset = invitee.attending !== true && invitee.attending !== false
-                .row.g-2.align-items-start
-                  .col.min-w-0
+                //- align-items-end lines actions up with the bottom of the name column (the input), at every width until wrap
+                .d-flex.align-items-end.gap-2
+                  .flex-grow-1.min-w-0
                     label.form-label.small.mb-1(for=`invitee-${index}-name`) Guest name
                       span.text-danger(aria-hidden="true") &nbsp;*
                     input.form-control.invitee-name-input(
@@ -174,55 +190,70 @@ block content
                       value=invitee.name || ''
                     )
                     .invalid-feedback Please enter this guest's name.
-                  .col-12.col-sm-auto
-                    fieldset.p-0.m-0.border-0
-                      legend.form-label.small.mb-1.px-0 Attending
-                      .btn-group.invitee-attending-group.w-100.w-sm-auto.rounded-pill.overflow-hidden(
-                        role="group",
-                        aria-label=`Attending status for guest ${index + 1}`
-                      )
-                        input.btn-check.invitee-attending-radio(
-                          type="radio",
-                          name=`invitees[${index}][attending]`,
-                          id=`invitee-${index}-attend-no`,
-                          value="false",
-                          checked=invitee.attending === false
-                        )
-                        label.btn.btn-outline-danger(for=`invitee-${index}-attend-no`) No
-                        input.btn-check.invitee-attending-radio(
-                          type="radio",
-                          name=`invitees[${index}][attending]`,
-                          id=`invitee-${index}-attend-none`,
-                          value="",
-                          checked=attendUnset
-                        )
-                        label.btn.btn-outline-dark(for=`invitee-${index}-attend-none`) Not answered
-                        input.btn-check.invitee-attending-radio(
-                          type="radio",
-                          name=`invitees[${index}][attending]`,
-                          id=`invitee-${index}-attend-yes`,
-                          value="true",
-                          checked=invitee.attending === true
-                        )
-                        label.btn.btn-outline-primary(for=`invitee-${index}-attend-yes`) Yes
-                .row.g-2.mt-1
-                  .col-12
-                    label.form-label.small.mb-1(for=`invitee-${index}-dietary`) Dietary requirements
-                    textarea.form-control.invitee-dietary-input(
-                      id=`invitee-${index}-dietary`,
-                      name=`invitees[${index}][dietaryRestrictions]`,
-                      rows="2",
-                      placeholder="The guest has not specified any dietary requirements"
-                    ) #{invitee.dietaryRestrictions || ''}
-                .row.mt-2
-                  .col-12.d-flex.justify-content-end
-                    button.btn.btn-outline-danger.remove-invitee(
+                  .d-flex.flex-shrink-0.gap-1.align-items-center
+                    button.invitee-extra-toggle.btn.btn-outline-secondary.d-inline-flex.align-items-center.gap-1.collapsed(
+                      type="button",
+                      data-bs-toggle="collapse",
+                      data-bs-target=`#invitee-${index}-extra`,
+                      aria-expanded="false",
+                      aria-controls=`invitee-${index}-extra`,
+                      aria-label=`More fields for guest ${index + 1}`
+                    )
+                      span.visually-hidden More for guest #{index + 1}
+                      i.bi.bi-sliders(aria-hidden="true")
+                      span.d-none.d-md-inline RSVP & dietary
+                      i.bi.bi-chevron-down.small.collapse-chevron(aria-hidden="true")
+                    button.btn.btn-outline-danger.remove-invitee.d-inline-flex.align-items-center.gap-1(
                       type="button",
                       title="Remove guest",
                       aria-label="Remove guest"
                     )
-                      i.bi.bi-trash.me-1(aria-hidden="true")
-                      | Remove guest
+                      i.bi.bi-trash(aria-hidden="true")
+                      span.d-none.d-md-inline Remove
+
+                .collapse.invitee-extra-collapse.mt-2(id=`invitee-${index}-extra`)
+                  .pt-3.border-top
+                    .row.g-2.align-items-start
+                      .col-12
+                        fieldset.p-0.m-0.border-0
+                          legend.form-label.small.mb-1.px-0 Attending
+                          .btn-group.invitee-attending-group.w-100.w-sm-auto.rounded-pill.overflow-hidden(
+                            role="group",
+                            aria-label=`Attending status for guest ${index + 1}`
+                          )
+                            input.btn-check.invitee-attending-radio(
+                              type="radio",
+                              name=`invitees[${index}][attending]`,
+                              id=`invitee-${index}-attend-no`,
+                              value="false",
+                              checked=invitee.attending === false
+                            )
+                            label.btn.btn-outline-danger(for=`invitee-${index}-attend-no`) No
+                            input.btn-check.invitee-attending-radio(
+                              type="radio",
+                              name=`invitees[${index}][attending]`,
+                              id=`invitee-${index}-attend-none`,
+                              value="",
+                              checked=attendUnset
+                            )
+                            label.btn.btn-outline-dark(for=`invitee-${index}-attend-none`) Not answered
+                            input.btn-check.invitee-attending-radio(
+                              type="radio",
+                              name=`invitees[${index}][attending]`,
+                              id=`invitee-${index}-attend-yes`,
+                              value="true",
+                              checked=invitee.attending === true
+                            )
+                            label.btn.btn-outline-primary(for=`invitee-${index}-attend-yes`) Yes
+                    .row.g-2.mt-1
+                      .col-12
+                        label.form-label.small.mb-1(for=`invitee-${index}-dietary`) Dietary requirements
+                        textarea.form-control.invitee-dietary-input(
+                          id=`invitee-${index}-dietary`,
+                          name=`invitees[${index}][dietaryRestrictions]`,
+                          rows="2",
+                          placeholder="Not Provided"
+                        ) #{invitee.dietaryRestrictions || ''}
 
       .d-flex.flex-wrap.align-items-center.gap-2
         button.btn.btn-primary.d-inline-flex.align-items-center.gap-2(type="submit")
@@ -364,15 +395,29 @@ block script
         wrap.setAttribute('data-invitee-row', '');
         wrap.innerHTML =
           '<input type="hidden" class="invitee-id-input" name="invitees[' + i + '][id]" value="">' +
-          '<div class="row g-2 align-items-start">' +
-          '<div class="col min-w-0">' +
+          '<div class="d-flex align-items-end gap-2">' +
+          '<div class="flex-grow-1 min-w-0">' +
           '<label class="form-label small mb-1" for="invitee-' + i + '-name">Guest name' +
           '<span class="text-danger" aria-hidden="true">&nbsp;*</span></label>' +
           '<input class="form-control invitee-name-input" id="invitee-' + i + '-name" type="text" ' +
           'name="invitees[' + i + '][name]" required autocomplete="name" placeholder="Full name">' +
           '<div class="invalid-feedback">Please enter this guest\'s name.</div>' +
           '</div>' +
-          '<div class="col-12 col-sm-auto">' +
+          '<div class="d-flex flex-shrink-0 gap-1 align-items-center">' +
+          '<button class="invitee-extra-toggle btn btn-outline-secondary d-inline-flex align-items-center gap-1 collapsed" type="button" ' +
+          'data-bs-toggle="collapse" data-bs-target="#invitee-' + i + '-extra" aria-expanded="false" aria-controls="invitee-' + i + '-extra" ' +
+          'aria-label="More fields for guest">' +
+          '<span class="visually-hidden">More for guest</span>' +
+          '<i class="bi bi-sliders" aria-hidden="true"></i>' +
+          '<span class="d-none d-md-inline">RSVP & dietary</span>' +
+          '<i class="bi bi-chevron-down small collapse-chevron" aria-hidden="true"></i>' +
+          '</button>' +
+          '<button class="btn btn-outline-danger remove-invitee d-inline-flex align-items-center gap-1" type="button" title="Remove guest" aria-label="Remove guest">' +
+          '<i class="bi bi-trash" aria-hidden="true"></i><span class="d-none d-md-inline">Remove</span></button>' +
+          '</div></div>' +
+          '<div class="collapse invitee-extra-collapse mt-2" id="invitee-' + i + '-extra">' +
+          '<div class="pt-3 border-top">' +
+          '<div class="row g-2 align-items-start"><div class="col-12">' +
           '<fieldset class="p-0 m-0 border-0">' +
           '<legend class="form-label small mb-1 px-0">Attending</legend>' +
           '<div class="btn-group invitee-attending-group w-100 w-sm-auto rounded-pill overflow-hidden" role="group" aria-label="Attending status for guest">' +
@@ -382,19 +427,13 @@ block script
           '<label class="btn btn-outline-dark" for="invitee-' + i + '-attend-none">Not answered</label>' +
           '<input class="btn-check invitee-attending-radio" type="radio" name="invitees[' + i + '][attending]" id="invitee-' + i + '-attend-yes" value="true">' +
           '<label class="btn btn-outline-primary" for="invitee-' + i + '-attend-yes">Yes</label>' +
-          '</div></fieldset>' +
-          '</div></div>' +
-          '<div class="row g-2 mt-1">' +
-          '<div class="col-12">' +
+          '</div></fieldset></div></div>' +
+          '<div class="row g-2 mt-1"><div class="col-12">' +
           '<label class="form-label small mb-1" for="invitee-' + i + '-dietary">Dietary requirements</label>' +
           '<textarea class="form-control invitee-dietary-input" id="invitee-' + i + '-dietary" name="invitees[' + i + '][dietaryRestrictions]" rows="2" placeholder="The guest has not specified any dietary requirements"></textarea>' +
-          '</div></div>' +
-          '<div class="row mt-2">' +
-          '<div class="col-12 d-flex justify-content-end">' +
-          '<button class="btn btn-outline-danger remove-invitee" type="button" title="Remove guest" aria-label="Remove guest">' +
-          '<i class="bi bi-trash me-1" aria-hidden="true"></i>Remove guest</button>' +
-          '</div></div>';
+          '</div></div></div></div>';
         rowsContainer.appendChild(wrap);
+        reindexRows();
         syncRemoveButtons();
         var input = wrap.querySelector('.invitee-name-input');
         if (input) input.focus();
@@ -455,6 +494,18 @@ block script
           }
           if (labels[0]) labels[0].setAttribute('for', 'invitee-' + i + '-name');
           if (labels[1]) labels[1].setAttribute('for', 'invitee-' + i + '-dietary');
+          var extraCollapse = row.querySelector('.invitee-extra-collapse');
+          var extraToggle = row.querySelector('.invitee-extra-toggle');
+          if (extraCollapse) {
+            extraCollapse.id = 'invitee-' + i + '-extra';
+          }
+          if (extraToggle) {
+            extraToggle.setAttribute('data-bs-target', '#invitee-' + i + '-extra');
+            extraToggle.setAttribute('aria-controls', 'invitee-' + i + '-extra');
+            extraToggle.setAttribute('aria-label', 'More fields for guest ' + (i + 1));
+            var vh = extraToggle.querySelector('.visually-hidden');
+            if (vh) vh.textContent = 'More for guest ' + (i + 1);
+          }
         });
       }
 

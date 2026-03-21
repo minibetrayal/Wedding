@@ -1,5 +1,15 @@
 extends /layout
 
+block append styles
+  style.
+    .invite-list-item--has-details {
+      background-color: rgba(var(--bs-info-rgb), 0.07);
+    }
+    a.invite-list-item--has-details.list-group-item-action:hover,
+    a.invite-list-item--has-details.list-group-item-action:focus-visible {
+      background-color: rgba(var(--bs-info-rgb), 0.12);
+    }
+
 block title
   | Invitations — Admin
 
@@ -30,7 +40,7 @@ block content
       .col
         .card.h-100.border.shadow-sm
           .card-body.text-center.py-3.px-2
-            .fs-2.fw-semibold.text-body #{invites.reduce((acc, invite) => acc + invite.attending(), 0)}
+            .fs-2.fw-semibold.text-body #{invites.reduce((acc, invite) => acc + invite.invitees.length, 0)}
             .small.text-muted Guests invited
       .col
         .card.h-100.border.shadow-sm
@@ -56,6 +66,7 @@ block content
     h2.h6.text-muted.text-uppercase.mb-2 All invitations
     if invites.length
       p.small.text-muted.mb-3
+        span.d-block.mb-2 Status (left border)
         span.ms-1
           span.text-secondary.me-2.text-nowrap
             i.bi.bi-envelope.me-1(aria-hidden="true")
@@ -66,9 +77,15 @@ block content
           span.text-warning.me-2.text-nowrap
             i.bi.bi-x-lg.me-1(aria-hidden="true")
             | Declined
-          span.text-success.text-nowrap 
+          span.text-success.me-2.text-nowrap
             i.bi.bi-people-fill.me-1(aria-hidden="true")
             | Attending
+          span.text-dark.me-2.text-nowrap
+            i.bi.bi-chat-left-text.me-1(aria-hidden="true")
+            | Guest note on invite
+          span.text-dark.text-nowrap
+            i.bi.bi-fork-knife.me-1(aria-hidden="true")
+            | Special dietary info
 
       .list-group.shadow-sm
         - 
@@ -80,15 +97,36 @@ block content
           ]
         each invite in invites
           - const index = invite.seen ? (invite.responded ? (invite.attending() > 0 ? 3 : 2) : 1) : 0;
+          - const hasGuestNote = typeof invite.notes === 'string' && invite.notes.trim().length > 0
+          - const hasAttendingDietary = invite.invitees.some((g) => g.attending === true && typeof g.dietaryRestrictions === 'string' && g.dietaryRestrictions.trim().length > 0)
+          - const hasDetailsHighlight = hasGuestNote || hasAttendingDietary
           a.list-group-item.list-group-item-action.d-flex.align-items-center.gap-3.py-3.px-3(
             href=`/admin/invites/${invite.id}`,
-            class=`border-start border-4 border-${d[index][1]}`
+            class=[
+              `border-start border-4 border-${d[index][1]}`,
+              hasDetailsHighlight && 'invite-list-item--has-details',
+            ].filter(Boolean).join(' ')
           )
             .flex-shrink-0
               i.bi.fs-4(class=`bi-${d[index][2]} text-${d[index][1]}` aria-hidden="true")
             .flex-grow-1.min-w-0
-              .fw-semibold.text-body #{invite.name}
-              .small.text-muted #{invite.attending()} attending · #{invite.invitees.length} invited
+              .fw-semibold.text-body.d-flex.flex-wrap.align-items-center.gap-2
+                span #{invite.name}
+                if hasGuestNote
+                  span.badge.rounded-pill.text-bg-dark.border.border-dark(
+                    title="This invite has guest notes"
+                  )
+                    i.bi.bi-chat-left-text(aria-hidden="true")
+                    span.visually-hidden Guest note
+                    span.d-none.d-sm-inline.ms-1 Note
+                if hasAttendingDietary
+                  span.badge.rounded-pill.text-bg-dark.border.border-dark(
+                    title="At least one attending guest listed dietary requirements"
+                  )
+                    i.bi.bi-fork-knife(aria-hidden="true")
+                    span.visually-hidden Dietary requirements
+                    span.d-none.d-sm-inline.ms-1 Dietary
+              .small.text-muted.mt-2.mt-sm-0 #{invite.attending()} attending · #{invite.invitees.length} invited
             .flex-shrink-0.small.text-muted.text-end
               span.visually-hidden Status:&nbsp;
               | #{d[index][0]}

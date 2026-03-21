@@ -27,19 +27,19 @@ router.post('/login', (req, res) => {
     const next = safeAdminRedirectPath(req.body?.next);
 
     if (!verifyAdminPassword(password)) {
-        res.status(401).render('pages/admin/login', {
-            error: 'Invalid password.',
-            next,
-        });
-        return;
+        req.flash('error', 'Invalid password.');
+        const q = new URLSearchParams({ next });
+        return res.redirect(302, `/admin/login?${q.toString()}`);
     }
 
     setAdminAuthCookie(res);
+    req.flash('success', 'Logged in successfully');
     res.redirect(302, next);
 });
 
 router.get('/logout', (req, res) => {
     clearAdminAuthCookie(res);
+    req.flash('success', 'Logged out successfully');
     res.redirect(302, '/');
 });
 

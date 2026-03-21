@@ -9,10 +9,4 @@
     border-bottom-left-radius: var(--bs-card-inner-border-radius);
     border-bottom-right-radius: var(--bs-card-inner-border-radius);
   }
-
-  button:not(.collapsed) {
-    .page-toc-chevron {
-      transform: rotate(180deg);
-    }
-  }
 }

@@ -248,10 +248,11 @@ class InviteeConnection {
         tempStore.invitees = tempStore.invitees.filter(i => i.id !== inviteeId);
     }
     
-    async update(inviteeId: string, name: string, dietaryRestrictions?: string): Promise<void> {
+    async update(inviteeId: string, name: string, attending?: boolean, dietaryRestrictions?: string): Promise<void> {
         const invitee = tempStore.invitees.find(i => i.id === inviteeId);
         if (!invitee) throw new DbNotFoundError('Invitee');
         invitee.name = name;
+        invitee.attending = attending;
         invitee.dietaryRestrictions = dietaryRestrictions;
     }
 }
@@ -323,12 +324,12 @@ class DummyData {
 
     async createInvites(db: DatabaseConnection) {
         const inv1 = await db.invites.create('Alex & Jordan', [
-            await db.invitees.create('Alex', true),
+            await db.invitees.create('Alex', true, 'Vegetarian — no fish, please.'),
             await db.invitees.create('Jordan', false),
         ]);
         inv1.seen = true;
         inv1.responded = true;
-        
+
         const inv2 = await db.invites.create('The Chen family', [
             await db.invitees.create('Pat', false),
             await db.invitees.create('Kim', false),
@@ -341,18 +342,55 @@ class DummyData {
             await db.invitees.create('Sam'),
         ]);
         inv3.seen = true;
+        inv3.notes = "So excited — let us know if you need anything from us!";
 
         const inv4 = await db.invites.create('Morgan Lee + guest', [
             await db.invitees.create('Morgan'),
             await db.invitees.create('Plus-one'),
         ]);
+        inv4.seen = true;
+        inv4.notes = "Plus-one’s full name to follow; they’ll share dietary needs once confirmed.";
 
         const inv5 = await db.invites.create('Priya & Dev', [
-            await db.invitees.create('Priya', true),
+            await db.invitees.create('Priya', true, 'Vegan.'),
             await db.invitees.create('Dev', true),
-            await db.invitees.create('Asha', true),
+            await db.invitees.create('Asha', true, 'Severe peanut allergy — carries epinephrine.'),
         ]);
         inv5.seen = true;
         inv5.responded = true;
+
+        const inv6 = await db.invites.create('The Okafor family', [
+            await db.invitees.create('Chioma', true),
+            await db.invitees.create('David', true, 'Diabetic — low-sugar dessert appreciated if possible.'),
+            await db.invitees.create('Zara', false),
+        ]);
+        inv6.seen = true;
+        inv6.responded = true;
+        inv6.notes = "Please let us know if a kids’ meal option is available.";
+
+        const inv7 = await db.invites.create('Elena Vasquez', [
+            await db.invitees.create('Elena', true, 'Halal preferred where possible.'),
+        ]);
+        inv7.seen = true;
+        inv7.responded = true;
+
+        const inv8 = await db.invites.create('Ben Carter', [
+            await db.invitees.create('Ben', true),
+        ]);
+        inv8.seen = true;
+        inv8.responded = true;
+        inv8.notes = "Flying in that morning — may be ceremony-only if the flight is delayed.";
+
+        const inv9 = await db.invites.create('River & Jamie', [
+            await db.invitees.create('River', true, 'Coeliac — strictly gluten free, cross-contamination matters.'),
+            await db.invitees.create('Jamie', true),
+        ]);
+        inv9.seen = true;
+        inv9.responded = true;
+        inv9.notes = "One of us is GF (River); Jamie has no restrictions.";
+
+        const inv10 = await db.invites.create('Uncle Theo', [
+            await db.invitees.create('Theo'),
+        ]);
     }
 }
