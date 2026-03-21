@@ -2,6 +2,7 @@ import express from 'express';
 
 import { database, DbNotFoundError } from '../data/database';
 import { hasValidAdminCookie } from '../middleware/adminAuth';
+import { clearRsvpCookie, getRsvpCookie, setRsvpCookie } from '../middleware/rsvpCookie';
 import { normalizeArray } from '../util/arrayUtils';
 
 const router = express.Router();
@@ -12,9 +13,37 @@ function normalizeInviteCode(raw: unknown): string {
     return raw.trim().replace(/\s+/g, '').toUpperCase();
 }
 
-router.get('/', (req, res) => {
-    const inviteCode = req.query.inviteCode;
-    res.render('pages/rsvp', { inviteCode });
+router.get('/', async (req, res, next) => {
+    try {
+        if (req.query.clear !== undefined) {
+            clearRsvpCookie(res);
+            return res.redirect(302, '/rsvp');
+        }
+
+        const inviteCode = req.query.inviteCode;
+        const explicitCode =
+            typeof inviteCode === 'string' && inviteCode.trim().length > 0 ? inviteCode : undefined;
+
+        if (!explicitCode) {
+            const remembered = getRsvpCookie(req);
+            if (remembered) {
+                try {
+                    await database.invites.get(remembered);
+                    return res.redirect(302, `/rsvp/${encodeURIComponent(remembered)}`);
+                } catch (err) {
+                    if (err instanceof DbNotFoundError) {
+                        clearRsvpCookie(res);
+                    } else {
+                        throw err;
+                    }
+                }
+            }
+        }
+
+        res.render('pages/rsvp', { inviteCode });
+    } catch (err) {
+        next(err);
+    }
 });
 
 router.post('/', async (req, res, next) => {
@@ -46,6 +75,9 @@ router.get('/:inviteId', async (req, res, next) => {
         const invite = await database.invites.get(inviteId);
         if (!invite.seen && !hasValidAdminCookie(req)) {
             await database.invites.updateStatus(inviteId, true, invite.responded);
+        }
+        if (!hasValidAdminCookie(req)) {
+            setRsvpCookie(res, invite.id);
         }
         res.render('pages/rsvp-edit', { invite });
     } catch (err) {

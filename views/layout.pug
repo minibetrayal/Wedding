@@ -10,21 +10,19 @@ html(lang="en")
       block title
         | #{coupleNamesShort}
 
-    //- Google Fonts: Inter (body), Playfair Display (headings), Great Vibes (fancy)
-    link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Great+Vibes&display=swap")
-
-    //- Bootstrap Icons
+    link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap")
+    link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap")
+    link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap")
     link(rel="stylesheet", href="/icons/bootstrap-icons.min.css")
-
-    //- App styles
-    link(rel="stylesheet", href="/styles/main.css")
-    
+    link(rel="stylesheet", href="/styles/main.css")    
     block styles
+
+    link(rel="icon" type="image/svg+xml" href="/images/anm.svg")
     
   body.d-flex.flex-column.min-vh-100
     nav.navbar.navbar-expand-lg.bg-body.border-bottom.sticky-top(role="navigation")
       .container 
-        a.navbar-brand.fw-semibold(href="/") #{coupleNamesShort} 
+        a.navbar-brand.fw-semibold.heading-script(href="/") #{coupleNamesShort} 
 
         button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#main-nav" aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation")
           span.navbar-toggler-icon

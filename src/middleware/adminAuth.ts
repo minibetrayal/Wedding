@@ -8,6 +8,13 @@ const ADMIN_COOKIE_VALUE = '1';
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
+const adminCookieOptions = {
+    signed: true,
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+};
+
 /**
  * Compare password to env using SHA-256 so we can use timingSafeEqual (fixed-length digests).
  */
@@ -46,15 +53,6 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
     const q = new URLSearchParams({ next: nextParam });
     res.redirect(302, `/admin/login?${q.toString()}`);
 }
-
-const adminCookieOptions = {
-    signed: true,
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    path: '/admin',
-    // Match setAdminAuthCookie so the browser clears the same cookie
-    secure: process.env.NODE_ENV === 'production',
-};
 
 /**
  * Set the admin cookie.
