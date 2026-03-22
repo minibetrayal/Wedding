@@ -1,0 +1,233 @@
+//-
+  New or edit guestbook message. Locals:
+  - isNew: boolean — true = create, false = edit existing
+  - entry: GuestbookEntry | null — when editing, entry to prefill (id, displayName, content, visible, photo)
+  - hasExistingPhoto: boolean — true when editing and entry already has a photo (client validation)
+
+extends /layout
+include /mixins/inclusions
+include /mixins/hero
+
+block title
+  if isNew
+    | #{coupleNamesShort} — Write a guestbook message
+  else
+    | #{coupleNamesShort} — Edit guestbook message
+
+block styles
+  +heroStyle
+
+block content
+  -
+    const ent = !isNew && typeof entry !== 'undefined' && entry ? entry : null
+    const formAction = isNew ? '/guestbook/new' : '/guestbook/' + (ent && ent.id ? ent.id : '') + '/edit'
+    const nameVal = ent && ent.displayName ? ent.displayName : ''
+    const contentVal = ent && ent.content ? ent.content : ''
+    const showPublic = !ent || ent.visible !== false
+
+  .container.py-4
+    +hero('Guestbook')
+
+    .row.justify-content-center.mt-4
+      .col-12.col-lg-10.col-xl-8
+        .mb-3
+          if isNew
+            a.btn.btn-outline-primary(href="/guestbook")
+              i.bi.bi-arrow-left.me-1(aria-hidden="true")
+              | Back to guestbook
+          else if ent
+            a.btn.btn-outline-primary(href='/guestbook/' + ent.id)
+              i.bi.bi-arrow-left.me-1(aria-hidden="true")
+              | Back to message
+
+        h2.h4.mb-4.text-body-secondary
+          if isNew
+            | Write a message
+          else
+            | Edit your message
+
+        .card.border-0.shadow-sm
+          .card-body.p-4.p-md-5
+            form#guestbook-edit-form(
+              method="post",
+              action=formAction,
+              enctype="multipart/form-data",
+              novalidate,
+              data-existing-photo=entry && entry.photo ? 'true' : 'false'
+            )
+              .mb-4
+                label.form-label(for="guestbook-display-name")
+                  | Name
+                  = ' '
+                  span.text-muted.fw-normal (optional)
+                input#guestbook-display-name.form-control(
+                  type="text",
+                  name="displayName",
+                  value=nameVal,
+                  maxlength="120",
+                  autocomplete="name",
+                  placeholder="How you would like to appear"
+                )
+                .form-text If you leave this blank, you will appear as “Guest”.
+
+              .guestbook-body-fields.mb-4
+                label.form-label(for="guestbook-content") Message
+                textarea#guestbook-content.form-control(
+                  name="content",
+                  rows="8",
+                  maxlength="8000",
+                  placeholder="Share a note, a memory, or good wishes… (optional if you add a photo)"
+                ) #{contentVal}
+                .guestbook-body-feedback.invalid-feedback.d-none
+                  | Please add a message or choose a photo (or both).
+                .form-text
+                  | Add a message, a photo, or both. At least one is required.
+
+                label.form-label.mt-3(for="guestbook-photo") Photo
+                if ent && ent.photo
+                  .d-flex.align-items-start.gap-3.mb-3.p-2.rounded.border.bg-body-tertiary
+                    img.rounded.border.flex-shrink-0.thumbnail(
+                      src='/photos/' + ent.photo.id,
+                      alt=ent.photo.name ? 'Current photo: ' + ent.photo.name : 'Current photo',
+                    )
+                    .min-w-0
+                      p.small.fw-semibold.text-body-secondary.mb-1 Current photo
+                      p.small.text-muted.text-break.mb-1.font-monospace(title=ent.photo.name) #{ent.photo.name}
+                      p.small.text-muted.mb-0 Upload a new file above to replace it.
+                input#guestbook-photo.form-control(
+                  type="file",
+                  name="photo",
+                  accept="image/*"
+                )
+                .guestbook-body-feedback.invalid-feedback.d-none
+                  | Please add a message or choose a photo (or both).
+                .form-text JPEG, PNG, WebP, GIF, etc. Optional if you wrote a message above.
+
+              .form-check.mb-4
+                input#guestbook-visible.form-check-input(
+                  type="checkbox",
+                  name="visible",
+                  value="1",
+                  checked=showPublic
+                )
+                label.form-check-label(for="guestbook-visible")
+                  | Show my message on the public guestbook
+                .form-text.small.text-muted
+                  | If unchecked, other people won't be able to see your message on the public page, but #{coupleNames} will still be able to see it!
+
+              .d-flex.flex-wrap.gap-2
+                button.btn.btn-primary(type="submit")
+                  if isNew
+                    | Post message
+                  else
+                    | Save changes
+                if isNew
+                  a.btn.btn-outline-secondary(href="/guestbook") Cancel
+                else if ent
+                  a.btn.btn-outline-secondary(href='/guestbook/' + ent.id) Cancel
+
+        if !isNew && ent
+          hr.my-4.opacity-25
+          section.border.border-danger.rounded-3.p-3.p-md-4.mb-4(aria-labelledby="delete-guestbook-section-title")
+            h2#delete-guestbook-section-title.h6.text-danger.mb-2 Danger zone
+            p.small.text-muted.mb-3
+              | Permanently delete this message and any photo attached to it. This cannot be undone.
+            button#delete-guestbook-open.btn.btn-outline-danger.d-inline-flex.align-items-center.gap-2(
+              type="button",
+              data-bs-toggle="modal",
+              data-bs-target="#delete-guestbook-modal"
+            )
+              i.bi.bi-trash(aria-hidden="true")
+              | Delete message
+          form#delete-guestbook-form.visually-hidden(
+            method="post",
+            action='/guestbook/' + ent.id + '/delete',
+            aria-hidden="true",
+            tabindex="-1"
+          )
+
+block modal
+  if !isNew && ent
+    #delete-guestbook-modal.modal.fade(
+      tabindex="-1",
+      aria-labelledby="delete-guestbook-modal-label",
+      aria-describedby="delete-guestbook-modal-body",
+      aria-hidden="true"
+    )
+      .modal-dialog.modal-dialog-centered
+        .modal-content.border-danger
+          .modal-header
+            h5#delete-guestbook-modal-label.modal-title.text-danger Delete this message?
+            button.btn-close(
+              type="button",
+              data-bs-dismiss="modal",
+              aria-label="Close"
+            )
+          #delete-guestbook-modal-body.modal-body
+            p.fw-semibold.mb-2
+              | This will permanently remove your guestbook post
+              if ent.displayName && ent.displayName.trim()
+                |  (shown as “#{ent.displayName.trim()}”)
+              | .
+            p.small.text-muted.mb-0
+              | This cannot be undone.
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button#delete-guestbook-modal-confirm.btn.btn-danger(type="button") Yes, delete message
+
+block script
+  +script('formValidate')
+  script.
+    document.addEventListener('DOMContentLoaded', function () {
+      var form = document.getElementById('guestbook-edit-form');
+      var content = document.getElementById('guestbook-content');
+      var photo = document.getElementById('guestbook-photo');
+      var feedback = document.getElementById('guestbook-body-feedback');
+      if (!form || !content || !photo) return;
+
+      function clearBodyInvalid() {
+        content.classList.remove('is-invalid');
+        photo.classList.remove('is-invalid');
+        document.querySelectorAll('.guestbook-body-feedback').forEach(function (feedback) {
+          feedback.classList.add('d-none');
+          feedback.style.display = '';
+        })
+      }
+
+      function hasExistingPhoto() {
+        return form.getAttribute('data-existing-photo') === 'true';
+      }
+
+      form.customValidationFunctions = form.customValidationFunctions || [];
+      form.customValidationFunctions.push(function () {
+        var text = (content.value || '').trim();
+        var hasFile = photo.files && photo.files.length > 0;
+        var ok = Boolean(text || hasFile || hasExistingPhoto());
+        if (ok) {
+          clearBodyInvalid();
+          return true;
+        }
+        content.classList.add('is-invalid');
+        photo.classList.add('is-invalid');
+        document.querySelectorAll('.guestbook-body-feedback').forEach(function (feedback) {
+          feedback.classList.remove('d-none');
+          feedback.style.display = 'block';
+        })
+        return false;
+      });
+
+      content.addEventListener('input', clearBodyInvalid);
+      photo.addEventListener('change', clearBodyInvalid);
+    });
+  script.
+    (function () {
+      var deleteForm = document.getElementById('delete-guestbook-form');
+      var deleteModalConfirm = document.getElementById('delete-guestbook-modal-confirm');
+      var deleteModalEl = document.getElementById('delete-guestbook-modal');
+      if (!deleteForm || !deleteModalConfirm || !deleteModalEl || typeof bootstrap === 'undefined') return;
+      var deleteModalInstance = bootstrap.Modal.getOrCreateInstance(deleteModalEl);
+      deleteModalConfirm.addEventListener('click', function () {
+        deleteModalInstance.hide();
+        deleteForm.submit();
+      });
+    })();

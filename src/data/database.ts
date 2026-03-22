@@ -19,6 +19,8 @@ class TempStore {
     settings: Settings = new Settings();
     photos: Photo[] = [];
     invitees: Invitee[] = [];
+    /** Set in development only; used by `GET /guestbook/__dev/fixture-author`. */
+    guestbookDevFixtureAuthorId?: string;
 
     private created: Set<string> = new Set();
 
@@ -102,6 +104,10 @@ class AuthorConnection {
         return author;
     }
 
+    async getAll(): Promise<Author[]> {
+        return tempStore.authors;
+    }
+
     async create(): Promise<Author> {
         const author = new Author(tempStore.createUuid());
         tempStore.authors.push(author);
@@ -120,10 +126,14 @@ class GuestbookConnection {
         return tempStore.guestbook;
     }
 
+    async count(): Promise<number> {
+        return tempStore.guestbook.length;
+    }
+
     async create(
         author: Author,
         visible: boolean,
-        content: string,
+        content?: string,
         displayName?: string,
         photo?: Photo
     ): Promise<GuestbookEntry> {
@@ -135,7 +145,7 @@ class GuestbookConnection {
             displayName,
             photo
         );
-        tempStore.guestbook.push(entry);
+        tempStore.guestbook.unshift(entry);
         return entry;
     }
 
@@ -148,7 +158,7 @@ class GuestbookConnection {
     async update(
         entryId: string,
         visible: boolean,
-        content: string,
+        content?: string,
         displayName?: string,
         photo?: Photo
     ): Promise<void> {
@@ -190,16 +200,16 @@ class PhotoConnection {
     async getPhoto(photoId: string): Promise<Buffer> {
         const photo = tempStore.photos.find(p => p.id === photoId);
         if (!photo) throw new DbNotFoundError('Photo');
-        const filePath = path.join(photosDir, photo.id);
+        const filePath = path.join(photosDir, photo.filename());
         return await fs.promises.readFile(filePath);
     }
 
     async create(name: string, mimeType: string, data: Buffer): Promise<Photo> {
-        const photo = new Photo(tempStore.createUuid(), name,mimeType);
+        const photo = new Photo(tempStore.createUuid(), name, mimeType);
         tempStore.photos.push(photo);
 
         await fs.promises.mkdir(photosDir, { recursive: true });
-        const filePath = path.join(photosDir, photo.id);
+        const filePath = path.join(photosDir, photo.filename());
         await fs.promises.writeFile(filePath, data);
         return photo;
     }
@@ -208,21 +218,8 @@ class PhotoConnection {
         const photo = tempStore.photos.find(p => p.id === photoId);
         tempStore.photos = tempStore.photos.filter(p => p.id !== photoId);
         if (photo) {
-            const filePath = path.join(photosDir, photo.id);
+            const filePath = path.join(photosDir, photo.filename());
             await fs.promises.unlink(filePath).catch(() => { /* ignore if file missing */ });
-        }
-    }
-
-    async update(photoId: string, name: string, mimeType: string, data?: Buffer): Promise<void> {
-        const photoFile = tempStore.photos.find(p => p.id === photoId);
-        if (!photoFile) throw new DbNotFoundError('Photo');
-        const photo = new Photo(photoFile.id, name, mimeType);
-        tempStore.photos = tempStore.photos.map(p => p.id === photoId ? photo : p);
-
-        if (data) {
-            await fs.promises.mkdir(photosDir, { recursive: true });
-            const filePath = path.join(photosDir, photo.id);
-            await fs.promises.writeFile(filePath, data);
         }
     }
 }
@@ -285,6 +282,7 @@ class DatabaseConnection {
         if (!this.initPromise) {
             this.initPromise = (async () => {
                 try {
+                    await fs.promises.rm(photosDir, { recursive: true, force: true });
                     const dummyData = new DummyData();
                     await dummyData.createInvites(this);
                     await dummyData.createGuestbookEntries(this);
@@ -297,6 +295,11 @@ class DatabaseConnection {
             })();
         }
         return this.initPromise;
+    }
+
+    /** Development: author id with fixture posts for guestbook list states (see guestbook dev route). */
+    getGuestbookDevFixtureAuthorId(): string | undefined {
+        return tempStore.guestbookDevFixtureAuthorId;
     }
 }
 
@@ -420,13 +423,14 @@ class DummyData {
         {
             displayName: 'The Chen family',
             content:
-                'We are so happy for you both! Thank you for letting us share in your day — we cannot wait to celebrate on the island.',
+                'We are so happy for you both, and we have been trying to find the right words since the invitation arrived. Your kindness over the years has meant the world to our whole family. From the late-night group chats planning this weekend to the hundred tiny details you have thought of for every guest, it shows how much heart you put into everything. We cannot wait to watch you walk down the aisle, share a meal under the lights, and embarrass ourselves on the dance floor in your honour. Thank you for letting us be part of it. With love from everyone at our table — we are counting the sleeps.',
             visible: true,
             daysAgo: 2,
         },
         {
             displayName: 'Sam T.',
-            content: 'Still smiling from the save-the-date. Counting down!',
+            content:
+                'Still smiling from the save-the-date — honestly, I have it pinned above my desk and every colleague who walks past asks about it. Counting down feels inadequate; I have a spreadsheet of outfits, a playlist called “pre-wedding hype,” and a group chat that will not stop sending heart emojis. You two have been the steady centre of our friend group for so long that seeing you make it official is going to wreck me in the best way. I promise to behave during the ceremony and make up for it on the dance floor. Cannot wait to raise a glass, ugly-cry during the vows, and tell embarrassing stories only half of which are true.',
             visible: true,
             daysAgo: 5,
         },
@@ -439,7 +443,7 @@ class DummyData {
         },
         {
             content:
-                'From everyone at the office — congratulations! We will raise a glass to you on the big day.',
+                'From everyone at the office — congratulations! We will raise a glass to you on the big day. The kitchen whiteboard is already covered in doodled hearts and someone printed your save-the-date for the notice board (sorry if that is weird; we are invested). Half of us only met you through work retreats and somehow you still invited us like family. We have pooled for a gift, argued politely about wrapping paper, and scheduled the group photo for the reception whether you like it or not. Wishing you calm inboxes until then, zero spreadsheet errors, and a honeymoon where nobody asks you to “jump on a quick call.”',
             visible: true,
             daysAgo: 11,
         },
@@ -462,6 +466,182 @@ class DummyData {
                 'So excited to watch you two tie the knot. Here is to sunshine, good music, and an unforgettable weekend.',
             visible: true,
             daysAgo: 21,
+        },
+        {
+            displayName: 'Alex & Jordan',
+            content:
+                'From your first RSVP to this — we are cheering for you both every step of the way. We still remember the night you told us in that cramped booth at the diner, napkins everywhere, laughing so hard the waiter asked if we needed water. Cannot wait to dance badly together, hold your jackets during photos, and be the ones who remember where you left your phones. You have built something rare: a partnership that is kind in public and honest in private. We are proud of you, grateful to know you, and already arguing over who cries first when the music starts.',
+            visible: true,
+            daysAgo: 3,
+        },
+        {
+            displayName: 'Chioma',
+            content: 'Thank you for making the weekend so easy for families. The kids are already asking about the cake.',
+            visible: true,
+            daysAgo: 4,
+        },
+        {
+            content: 'A little note from the neighbours — we will water your plants while you are away. Congratulations!',
+            visible: true,
+            daysAgo: 6,
+        },
+        {
+            displayName: 'David O.',
+            content: 'Honoured to be invited. Looking forward to the ceremony and whatever chaos the dance floor brings.',
+            visible: true,
+            daysAgo: 7,
+        },
+        {
+            displayName: 'Elena',
+            content: 'Your love for detail shows in every update you send. Wishing you calm nerves and blue skies.',
+            visible: true,
+            daysAgo: 9,
+        },
+        {
+            displayName: 'Jamie',
+            content: 'River says hi too — we are practising our “congratulations” faces for photos. See you soon!',
+            visible: true,
+            daysAgo: 10,
+        },
+        {
+            displayName: 'Kim Chen',
+            content: 'Pat and Lee send love as well. This is going to be beautiful.',
+            visible: true,
+            daysAgo: 12,
+        },
+        {
+            displayName: 'Dev',
+            content: 'Priya told me to keep this short: we are thrilled. Also she says the playlist better have bangers.',
+            visible: true,
+            daysAgo: 13,
+        },
+        {
+            displayName: 'Zara',
+            content: 'I will be the one hyping everyone up at the reception. Fair warning.',
+            visible: true,
+            daysAgo: 15,
+        },
+        {
+            content: 'Your uni friends (you know who we are) — still cannot believe it. In the best way. Much love.',
+            visible: true,
+            daysAgo: 16,
+        },
+        {
+            displayName: 'Asha',
+            content: 'Thank you for the clear allergy info on the site. Makes parents breathe easier. See you there!',
+            visible: true,
+            daysAgo: 17,
+        },
+        {
+            displayName: 'Ben’s mum',
+            content: 'Proud of you both from afar. We will be watching the clock that day and smiling.',
+            visible: true,
+            daysAgo: 19,
+        },
+        {
+            displayName: 'Lee',
+            content: 'Third Chen here — honestly just here for the food and the vows. Mostly the vows.',
+            visible: true,
+            daysAgo: 20,
+        },
+        {
+            displayName: 'Sam’s partner',
+            content: 'Sam made me write something heartfelt. So: you two deserve every good thing. There.',
+            visible: true,
+            daysAgo: 22,
+        },
+        {
+            displayName: 'Florist team',
+            content: '(Pretend this is not us testing the guestbook.) The flowers are going to be stunning. — J.',
+            visible: true,
+            daysAgo: 23,
+        },
+        {
+            content: 'To the couple: thank you for choosing a weekend we could all make work. Grateful.',
+            visible: true,
+            daysAgo: 24,
+        },
+        {
+            displayName: 'Morgan',
+            content: 'Plus-one says they are in. Formal name incoming — promise we are not holding you hostage with spreadsheets.',
+            visible: true,
+            daysAgo: 25,
+        },
+        {
+            displayName: 'Priya & Dev’s neighbour',
+            content: 'We will feed the cat. Go get married without worrying about the flat.',
+            visible: true,
+            daysAgo: 26,
+        },
+        {
+            displayName: 'The hiking group',
+            content: 'You survived that rainstorm on the trail; you can survive seating charts. Rooting for you.',
+            visible: true,
+            daysAgo: 27,
+        },
+        {
+            displayName: 'Jordan',
+            content: 'Alex is crying happy tears already. I am pretending I am not. Love you both.',
+            visible: true,
+            daysAgo: 28,
+        },
+        {
+            displayName: 'Chioma & David',
+            content: 'Double-checking: Zara is definitely not allowed to give a toast without a script. (We are joking. Mostly.)',
+            visible: true,
+            daysAgo: 29,
+        },
+        {
+            content: 'From overseas with terrible Wi‑Fi — congratulations! We will raise a cup in your time zone.',
+            visible: true,
+            daysAgo: 30,
+        },
+        {
+            displayName: 'Elena’s sister',
+            content: 'I have the tissues packed. Do not look at me during the vows.',
+            visible: true,
+            daysAgo: 31,
+        },
+        {
+            displayName: 'River',
+            content: 'PS from last time: the GF options on the RSVP made me feel seen. Thank you again.',
+            visible: true,
+            daysAgo: 32,
+        },
+        {
+            displayName: 'Uncle Theo’s +1',
+            content: 'He told me to “keep it brief.” Congratulations to two wonderful humans.',
+            visible: true,
+            daysAgo: 33,
+        },
+        {
+            displayName: 'The band (maybe)',
+            content: 'If this posts twice, blame the sound check. Either way — congrats!',
+            visible: true,
+            daysAgo: 34,
+        },
+        {
+            displayName: 'Pat',
+            content: 'Representing the Chen table: we are ready for speeches, dessert, and whatever you planned for midnight.',
+            visible: true,
+            daysAgo: 35,
+        },
+        {
+            displayName: 'A random cousin',
+            content: 'Found the website. Found the guestbook. Found my keyboard. Hello and congratulations!',
+            visible: true,
+            daysAgo: 36,
+        },
+        {
+            content: 'Your photographers are going to earn their fee — you two are disgustingly photogenic. Best wishes.',
+            visible: true,
+            daysAgo: 37,
+        },
+        {
+            displayName: 'Ben',
+            content: 'Flight booked. Fingers crossed for on-time landing. Either way I am there in spirit if not in body.',
+            visible: true,
+            daysAgo: 38,
         },
     ];
 
@@ -494,6 +674,42 @@ class DummyData {
             created.setDate(created.getDate() - row.daysAgo);
             entry.created = created;
             entry.updated = created;
+        }
+        tempStore.guestbook.sort((a, b) => b.created.getTime() - a.created.getTime());
+
+        if (process.env.NODE_ENV === 'development') {
+            const fixtureAuthor = await db.authors.create();
+            const now = new Date();
+            const normal = await db.guestbook.create(
+                fixtureAuthor,
+                true,
+                'Dev fixture — normal post (public and not moderated).',
+                'Dev fixture'
+            );
+            normal.created = now;
+            normal.updated = now;
+
+            const notPublic = await db.guestbook.create(
+                fixtureAuthor,
+                false,
+                'Dev fixture — not on the public guestbook (visible unchecked).',
+                'Dev fixture'
+            );
+            notPublic.created = now;
+            notPublic.updated = now;
+
+            const moderated = await db.guestbook.create(
+                fixtureAuthor,
+                true,
+                'Dev fixture — removed by moderator (hidden flag).',
+                'Dev fixture'
+            );
+            moderated.created = now;
+            moderated.updated = now;
+            moderated.hidden = true;
+
+            tempStore.guestbookDevFixtureAuthorId = fixtureAuthor.id;
+            tempStore.guestbook.sort((a, b) => b.created.getTime() - a.created.getTime());
         }
     }
 }

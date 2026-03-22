@@ -8,12 +8,12 @@ export class GuestbookEntry {
     visible: boolean;
     created: Date;
     updated: Date;
-    content: string;
+    content?: string;
     photo?: Photo;
 
     hidden: boolean = false;
 
-    constructor(id: string, author: Author, visible: boolean, content: string, displayName?: string, photo?: Photo) {
+    constructor(id: string, author: Author, visible: boolean, content?: string, displayName?: string, photo?: Photo) {
         this.id = id;
         this.author = author;
         this.visible = visible;
@@ -22,5 +22,13 @@ export class GuestbookEntry {
         this.photo = photo;
         this.created = new Date();
         this.updated = this.created;
+    }
+
+    formatCreated(): string {
+        return this.created.toLocaleString('en-AU', { timeZone: process.env.EVENT_TIMEZONE, dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    formatUpdated(): string {
+        return this.updated.toLocaleString('en-AU', { timeZone: process.env.EVENT_TIMEZONE, dateStyle: 'short', timeStyle: 'short' });
     }
 }

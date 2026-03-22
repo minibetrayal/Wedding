@@ -9,4 +9,11 @@ export class Photo {
         this.name = name;
         this.mimeType = mimeType;
     }
+
+    filename(): string {
+        if (this.name.includes('.')) {
+            return `${this.id}.${this.name.split('.').pop()}`;
+        }
+        return this.id;
+    }
 }

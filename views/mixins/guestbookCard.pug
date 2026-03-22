@@ -1,0 +1,57 @@
+include /mixins/inclusions
+
+mixin guestbookCardStyle
+	+style('guestbookCard')
+
+//- previewMaxChars: list preview length; longer text is truncated (full text on entry page via stretched link)
+mixin guestbookCard(entry, previewMaxChars)
+	-
+		const maxChars = typeof previewMaxChars === 'number' && previewMaxChars > 0 ? previewMaxChars : 240
+		const fullText = typeof entry.content === 'string' ? entry.content : ''
+		const isTruncated = fullText.length > maxChars
+		const previewText = isTruncated ? fullText.slice(0, maxChars).trimEnd() + '…' : fullText
+		const entryHref = '/guestbook/' + entry.id
+		const isModerated = Boolean(entry.hidden)
+		const isNotPublic = !entry.visible
+		let entryCardClass = 'guestbook-entry-card border-0 shadow-sm position-relative'
+	if isModerated
+		- entryCardClass += ' guestbook-entry-card--moderated'
+	if isNotPublic
+		- entryCardClass += ' guestbook-entry-card--not-public'
+	li
+		article.card(class=entryCardClass)
+			.card-body.p-4.position-relative
+				if isModerated || isNotPublic
+					.guestbook-entry-flags.mb-2.d-flex.flex-wrap.align-items-center.gap-2.position-relative.z-3
+						if isModerated
+							span.badge.rounded-pill.bg-danger.text-white
+								i.bi.bi-shield-slash.me-1(aria-hidden="true")
+								| Removed by moderator
+						if isNotPublic
+							span.badge.rounded-pill.border.text-body-secondary.bg-body-secondary
+								i.bi.bi-eye-slash.me-1(aria-hidden="true")
+								| Not on public guestbook
+				header.d-flex.flex-wrap.align-items-baseline.justify-content-between.gap-2.mb-2
+					.fw-semibold
+						if entry.displayName && entry.displayName.trim()
+							| #{entry.displayName.trim()}
+						else
+							span.text-muted Guest
+					time.small.text-muted(datetime=entry.created ? entry.created.toISOString() : undefined)
+						| #{entry.formatCreated()}
+				.guestbook-entry-body
+					if fullText.length > 0
+						p.mb-0.text-break.text-prewrap #{previewText}
+						if isTruncated
+							p.small.text-muted.mb-0.mt-1 Open the post to read the full message.
+					if entry.photo
+						.mt-3.guestbook-card-photo-wrap.rounded.border.bg-body-secondary.p-1
+							img.guestbook-card-photo.rounded(
+								src='/photos/' + entry.photo.id,
+								alt="Guestbook photo preview",
+								loading="lazy"
+							)
+				a.stretched-link(
+					href=entryHref,
+					aria-label=entry.displayName && entry.displayName.trim() ? 'View full message from ' + entry.displayName.trim() : 'View full message'
+				)

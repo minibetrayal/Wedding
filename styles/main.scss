@@ -32,3 +32,13 @@ button {
         }
     }
 }
+
+.thumbnail {
+    width: 4.5rem; 
+    height: 4.5rem; 
+    object-fit: cover;
+}
+
+.text-prewrap {
+    white-space: pre-wrap;
+}

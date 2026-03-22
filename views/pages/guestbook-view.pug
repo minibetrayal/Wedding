@@ -1,0 +1,51 @@
+extends /layout
+include /mixins/hero
+
+block title
+  | #{coupleNamesShort} — Guestbook message
+
+block styles
+  +heroStyle
+
+block content
+  .container.py-4
+    +hero('Guestbook')
+
+    .row.justify-content-center.mt-4
+      .col-12.col-lg-10.col-xl-8
+        .d-flex.flex-wrap.align-items-center.justify-content-between.gap-2.mb-3
+          a.btn.btn-outline-primary(href="/guestbook")
+            i.bi.bi-arrow-left.me-1(aria-hidden="true")
+            | Back to all messages
+          if isAuthor
+            a.btn.btn-outline-secondary(href=`/guestbook/${entry.id}/edit`)
+              i.bi.bi-pencil-square.me-1(aria-hidden="true")
+              | Edit post
+
+        article.card.border-0.shadow-sm
+          .card-body.p-4.p-md-5
+            header.mb-4
+              h1.h3.mb-2
+                if entry.displayName && entry.displayName.trim()
+                  | #{entry.displayName.trim()}
+                else
+                  span.text-muted Guest
+              .d-flex.flex-wrap.gap-2.text-muted.small
+                time(datetime=entry.created ? entry.created.toISOString() : undefined)
+                  | Posted #{entry.formatCreated()}
+                if entry.updated && entry.updated.getTime() !== entry.created.getTime()
+                  span(aria-hidden="true") ·
+                  time(datetime=entry.updated.toISOString())
+                    | Updated #{entry.formatUpdated()}
+
+            .guestbook-entry-body.fs-5.text-break
+              if entry.content && entry.content.length > 0
+                .mb-0.text-prewrap #{entry.content}
+              if entry.photo
+                figure.mt-4.mb-0(class=entry.content && entry.content.length > 0 ? 'pt-4 border-top' : '')
+                  img.img-fluid.rounded.border.shadow-sm(
+                    src='/photos/' + entry.photo.id,
+                    alt="Guestbook photo"
+                  )
+                  if entry.photo.name
+                    figcaption.small.text-muted.mt-2 #{entry.photo.name}
