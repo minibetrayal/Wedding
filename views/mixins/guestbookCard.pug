@@ -11,7 +11,7 @@ mixin guestbookCard(entry, previewMaxChars)
 		const isTruncated = fullText.length > maxChars
 		const previewText = isTruncated ? fullText.slice(0, maxChars).trimEnd() + '…' : fullText
 		const entryHref = '/guestbook/' + entry.id
-		const isModerated = Boolean(entry.hidden)
+		const isModerated = Boolean(entry.moderated)
 		const isNotPublic = !entry.visible
 		let entryCardClass = 'guestbook-entry-card border-0 shadow-sm position-relative'
 	if isModerated

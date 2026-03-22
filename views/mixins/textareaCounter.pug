@@ -1,0 +1,45 @@
+mixin textareaCounterStyle
+  +style('textareaCounter')
+
+mixin textareaCounter(warnAt=-0.5, dangerAt=-0.9)
+  -
+    if (!attributes.id) attributes.id = 'guestbook-message-field';
+
+    if (attributes.maxlength) {
+      if (warnAt < 0) warnAt = (-warnAt * attributes.maxlength);
+      if (dangerAt < 0) dangerAt = (-dangerAt * attributes.maxlength);
+      if (!attributes['aria-describedby']) attributes['aria-describedby'] = attributes.id + '-hint';
+    }
+
+  .guestbook-message-counter
+    textarea&attributes(attributes)
+      block
+    if attributes.maxlength 
+      .hint.text-body-tertiary.opacity-25(id=attributes.id + '-hint')
+        span(id=attributes.id + '-count') 0
+        | /#{attributes.maxlength}
+
+      
+      script.
+        (function () {
+          const idBase = !{JSON.stringify(attributes.id)};
+          const warnAt = !{JSON.stringify(warnAt)};
+          const dangerAt = !{JSON.stringify(dangerAt)};
+          const ta = document.getElementById(idBase);
+          const hint = document.getElementById(idBase + '-hint');
+          const countEl = document.getElementById(idBase + '-count');
+
+          function paint(n) {
+            countEl.textContent = String(n);
+            hint.classList.toggle('opacity-25', n <= warnAt);
+            hint.classList.toggle('text-body-tertiary', n <= dangerAt);
+            hint.classList.toggle('text-danger', n > dangerAt);
+          }
+
+          function sync() {
+            paint(Math.min(ta.value.length, !{JSON.stringify(attributes.maxlength)}));
+          }
+
+          sync();
+          ta.addEventListener('input', sync);
+        })();

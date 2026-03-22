@@ -63,6 +63,28 @@ block content
             .fs-2.fw-semibold.text-body #{invites.reduce((acc, invite) => acc + invite.attending(), 0)}
             .small.text-muted Attending guests
 
+    .row.row-cols-1.row-cols-sm-2.g-3.mb-4
+      .col
+        .card.h-100.border.shadow-sm
+          .card-body.text-center.py-3.px-2
+            -
+              const totalCarpoolSpotsOffered = invites.reduce(function (acc, inv) {
+                const n = Number(inv.carpoolSpotsOffered)
+                return acc + (Number.isFinite(n) && n > 0 ? n : 0)
+              }, 0)
+            .fs-2.fw-semibold.text-body #{totalCarpoolSpotsOffered}
+            .small.text-muted Carpool spots offered
+      .col
+        .card.h-100.border.shadow-sm
+          .card-body.text-center.py-3.px-2
+            -
+              const totalCarpoolSeatsRequested = invites.reduce(function (acc, inv) {
+                if (!inv.carpoolRequested || !inv.responded) return acc
+                return acc + inv.attending()
+              }, 0)
+            .fs-2.fw-semibold.text-body #{totalCarpoolSeatsRequested}
+            .small.text-muted Carpool seats requested
+
     h2.h6.text-muted.text-uppercase.mb-2 All invitations
     if invites.length
       p.small.text-muted.mb-3
@@ -83,9 +105,15 @@ block content
           span.text-dark.me-2.text-nowrap
             i.bi.bi-chat-left-text.me-1(aria-hidden="true")
             | Guest note on invite
-          span.text-dark.text-nowrap
+          span.text-dark.me-2.text-nowrap
             i.bi.bi-fork-knife.me-1(aria-hidden="true")
             | Special dietary info
+          span.text-danger.me-2.text-nowrap
+            i.bi.bi-car-front.me-1(aria-hidden="true")
+            | Carpool requested
+          span.text-success.me-2.text-nowrap
+            i.bi.bi-car-front.me-1(aria-hidden="true")
+            | Carpool spots offered
 
       .list-group.shadow-sm
         - 
@@ -99,6 +127,12 @@ block content
           - const index = invite.seen ? (invite.responded ? (invite.attending() > 0 ? 3 : 2) : 1) : 0;
           - const hasGuestNote = typeof invite.notes === 'string' && invite.notes.trim().length > 0
           - const hasAttendingDietary = invite.invitees.some((g) => g.attending === true && typeof g.dietaryRestrictions === 'string' && g.dietaryRestrictions.trim().length > 0)
+          - const carpoolSpotsN = Number(invite.carpoolSpotsOffered)
+          - const hasCarpoolOffered = Number.isFinite(carpoolSpotsN) && carpoolSpotsN > 0
+          - const hasCarpoolRequested = !!invite.carpoolRequested
+          - const carpoolRequestedSeatsLabel = invite.responded ? String(invite.attending()) : '—'
+          - const carpoolRequestedTitle = invite.responded ? ('Carpool requested — seats (attending guests): ' + invite.attending()) : 'Carpool requested — RSVP not yet submitted; seat count shown after they respond'
+          - const carpoolOfferedTitle = 'Offering ' + carpoolSpotsN + ' spare carpool seat' + (carpoolSpotsN === 1 ? '' : 's')
           - const hasDetailsHighlight = hasGuestNote || hasAttendingDietary
           a.list-group-item.list-group-item-action.d-flex.align-items-center.gap-3.py-3.px-3(
             href=`/admin/invites/${invite.id}`,
@@ -110,22 +144,33 @@ block content
             .flex-shrink-0
               i.bi.fs-4(class=`bi-${d[index][2]} text-${d[index][1]}` aria-hidden="true")
             .flex-grow-1.min-w-0
-              .fw-semibold.text-body.d-flex.flex-wrap.align-items-center.gap-2
-                span #{invite.name}
-                if hasGuestNote
-                  span.badge.rounded-pill.text-bg-dark.border.border-dark(
-                    title="This invite has guest notes"
-                  )
-                    i.bi.bi-chat-left-text(aria-hidden="true")
-                    span.visually-hidden Guest note
-                    span.d-none.d-sm-inline.ms-1 Note
-                if hasAttendingDietary
-                  span.badge.rounded-pill.text-bg-dark.border.border-dark(
-                    title="At least one attending guest listed dietary requirements"
-                  )
-                    i.bi.bi-fork-knife(aria-hidden="true")
-                    span.visually-hidden Dietary requirements
-                    span.d-none.d-sm-inline.ms-1 Dietary
+              .fw-semibold.text-body.d-flex.flex-column.flex-sm-row.flex-sm-wrap.align-items-start.align-items-sm-center.gap-1
+                span.text-break #{invite.name}
+                .d-flex.flex-wrap.align-items-center.gap-1
+                  if hasGuestNote
+                    span.badge.rounded-pill.text-bg-dark.border.border-dark(
+                      title="This invite has guest notes"
+                    )
+                      i.bi.bi-chat-left-text(aria-hidden="true")
+                      span.visually-hidden Guest note
+                      span.d-none.d-sm-inline.ms-1 Note
+                  if hasAttendingDietary
+                    span.badge.rounded-pill.text-bg-dark.border.border-dark(
+                      title="At least one attending guest listed dietary requirements"
+                    )
+                      i.bi.bi-fork-knife(aria-hidden="true")
+                      span.visually-hidden Dietary requirements
+                      span.d-none.d-sm-inline.ms-1 Dietary
+                  if hasCarpoolRequested
+                    span.badge.rounded-pill.text-bg-danger.border.border-danger(title=carpoolRequestedTitle)
+                      i.bi.bi-car-front(aria-hidden="true")
+                      span.visually-hidden #{carpoolRequestedTitle}
+                      span.ms-1(aria-hidden="true") #{carpoolRequestedSeatsLabel}
+                  if hasCarpoolOffered
+                    span.badge.rounded-pill.text-bg-success.border.border-success(title=carpoolOfferedTitle)
+                      i.bi.bi-car-front(aria-hidden="true")
+                      span.visually-hidden #{carpoolOfferedTitle}
+                      span.ms-1(aria-hidden="true") #{carpoolSpotsN}
               .small.text-muted.mt-2.mt-sm-0 #{invite.attending()} attending · #{invite.invitees.length} invited
             .flex-shrink-0.small.text-muted.text-end
               span.visually-hidden Status:&nbsp;

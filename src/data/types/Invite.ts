@@ -11,6 +11,9 @@ export class Invite {
     responded: boolean = false;
     seen: boolean = false;
 
+    carpoolRequested: boolean = false;
+    carpoolSpotsOffered: number = 0;
+
     constructor(id: string, name: string, invitees: Invitee[]) {
         this.id = id;
         this.name = name;

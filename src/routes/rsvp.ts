@@ -4,6 +4,7 @@ import { database, DbNotFoundError } from '../data/database';
 import { hasValidAdminCookie } from '../middleware/adminAuth';
 import { clearRsvpCookie, getRsvpCookie, setRsvpCookie } from '../middleware/rsvpCookie';
 import { normalizeArray } from '../util/arrayUtils';
+import { parseCarpoolSpotsOffered } from '../util/inviteCarpool';
 
 const router = express.Router();
 
@@ -171,7 +172,18 @@ router.post('/:inviteId', async (req, res, next) => {
             await database.invitees.update(invitee.id, invitee.name, attending, dietary);
         }
 
-        await database.invites.update(inviteId, phone, email, notes);
+        const carpoolRequested = req.body.carpoolRequested === '1' || req.body.carpoolRequested === 'on';
+        const carpoolSpotsOffered = carpoolRequested
+            ? 0
+            : parseCarpoolSpotsOffered(req.body.carpoolSpotsOffered);
+        await database.invites.update(
+            inviteId,
+            phone,
+            email,
+            notes,
+            carpoolRequested,
+            carpoolSpotsOffered
+        );
 
         if (!hasValidAdminCookie(req)) {
             await database.invites.updateStatus(inviteId, true, true);

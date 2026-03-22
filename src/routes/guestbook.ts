@@ -5,12 +5,35 @@ import { database, DbNotFoundError } from '../data/database';
 import { getAuthorCookie, isViewerAuthor, setAuthorCookie } from '../middleware/authorCookie';
 import { uploadPhoto } from '../middleware/guestbookUpload';
 import { Author } from '../data/types/Author';
-import { hasValidAdminCookie } from '../middleware/adminAuth';
+import { hasValidAdminCookie, requireAdmin } from '../middleware/adminAuth';
 import { GuestbookEntry } from '../data/types/GuestbookEntry';
+import {
+    evaluateGuestbookAutomoderation,
+    formatAutomoderationReason,
+    isGuestbookAutomaticModerationReason,
+} from '../util/guestbookAutomoderation';
 
 const router = express.Router();
 
-async function get(req: express.Request, res: express.Response, filter: (entry: GuestbookEntry) => boolean, isEveryone: boolean) {
+const MODERATION_REASON_MAX = parseInt(process.env.MODERATION_REASON_MAX!, 10);
+const GUESTBOOK_CONTENT_MAX = parseInt(process.env.GUESTBOOK_CONTENT_MAX!, 10);
+
+function trimGuestbookContent(raw: string): string {
+    const t = typeof raw === 'string' ? raw.trim() : '';
+    if (t.length <= GUESTBOOK_CONTENT_MAX) {
+        return t;
+    }
+    return t.slice(0, GUESTBOOK_CONTENT_MAX);
+}
+
+type GuestbookListMode = 'everyone' | 'mine' | 'moderation';
+
+async function get(
+    req: express.Request,
+    res: express.Response,
+    filter: (entry: GuestbookEntry) => boolean,
+    listMode: GuestbookListMode
+) {
     const limit = parseInt(req.query.limit as string) || 10;
     const allEntries = await database.guestbook.getAll();
     const filteredEntries = allEntries.filter(filter);
@@ -23,8 +46,9 @@ async function get(req: express.Request, res: express.Response, filter: (entry: 
     if (page > totalPages) page = totalPages;
     const offset = (page - 1) * limit;
     const entries = filteredEntries.slice(offset, offset + limit);
+    const isAdmin = hasValidAdminCookie(req);
 
-    res.render('pages/guestbook', { entries, page, limit, totalEntries, isEveryone });
+    res.render('pages/guestbook', { entries, page, limit, totalEntries, listMode, isAdmin });
 }
 
 /** Development only: set author cookie to seeded fixture user, then open My posts with all list states. */
@@ -41,21 +65,33 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 router.get('/', async (req, res) => {
-    await get(req, res, (entry) => entry.visible && !entry.hidden, true);
+    await get(req, res, (entry) => {
+        const isAuthor = isViewerAuthor(req, entry.author.id);
+        const isAdmin = hasValidAdminCookie(req);
+        return isAuthor || isAdmin || (entry.visible && !entry.moderated);
+    }, 'everyone');
 });
 
 router.get('/mine', async (req, res) => {
-    await get(req, res, (entry) => entry.author.id === getAuthorCookie(req), false);
+    await get(req, res, (entry) => entry.author.id === getAuthorCookie(req), 'mine');
 });
 
 router.get('/new', (req, res) => {
-    res.render('pages/guestbook-edit', { isNew: true, entry: null });
+    res.render('pages/guestbook-edit', {
+        isNew: true,
+        entry: null,
+        guestbookContentMax: GUESTBOOK_CONTENT_MAX,
+    });
+});
+
+router.get('/moderation', requireAdmin, async (req, res) => {
+    await get(req, res, (entry) => entry.pendingRemoderation && entry.moderated, 'moderation');
 });
 
 router.post('/new', uploadPhoto(() => '/guestbook/new'), async (req, res, next) => {
     try {
         const displayNameRaw = typeof req.body.displayName === 'string' ? req.body.displayName.trim() : '';
-        const contentRaw = typeof req.body.content === 'string' ? req.body.content.trim() : '';
+        const contentRaw = trimGuestbookContent(typeof req.body.content === 'string' ? req.body.content : '');
         const visible = req.body.visible === '1' || req.body.visible === 'on';
         const file = req.file;
         const hasContent = contentRaw.length > 0;
@@ -96,6 +132,14 @@ router.post('/new', uploadPhoto(() => '/guestbook/new'), async (req, res, next) 
             displayNameRaw || undefined,
             photo
         );
+        const auto = evaluateGuestbookAutomoderation(displayNameRaw, contentRaw);
+        if (auto.shouldModerate) {
+            await database.guestbook.hide(entry.id, formatAutomoderationReason(auto.reasons), true);
+            req.flash(
+                'info',
+                'Your message was saved but is not on the public guestbook yet — a moderator will review it shortly (automatic checks).'
+            );
+        }
         req.flash('success', 'Your message was posted.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entry.id)}`);
     } catch (err) {
@@ -112,11 +156,17 @@ router.get('/:entryId', async (req, res, next) => {
         const entry = await database.guestbook.get(req.params.entryId);
         const isAuthor = isViewerAuthor(req, entry.author.id);
         const isAdmin = hasValidAdminCookie(req);
-        if ((!entry.visible || entry.hidden) && !isAuthor) {
+        if ((!entry.visible || entry.moderated) && !(isAuthor || isAdmin)) {
             req.flash('error', 'Guestbook entry not found');
             return res.redirect(302, '/guestbook');
         }
-        res.render('pages/guestbook-view', { entry, isAuthor, isAdmin });
+        res.render('pages/guestbook-view', {
+            entry,
+            isAuthor,
+            isAdmin,
+            isAutomoderated: isGuestbookAutomaticModerationReason(entry.moderationReason),
+            moderationReasonMax: MODERATION_REASON_MAX,
+        });
     } catch (err) {
         if (err instanceof DbNotFoundError) {
             req.flash('error', 'Guestbook entry not found');
@@ -135,7 +185,8 @@ router.get('/:entryId/edit', async (req, res, next) => {
         }
         res.render('pages/guestbook-edit', {
             isNew: false,
-            entry
+            entry,
+            guestbookContentMax: GUESTBOOK_CONTENT_MAX,
         });
     } catch (err) {
         if (err instanceof DbNotFoundError) {
@@ -157,7 +208,7 @@ router.post('/:entryId/edit',
             return res.redirect(302, '/guestbook');
         }
         const displayNameRaw = typeof req.body.displayName === 'string' ? req.body.displayName.trim() : '';
-        const contentRaw = typeof req.body.content === 'string' ? req.body.content.trim() : '';
+        const contentRaw = trimGuestbookContent(typeof req.body.content === 'string' ? req.body.content : '');
         const visible = req.body.visible === '1' || req.body.visible === 'on';
         const file = req.file;
 
@@ -183,6 +234,14 @@ router.post('/:entryId/edit',
             displayNameRaw || undefined,
             photo
         );
+        const auto = evaluateGuestbookAutomoderation(displayNameRaw, contentRaw);
+        if (auto.shouldModerate) {
+            await database.guestbook.hide(entryId, formatAutomoderationReason(auto.reasons), true);
+            req.flash(
+                'info',
+                'Your update was saved but the post is not on the public guestbook until a moderator reviews it (automatic checks).'
+            );
+        }
         req.flash('success', 'Your message was updated.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
     } catch (err) {
@@ -208,6 +267,48 @@ router.post('/:entryId/delete', async (req, res, next) => {
         await database.guestbook.delete(entryId);
         req.flash('success', 'Your message was deleted.');
         res.redirect(302, '/guestbook/mine');
+    } catch (err) {
+        if (err instanceof DbNotFoundError) {
+            req.flash('error', 'Guestbook entry not found');
+            return res.redirect(302, '/guestbook');
+        }
+        next(err);
+    }
+});
+
+router.post('/:entryId/hide', async (req, res, next) => {
+    try {
+        if (!hasValidAdminCookie(req)) {
+            req.flash('error', 'You must be signed in as an admin to moderate guestbook posts.');
+            return res.redirect(302, '/guestbook');
+        }
+        const entryId = req.params.entryId;
+        await database.guestbook.get(entryId);
+        const reasonRaw = typeof req.body.reason === 'string' ? req.body.reason.trim() : '';
+        const reason = reasonRaw.length > 0 ? reasonRaw.slice(0, MODERATION_REASON_MAX) : undefined;
+        await database.guestbook.hide(entryId, reason);
+        req.flash('success', 'This message is now hidden from the public guestbook.');
+        res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
+    } catch (err) {
+        if (err instanceof DbNotFoundError) {
+            req.flash('error', 'Guestbook entry not found');
+            return res.redirect(302, '/guestbook');
+        }
+        next(err);
+    }
+});
+
+router.post('/:entryId/unhide', async (req, res, next) => {
+    try {
+        if (!hasValidAdminCookie(req)) {
+            req.flash('error', 'You must be signed in as an admin to moderate guestbook posts.');
+            return res.redirect(302, '/guestbook');
+        }
+        const entryId = req.params.entryId;
+        await database.guestbook.get(entryId);
+        await database.guestbook.show(entryId);
+        req.flash('success', 'This message is visible on the public guestbook again.');
+        res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
     } catch (err) {
         if (err instanceof DbNotFoundError) {
             req.flash('error', 'Guestbook entry not found');

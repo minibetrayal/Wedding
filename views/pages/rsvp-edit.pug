@@ -120,7 +120,40 @@ block content
 
               .card.border.shadow-sm.mb-4
                 .card-body
-                  h2.h6.text-uppercase.text-muted.mb-3 Information
+                  h2.h6.text-uppercase.text-muted.mb-2 Ceremony to reception
+                  p.small.text-muted.mb-3
+                    | Optional — helps us organise transport between the ceremony and reception for guests without their own transport.
+
+                  .form-check.mb-3
+                    input#rsvp-carpool-requested.form-check-input(
+                      type="checkbox",
+                      name="carpoolRequested",
+                      value="1",
+                      checked=!!inv.carpoolRequested
+                    )
+                    label.form-check-label(for="rsvp-carpool-requested")
+                      | We will need carpooling from the ceremony to the reception
+
+                  .mb-0
+                    label.form-label(for="rsvp-carpool-spots") Spare seats offered
+                    input#rsvp-carpool-spots.form-control(
+                      type="number",
+                      name="carpoolSpotsOffered",
+                      min="0",
+                      max="50",
+                      step="1",
+                      value=inv.carpoolRequested ? 0 : (inv.carpoolSpotsOffered != null ? inv.carpoolSpotsOffered : 0),
+                      readonly=inv.carpoolRequested || false,
+                      aria-disabled=inv.carpoolRequested ? 'true' : false
+                    )
+                    p#rsvp-carpool-spots-hint.small.text-muted.mb-0(class=inv.carpoolRequested ? '' : 'd-none')
+                      | Not applicable while you have requested a lift.
+                    .form-text.small#rsvp-carpool-spots-form-text(class=inv.carpoolRequested ? 'd-none' : '')
+                      | Example: if two of you are coming in a five-seat car, you might enter 3. Enter 0 if you cannot offer a lift.
+
+              .card.border.shadow-sm.mb-4
+                .card-body
+                  h2.h6.text-uppercase.text-muted.mb-3 Other Information
 
                   .row.g-3
                     .col-md-6
@@ -235,6 +268,38 @@ block script
           if (fb) fb.classList.add('d-none');
         });
       });
+
+      var carpoolRequest = document.getElementById('rsvp-carpool-requested');
+      var carpoolSpots = document.getElementById('rsvp-carpool-spots');
+      var carpoolSpotsHint = document.getElementById('rsvp-carpool-spots-hint');
+      var carpoolSpotsFormText = document.getElementById('rsvp-carpool-spots-form-text');
+      var carpoolSpotsBeforeRequest = null;
+      function syncCarpoolSpotsOffered() {
+        if (!carpoolRequest || !carpoolSpots) return;
+        if (carpoolRequest.checked) {
+          if (!carpoolSpots.readOnly) {
+            carpoolSpotsBeforeRequest = carpoolSpots.value;
+          }
+          carpoolSpots.value = '0';
+          carpoolSpots.readOnly = true;
+          carpoolSpots.setAttribute('aria-disabled', 'true');
+          if (carpoolSpotsHint) carpoolSpotsHint.classList.remove('d-none');
+          if (carpoolSpotsFormText) carpoolSpotsFormText.classList.add('d-none');
+        } else {
+          carpoolSpots.readOnly = false;
+          carpoolSpots.removeAttribute('aria-disabled');
+          if (carpoolSpotsBeforeRequest != null && carpoolSpotsBeforeRequest !== '') {
+            carpoolSpots.value = carpoolSpotsBeforeRequest;
+          }
+          carpoolSpotsBeforeRequest = null;
+          if (carpoolSpotsHint) carpoolSpotsHint.classList.add('d-none');
+          if (carpoolSpotsFormText) carpoolSpotsFormText.classList.remove('d-none');
+        }
+      }
+      if (carpoolRequest) {
+        carpoolRequest.addEventListener('change', syncCarpoolSpotsOffered);
+        syncCarpoolSpotsOffered();
+      }
 
       /* Leave-page warning: compare to initial snapshot (browsers usually show a generic message). */
       function rsvpFormSignature(f) {

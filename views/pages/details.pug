@@ -22,52 +22,17 @@ block content
     .vstack.gap-3
       //- When and Where
       +detailsCard('When & Where', 'calendar-event')
-        p.mb-4
-          if eventDate
-            strong #{eventDate}
-          else
-            | Date TBC
-
-        if (eventDate && eventTimezoneLabel)
-          p.small.text-muted All times are in #{eventTimezoneLabel}
-
-        +gemline(1, 2)
-        
-        h3.h5 Ceremony 
-        p.mb-3 
-          if ceremonyKey 
-            | Begins at 
-            strong #{scheduledEvents.find(event => event.key === ceremonyKey).time}
-          else
-            | Time TBC
-
-        p.mb-0
-          if locations.ceremony 
-            | #{locations.ceremony}
-          else
-            | Location TBC
-
+        p.small.mb-2 
+          | The Ceremony will be held at our beautify island property, at 
+          strong #{locations.ceremony}
+          | , starting at 
+          strong #{scheduledEvents.find(event => event.key === ceremonyKey).time}
+          | .
         .my-2 
           +mapButton(locations.ceremony)
 
-        +gemline(4, 2)
-
-        h3.h5 Dinner & Reception 
-        p.mb-3 
-          if receptionKey 
-            | Begins at 
-            strong #{scheduledEvents.find(event => event.key === receptionKey).time}
-          else
-            | Time TBC
-
-        p.mb-0
-          if locations.reception 
-            | #{locations.reception}
-          else
-            | Location TBC
-
-        .my-2 
-          +mapButton(locations.reception)
+        p.small.mb-2
+          | We welcome you to arrive from #{scheduledEvents.find(event => event.key === arrivalTimeKey).time} onwards.
 
       //- Dress Code
       +detailsCard('Dress Code', 'person-check')
@@ -123,7 +88,7 @@ block content
       +detailsCard('Ferry', 'water')
         ul.small 
           li.mb-2
-            | The ferry service to #{locations.islandShort} takes #{times.mainlandToIsland} minutes,
+            | The ferry service between #{locations.mainlandShort} and #{locations.islandShort} takes #{times.mainlandToIsland} minutes,
             | depending on the direction of travel.
           li.mb-2
             | You are welcome to arrive any time after&nbsp;
@@ -151,6 +116,22 @@ block content
             | Tickets are available for purchase from the ferry terminal, or on the boat itself.
             | If paying by credit/debit card, simply tap your card or phone to the reader when you board and 
             | disembark the ferry.
+          li.mb-2 
+            | After the ceremony, we will be returning to the mainland for the 
+            a.link-primary(href='#dinner-and-reception', target="_blank", rel="noopener") dinner and reception
+            | , using one of the following ferry services:
+            ul.mt-2 
+              each service in ferryServicesToMainland 
+                li.mb-2
+                  strong #{service.platform}
+                  | &nbsp;@&nbsp;
+                  strong #{service.time}
+                  br
+                  | via&nbsp;
+                  strong #{service.via}
+                  br
+                  | arriving @&nbsp;
+                  strong #{service.arriving}
 
           div 
             a.small.fw-semibold.link-primary(
@@ -201,34 +182,36 @@ block content
           li.mb-2
             | After the ceremony, we'll be taking some photos, so please stick around for this.
 
-      //- Reception
-      +detailsCard('Reception', 'cake')
-        ul.small 
+      //- Dinner and Reception
+      +detailsCard('Dinner and Reception', 'cake')
+        p.small.mb-4
+          | After the ceremony, we'll be travelling to the mainland for the reception, once again using the 
+          a.link-primary(href='#ferry', target="_blank", rel="noopener") ferry service
+          | .
+
+        ul.small
           li.mb-2
-            | After the ceremony, we'll head back to the #{locations.islandShort} ferry terminal and back to the mainland.
-            | From there, please make your own way to the reception venue.
-          li.mb-2
-            | There's about a #{times.mainlandToReception} minute drive from #{locations.mainlandShort} to 
-            | #{locations.receptionShort}.
+            | The reception will be held at 
+            strong #{locations.reception}
+            | , starting at 
+            strong #{scheduledEvents.find(event => event.key === receptionKey).time}
+            | .
             +mapButton(locations.reception)
           li.mb-2
-            | If you are unable to make your own way to the reception, let us know in your RSVP, 
-            | and we can arrange carpooling.
+            | We ask that you make your own way to the reception venue from #{locations.mainlandShort}.
+            | If you need assistance with this, let us know in your RSVP and we can arrange carpooling.
           li.mb-2
-            | After #{coupleNames} arrive at the reception, there will be some more photos taken before dinner is served.
+            | It's about a #{times.mainlandToReception} minute drive from #{locations.mainlandShort} to #{locations.receptionShort}.
           li.mb-2
-            | Be sure to stick around after the dinner for the dancing and fun!
-
-      //- Guestbook and Photos
-      +detailsCard('Guestbook and Photos', 'camera')
-        ul.small 
+            | There is parking available at #{locations.receptionShort}, as well as roadside parking nearby.
+            | If you have trouble finding parking, we suggest a nearby carpark at the nearby 
+            strong #{locations.receptionParkingShort}
+            | , from which there is a short walk up a grassy path to the reception.
+            +mapButton(locations.receptionParking)
           li.mb-2
-            | There will be a professional photographer at the ceremony and reception, but please feel free to 
-            | take your own photos on the day
+            | After #{coupleNames} arrive, there will be more photos before dinner is served.
           li.mb-2
-            | You can also write a message for us in our 
-            a.link-primary(href="/guestbook") digital guestbook
-            | , where you can upload photos too.
+            | Stick around after dinner for dancing and fun!
 
       //- Menu
       +detailsCard('Menu', 'fork-knife')
@@ -241,6 +224,17 @@ block content
 
         p.small.text-muted.mb-0
           | If you have any dietary requirements, please let us know in your RSVP.
+
+      //- Guestbook and Photos
+      +detailsCard('Guestbook and Photos', 'camera')
+        ul.small 
+          li.mb-2
+            | There will be a professional photographer at the ceremony and reception, but please feel free to 
+            | take your own photos on the day
+          li.mb-2
+            | You can also write a message for us in our 
+            a.link-primary(href="/guestbook") digital guestbook
+            | , where you can upload photos too.
               
       //- Gifts
       +detailsCard('Gifts', 'gift')

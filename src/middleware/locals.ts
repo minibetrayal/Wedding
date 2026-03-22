@@ -79,21 +79,25 @@ export default async function locals(req: express.Request, res: express.Response
         }
         res.locals.scheduledEvents.sort((a: ScheduledEvent, b: ScheduledEvent) => a.sortKey.getTime() - b.sortKey.getTime());
 
-        const services: Record<string, FerryService> = {};
+        const servicesToIsland: Record<string, FerryService> = {};
+        const servicesToMainland: Record<string, FerryService> = {};
         for (let key of Object.keys(process.env)) {
             if (!key || !process.env[key]) continue;
-            const match = key.match(/^FERRY_SERVICE_TO_ISLAND_(\d+)_(.*)$/);
+            const match = key.match(/^FERRY_SERVICE_TO_(ISLAND|MAINLAND)_(\d+)_(.*)$/);
             if (!match) continue;
 
-            const service: FerryService = services[match[1]] ?? { sortKey: match[1] };
+            const services = match[1] === 'ISLAND' ? servicesToIsland : servicesToMainland;
+
+            const service: FerryService = services[match[2]] ?? { sortKey: match[2] };
             let value = process.env[key];
-            if (match[2] === 'TIME' || match[2] === 'ARRIVING') {
+            if (match[3] === 'TIME' || match[3] === 'ARRIVING') {
                 value = formatTime(process.env.EVENT_DATE, value, process.env.EVENT_TIMEZONE);
             }
-            service[match[2].toLowerCase() as keyof FerryService] = value;
-            services[match[1]] = service;
+            service[match[3].toLowerCase() as keyof FerryService] = value;
+            services[match[2]] = service;
         }
-        res.locals.ferryServicesToIsland = Object.values(services);
+        res.locals.ferryServicesToIsland = Object.values(servicesToIsland);
+        res.locals.ferryServicesToMainland = Object.values(servicesToMainland);
     }
     for (let keyType of ['locations', 'links', 'times', 'costs']) {
         res.locals[keyType] = {};

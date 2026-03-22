@@ -69,13 +69,17 @@ class InviteConnection {
         inviteId: string,
         phone?: string,
         email?: string,
-        notes?: string
+        notes?: string,
+        carpoolRequested?: boolean,
+        carpoolSpotsOffered?: number
     ): Promise<void> {
         const existingInvite = tempStore.invites.find(i => i.id === inviteId);
         if (!existingInvite) throw new DbNotFoundError('Invite');
         existingInvite.phone = phone;
         existingInvite.email = email;
         existingInvite.notes = notes;
+        if (carpoolRequested !== undefined) existingInvite.carpoolRequested = carpoolRequested;
+        if (carpoolSpotsOffered !== undefined) existingInvite.carpoolSpotsOffered = carpoolSpotsOffered;
     }
 
     async updateInvite(
@@ -169,19 +173,29 @@ class GuestbookConnection {
         entry.updated = new Date();
         entry.displayName = displayName;
         entry.photo = photo;
+        entry.pendingRemoderation = entry.moderated;
     }
 
-    async hide(entryId: string): Promise<void> {
+    /**
+     * Hide from the public guestbook.
+     * @param automoderated When true, leave `pendingRemoderation` set so the post appears in the moderation queue; when false/omitted, clear it (admin confirmed removal).
+     */
+    async hide(entryId: string, moderationReason?: string, automoderated?: boolean): Promise<void> {
         const entry = tempStore.guestbook.find(e => e.id === entryId);
         if (!entry) throw new DbNotFoundError('Entry');
-        entry.hidden = true;
+        entry.moderated = true;
+        const trimmed = moderationReason?.trim();
+        entry.moderationReason = trimmed && trimmed.length > 0 ? trimmed : undefined;
         entry.updated = new Date();
+        entry.pendingRemoderation = automoderated === true;
     }
 
     async show(entryId: string): Promise<void> {
         const entry = tempStore.guestbook.find(e => e.id === entryId);
         if (!entry) throw new DbNotFoundError('Entry');
-        entry.hidden = false;
+        entry.moderated = false;
+        entry.moderationReason = undefined;
+        entry.pendingRemoderation = false;
         entry.updated = new Date();
     }
 }
@@ -320,6 +334,37 @@ export class DbError extends Error {
 
 
 class DummyData {
+    /** Dev-only sample images; contents are discovered at runtime. */
+    private static readonly dummyPhotosSourceDir = path.join(process.cwd(), 'dummy-photos');
+    private static readonly dummyPhotoFilenameRe = /\.(jpe?g|png|gif|webp)$/i;
+
+    private static async listSortedDummyPhotoPaths(): Promise<string[]> {
+        try {
+            const entries = await fs.promises.readdir(DummyData.dummyPhotosSourceDir, {
+                withFileTypes: true,
+            });
+            return entries
+                .filter((e) => e.isFile() && DummyData.dummyPhotoFilenameRe.test(e.name))
+                .map((e) => path.join(DummyData.dummyPhotosSourceDir, e.name))
+                .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        } catch {
+            return [];
+        }
+    }
+
+    private static imageMimeTypeForPath(filePath: string): string {
+        switch (path.extname(filePath).toLowerCase()) {
+            case '.png':
+                return 'image/png';
+            case '.gif':
+                return 'image/gif';
+            case '.webp':
+                return 'image/webp';
+            default:
+                return 'image/jpeg';
+        }
+    }
+
     private readonly inviteSeeds: Array<{
         name: string;
         guests: Array<{
@@ -332,6 +377,8 @@ class DummyData {
         notes?: string;
         phone?: string;
         email?: string;
+        carpoolRequested?: boolean;
+        carpoolSpotsOffered?: number;
     }> = [
         {
             name: 'Alex & Jordan',
@@ -341,6 +388,8 @@ class DummyData {
             ],
             seen: true,
             responded: true,
+            carpoolRequested: true,
+            carpoolSpotsOffered: 0,
         },
         {
             name: 'The Chen family',
@@ -373,6 +422,8 @@ class DummyData {
             ],
             seen: true,
             responded: true,
+            carpoolRequested: true,
+            carpoolSpotsOffered: 0,
         },
         {
             name: 'The Okafor family',
@@ -384,12 +435,16 @@ class DummyData {
             seen: true,
             responded: true,
             notes: 'Please let us know if a kids’ meal option is available.',
+            carpoolRequested: true,
+            carpoolSpotsOffered: 0,
         },
         {
             name: 'Elena Vasquez',
             guests: [{ name: 'Elena', attending: true, dietaryRestrictions: 'Halal preferred where possible.' }],
             seen: true,
             responded: true,
+            carpoolRequested: false,
+            carpoolSpotsOffered: 2,
         },
         {
             name: 'Ben Carter',
@@ -397,6 +452,8 @@ class DummyData {
             seen: true,
             responded: true,
             notes: 'Flying in that morning — may be ceremony-only if the flight is delayed.',
+            carpoolRequested: true,
+            carpoolSpotsOffered: 0,
         },
         {
             name: 'River & Jamie',
@@ -407,6 +464,8 @@ class DummyData {
             seen: true,
             responded: true,
             notes: 'One of us is GF (River); Jamie has no restrictions.',
+            carpoolRequested: false,
+            carpoolSpotsOffered: 3,
         },
         {
             name: 'Uncle Theo',
@@ -419,6 +478,8 @@ class DummyData {
         content: string;
         visible: boolean;
         daysAgo: number;
+        /** If true and `dummy-photos` has image files, attach the next one (round-robin). */
+        attachDummyPhoto?: boolean;
     }> = [
         {
             displayName: 'The Chen family',
@@ -433,6 +494,7 @@ class DummyData {
                 'Still smiling from the save-the-date — honestly, I have it pinned above my desk and every colleague who walks past asks about it. Counting down feels inadequate; I have a spreadsheet of outfits, a playlist called “pre-wedding hype,” and a group chat that will not stop sending heart emojis. You two have been the steady centre of our friend group for so long that seeing you make it official is going to wreck me in the best way. I promise to behave during the ceremony and make up for it on the dance floor. Cannot wait to raise a glass, ugly-cry during the vows, and tell embarrassing stories only half of which are true.',
             visible: true,
             daysAgo: 5,
+            attachDummyPhoto: true,
         },
         {
             displayName: 'Priya',
@@ -440,12 +502,14 @@ class DummyData {
                 'Wishing you a lifetime of laughter and good food. The little ones are already practising their dance moves.',
             visible: true,
             daysAgo: 8,
+            attachDummyPhoto: true,
         },
         {
             content:
                 'From everyone at the office — congratulations! We will raise a glass to you on the big day. The kitchen whiteboard is already covered in doodled hearts and someone printed your save-the-date for the notice board (sorry if that is weird; we are invested). Half of us only met you through work retreats and somehow you still invited us like family. We have pooled for a gift, argued politely about wrapping paper, and scheduled the group photo for the reception whether you like it or not. Wishing you calm inboxes until then, zero spreadsheet errors, and a honeymoon where nobody asks you to “jump on a quick call.”',
             visible: true,
             daysAgo: 11,
+            attachDummyPhoto: true,
         },
         {
             displayName: 'River',
@@ -466,6 +530,7 @@ class DummyData {
                 'So excited to watch you two tie the knot. Here is to sunshine, good music, and an unforgettable weekend.',
             visible: true,
             daysAgo: 21,
+            attachDummyPhoto: true,
         },
         {
             displayName: 'Alex & Jordan',
@@ -657,18 +722,40 @@ class DummyData {
             await db.invites.updateStatus(invite.id, 
                 row.seen !== undefined ? row.seen : false, 
                 row.responded !== undefined ? row.responded : false);
-            await db.invites.update(invite.id, row.notes, row.phone, row.email);
+            await db.invites.update(
+                invite.id,
+                row.phone,
+                row.email,
+                row.notes,
+                row.carpoolRequested === true,
+                row.carpoolSpotsOffered !== undefined ? row.carpoolSpotsOffered : 0
+            );
         }
     }
 
     async createGuestbookEntries(db: DatabaseConnection) {
+        const dummyPhotoPaths = await DummyData.listSortedDummyPhotoPaths();
+        let dummyPhotoSlot = 0;
+
         for (const row of this.guestbookSeeds) {
             const author = await db.authors.create();
+            let photo: Photo | undefined;
+            if (row.attachDummyPhoto && dummyPhotoPaths.length > 0) {
+                const srcPath = dummyPhotoPaths[dummyPhotoSlot % dummyPhotoPaths.length];
+                dummyPhotoSlot += 1;
+                const data = await fs.promises.readFile(srcPath);
+                photo = await db.photos.create(
+                    path.basename(srcPath),
+                    DummyData.imageMimeTypeForPath(srcPath),
+                    data
+                );
+            }
             const entry = await db.guestbook.create(
                 author,
                 row.visible,
                 row.content,
-                row.displayName
+                row.displayName,
+                photo
             );
             const created = new Date();
             created.setDate(created.getDate() - row.daysAgo);
@@ -701,12 +788,13 @@ class DummyData {
             const moderated = await db.guestbook.create(
                 fixtureAuthor,
                 true,
-                'Dev fixture — removed by moderator (hidden flag).',
+                'Dev fixture — removed by moderator (moderated flag).',
                 'Dev fixture'
             );
             moderated.created = now;
             moderated.updated = now;
-            moderated.hidden = true;
+            moderated.moderated = true;
+            moderated.moderationReason = 'Dev fixture — sample moderator note.';
 
             tempStore.guestbookDevFixtureAuthorId = fixtureAuthor.id;
             tempStore.guestbook.sort((a, b) => b.created.getTime() - a.created.getTime());

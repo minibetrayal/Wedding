@@ -3,7 +3,10 @@ include /mixins/hero
 include /mixins/guestbookCard
 
 block title
-  | #{coupleNamesShort} — Guestbook
+  if listMode === 'moderation'
+    | #{coupleNamesShort} — Guestbook Moderation
+  else
+    | #{coupleNamesShort} — Guestbook
 
 block styles
   +heroStyle
@@ -17,7 +20,10 @@ block content
     const total = typeof totalEntries === 'number' ? totalEntries : 0
     const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize)
     const showPagination = totalPages > 1
-    const listPath = isEveryone ? '/guestbook' : '/guestbook/mine'
+    const isEveryone = listMode === 'everyone'
+    const isMine = listMode === 'mine'
+    const isModeration = listMode === 'moderation'
+    const listPath = isEveryone ? '/guestbook' : isMine ? '/guestbook/mine' : '/guestbook/moderation'
     const fromIdx = total === 0 ? 0 : (currentPage - 1) * pageSize + 1
     const toIdx = Math.min(currentPage * pageSize, total)
     const maxPageButtons = 7
@@ -41,7 +47,7 @@ block content
     const paginationTrailEllipsis = windowEnd < totalPages - 1
 
   .container.py-4
-    +hero('Guestbook')
+    +hero(isModeration ? 'Guestbook Moderation' : 'Guestbook')
 
     //- Primary actions (routes to be implemented)
     .row.justify-content-center.mt-4
@@ -58,19 +64,46 @@ block content
             )
               i.bi.bi-person-lines-fill(aria-hidden="true")
               | My posts
-          else
+            if isAdmin
+              a.btn.btn-outline-secondary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+                href="/guestbook/moderation"
+              )
+                i.bi.bi-shield-exclamation(aria-hidden="true")
+                | Moderation queue
+          else if isMine
             a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
               href="/guestbook"
             )
               i.bi.bi-people(aria-hidden="true")
               | All posts
+            if isAdmin
+              a.btn.btn-outline-secondary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+                href="/guestbook/moderation"
+              )
+                i.bi.bi-shield-exclamation(aria-hidden="true")
+                | Moderation queue
+          else if isModeration
+            a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+              href="/guestbook"
+            )
+              i.bi.bi-people(aria-hidden="true")
+              | All posts
+            a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+              href="/guestbook/mine"
+            )
+              i.bi.bi-person-lines-fill(aria-hidden="true")
+              | My posts
 
-        //- Public list (server will pass `entries`; visible + not hidden)
         h2.h4.text-body-secondary.mb-3
           if isEveryone
             | Messages from everyone
-          else
+          else if isMine
             | Messages from me
+          else
+            | Pending re-moderation
+        if isModeration
+          p.small.text-muted.mb-3
+            | If a post has been hidden by a moderator and subsequently edited, it will be shown here until the moderator confirms it should stay hidden or be shown publicly.
         if total > 0
           p.small.text-muted.mb-3
             | Showing #{fromIdx}–#{toIdx} of #{total}
@@ -81,8 +114,10 @@ block content
               p.lead.mb-2 No messages yet.
               if isEveryone
                 p.small.mb-0 Be the first to leave a note for #{coupleNames}.
-              else
+              else if isMine
                 p.small.mb-0 Leave your first note for #{coupleNames}.
+              else
+                p.small.mb-0 Nothing in the queue right now.
         else
           ul.list-unstyled.d-flex.flex-column.gap-3.mb-0
             each entry in guestbookList

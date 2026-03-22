@@ -26,14 +26,27 @@ export function verifyAdminPassword(input: string): boolean {
     return timingSafeEqual(a, b);
 }
 
+type PostLoginRedirectRule = { isPrefix: boolean; path: string };
+
+const ALLOWED_POST_LOGIN_REDIRECTS: PostLoginRedirectRule[] = [
+    { isPrefix: true, path: '/admin' },
+    { isPrefix: false, path: '/guestbook/moderation' },
+];
+
 /**
- * Only allow relative redirects under /admin (avoid open redirects).
+ * Sanitize `next` after admin login (avoid open redirects). Only paths matching
+ * {@link ALLOWED_POST_LOGIN_REDIRECTS} are returned; otherwise `/admin`.
  */
 export function safeAdminRedirectPath(next: unknown): string {
     if (Array.isArray(next)) next = next[0];
-    if (typeof next !== 'string' || !next.startsWith('/admin')) return '/admin';
-    if (next.startsWith('//') || /[\r\n]/.test(next)) return '/admin';
-    return next;
+    if (typeof next !== 'string' || /[\r\n]/.test(next)) return '/admin';
+    if (next.startsWith('//')) return '/admin';
+    for (const rule of ALLOWED_POST_LOGIN_REDIRECTS) {
+        const typeOneResult = next === rule.path || next.startsWith(`${rule.path}?`);
+        if (typeOneResult) return next;
+        if (rule.isPrefix && next.startsWith(`${rule.path}/`)) return next;
+    }
+    return '/admin';
 }
 
 /**

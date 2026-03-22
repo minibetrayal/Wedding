@@ -1,0 +1,16 @@
+.guestbook-message-counter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  .hint {
+    font-size: 0.875rem;
+    align-self: flex-end;
+    line-height: 1.2;
+    pointer-events: none;
+  }
+
+  textarea:not(:focus) + .hint {
+    opacity: 0.25 !important;
+  }
+}

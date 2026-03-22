@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { database, DbNotFoundError } from '../../data/database';
+import { parseCarpoolSpotsOffered } from '../../util/inviteCarpool';
 
 const router = express.Router();
 
@@ -17,6 +18,8 @@ router.get('/new', (_req, res) => {
             phone: '',
             email: '',
             notes: '',
+            carpoolRequested: false,
+            carpoolSpotsOffered: 0,
             invitees: [],
         },
     });
@@ -95,8 +98,17 @@ router.post('/', async (req, res, next) => {
             return res.redirect(302, '/admin/invites/new');
         }
         const invite = await database.invites.create(name, invitees);
-        if (phone || email || notes) {
-            await database.invites.update(invite.id, phone || undefined, email || undefined, notes || undefined);
+        const carpoolRequested = req.body.carpoolRequested === '1' || req.body.carpoolRequested === 'on';
+        const carpoolSpotsOffered = parseCarpoolSpotsOffered(req.body.carpoolSpotsOffered);
+        if (phone || email || notes || carpoolRequested || carpoolSpotsOffered > 0) {
+            await database.invites.update(
+                invite.id,
+                phone || undefined,
+                email || undefined,
+                notes || undefined,
+                carpoolRequested,
+                carpoolSpotsOffered
+            );
         }
         await database.invites.updateStatus(invite.id, req.body.seen === '1', req.body.responded === '1');
         req.flash('success', 'Invitation created successfully');
@@ -164,11 +176,15 @@ router.post('/:inviteId/edit', async (req, res, next) => {
             return res.redirect(302, `/admin/invites/${inviteId}/edit`);
         }
         await database.invites.updateInvite(inviteId, name, nextInvitees);
+        const carpoolRequested = req.body.carpoolRequested === '1' || req.body.carpoolRequested === 'on';
+        const carpoolSpotsOffered = parseCarpoolSpotsOffered(req.body.carpoolSpotsOffered);
         await database.invites.update(
             invite.id,
             typeof phone === 'string' && phone.trim() ? phone.trim() : undefined,
             typeof email === 'string' && email.trim() ? email.trim() : undefined,
-            typeof notes === 'string' && notes.trim() ? notes.trim() : undefined
+            typeof notes === 'string' && notes.trim() ? notes.trim() : undefined,
+            carpoolRequested,
+            carpoolSpotsOffered
         );
         await database.invites.updateStatus(inviteId, req.body.seen === '1', req.body.responded === '1');
         req.flash('success', 'Invitation updated successfully');

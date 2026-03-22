@@ -19,7 +19,7 @@ import projectorRoutes from './routes/projector';
 import rsvpRoutes from './routes/rsvp';
 
 const app = express();
-const PORT = process.env.PORT ?? 3000;
+const PORT = parseInt(process.env.PORT!, 10);
 
 // View engine: Pug
 const viewsPath = path.join(__dirname, '..', 'views');

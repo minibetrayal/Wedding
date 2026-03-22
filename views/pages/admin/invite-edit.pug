@@ -132,6 +132,33 @@ block content
                 .form-text.small Message or notes the guest leaves when responding.
 
               fieldset.mt-3.mb-0.border-0.p-0
+                legend.form-label.small.text-muted.mb-2.px-0 Ceremony → reception (carpool)
+                  span.visually-hidden (optional)
+                p.small.text-muted.mb-2
+                  | Carpooling from ceremony to reception.
+                .form-check.mb-2
+                  input#invite-carpool-requested.form-check-input(
+                    type="checkbox",
+                    name="carpoolRequested",
+                    value="1",
+                    checked=!!inv.carpoolRequested
+                  )
+                  label.form-check-label(for="invite-carpool-requested")
+                    | We need carpooling from the ceremony to the reception for people on this invitation
+                .mb-0
+                  label.form-label.small(for="invite-carpool-spots") Spare seats we can offer for that trip
+                  input#invite-carpool-spots.form-control(
+                    type="number",
+                    name="carpoolSpotsOffered",
+                    min="0",
+                    max="50",
+                    step="1",
+                    value=inv.carpoolSpotsOffered != null ? inv.carpoolSpotsOffered : 0
+                  )
+                  .form-text.small
+                    | If you are driving and have empty seats (e.g. two guests in a five-seat car), enter how many extra people you could take. Use 0 if none.
+
+              fieldset.mt-3.mb-0.border-0.p-0
                 legend.form-label.small.text-muted.mb-2.px-0 RSVP status
                   span.visually-hidden (optional overrides)
                 p.small.text-muted.mb-2

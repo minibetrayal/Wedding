@@ -11,7 +11,9 @@ export class GuestbookEntry {
     content?: string;
     photo?: Photo;
 
-    hidden: boolean = false;
+    moderated: boolean = false;
+    moderationReason?: string;
+    pendingRemoderation: boolean = false;
 
     constructor(id: string, author: Author, visible: boolean, content?: string, displayName?: string, photo?: Photo) {
         this.id = id;

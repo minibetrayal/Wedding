@@ -1,5 +1,5 @@
 function tz(timezone?: string): { timeZone: string } {
-  return { timeZone: timezone || process.env.EVENT_TIMEZONE || 'Australia/Brisbane' }
+  return { timeZone: timezone || process.env.EVENT_TIMEZONE! }
 };
 
 export function formatDate(dateString: string, timezone?: string): string {

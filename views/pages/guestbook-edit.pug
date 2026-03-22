@@ -1,12 +1,7 @@
-//-
-  New or edit guestbook message. Locals:
-  - isNew: boolean — true = create, false = edit existing
-  - entry: GuestbookEntry | null — when editing, entry to prefill (id, displayName, content, visible, photo)
-  - hasExistingPhoto: boolean — true when editing and entry already has a photo (client validation)
-
 extends /layout
 include /mixins/inclusions
 include /mixins/hero
+include /mixins/textareaCounter
 
 block title
   if isNew
@@ -16,6 +11,7 @@ block title
 
 block styles
   +heroStyle
+  +textareaCounterStyle
 
 block content
   -
@@ -72,10 +68,10 @@ block content
 
               .guestbook-body-fields.mb-4
                 label.form-label(for="guestbook-content") Message
-                textarea#guestbook-content.form-control(
+                +textareaCounter#guestbook-content.form-control(
                   name="content",
                   rows="8",
-                  maxlength="8000",
+                  maxlength=guestbookContentMax,
                   placeholder="Share a note, a memory, or good wishes… (optional if you add a photo)"
                 ) #{contentVal}
                 .guestbook-body-feedback.invalid-feedback.d-none

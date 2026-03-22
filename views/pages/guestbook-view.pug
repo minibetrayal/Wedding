@@ -1,11 +1,13 @@
 extends /layout
 include /mixins/hero
+include /mixins/textareaCounter
 
 block title
   | #{coupleNamesShort} — Guestbook message
 
 block styles
   +heroStyle
+  +textareaCounterStyle
 
 block content
   .container.py-4
@@ -17,13 +19,52 @@ block content
           a.btn.btn-outline-primary(href="/guestbook")
             i.bi.bi-arrow-left.me-1(aria-hidden="true")
             | Back to all messages
-          if isAuthor
-            a.btn.btn-outline-secondary(href=`/guestbook/${entry.id}/edit`)
-              i.bi.bi-pencil-square.me-1(aria-hidden="true")
-              | Edit post
+          .d-flex.flex-wrap.align-items-center.gap-2
+            if isAuthor
+              a.btn.btn-outline-secondary(href=`/guestbook/${entry.id}/edit`)
+                i.bi.bi-pencil-square.me-1(aria-hidden="true")
+                | Edit post
+            if isAdmin && (!entry.moderated || entry.pendingRemoderation)
+              button.btn.btn-outline-danger.d-inline-flex.align-items-center.gap-2(
+                type="button",
+                data-bs-toggle="modal",
+                data-bs-target="#guestbook-hide-modal"
+              )
+                i.bi.bi-eye-slash(aria-hidden="true")
+                if entry.pendingRemoderation
+                  | Confirm moderated
+                else
+                  | Hide from public
+            if isAdmin && entry.moderated
+              button.btn.btn-outline-success.d-inline-flex.align-items-center.gap-2(
+                type="button",
+                data-bs-toggle="modal",
+                data-bs-target="#guestbook-unhide-modal"
+              )
+                i.bi.bi-eye(aria-hidden="true")
+                | Show on public
 
         article.card.border-0.shadow-sm
           .card-body.p-4.p-md-5
+            if entry.moderated && (isAuthor || isAdmin)
+              .alert.alert-warning.border-warning.mb-4(role="status")
+                p.fw-semibold.mb-1
+                  i.bi.bi-shield-slash.me-2(aria-hidden="true")
+                  | Hidden from the public guestbook
+                p.small.mb-0.text-body-secondary
+                  | It does not appear on the main list for guests. The author, admins, and #{coupleNames} can still view it here.
+                if entry.moderationReason && entry.moderationReason.length > 0
+                  p.small.mb-0.mt-2
+                    span.text-body-secondary Note:
+                    = ' '
+                    span.text-prewrap #{entry.moderationReason}
+                if isAdmin && entry.pendingRemoderation
+                  p.small.mb-0.mt-2.fw-semibold.text-body-secondary
+                    i.bi.bi-exclamation-circle.me-1(aria-hidden="true")
+                    if isAutomoderated
+                      | Automatic checks flagged this post — confirm it should stay off the public guestbook, or show it for everyone.
+                    else
+                      | Author edited while hidden — confirm it stays moderated, or show it on the public guestbook.
             header.mb-4
               h1.h3.mb-2
                 if entry.displayName && entry.displayName.trim()
@@ -49,3 +90,66 @@ block content
                   )
                   if entry.photo.name
                     figcaption.small.text-muted.mt-2 #{entry.photo.name}
+
+block modal
+  if isAdmin && (!entry.moderated || entry.pendingRemoderation)
+    #guestbook-hide-modal.modal.fade(
+      tabindex="-1",
+      aria-labelledby="guestbook-hide-modal-label",
+      aria-hidden="true"
+    )
+      .modal-dialog.modal-dialog-centered
+        form.modal-content.border-danger(
+          method="post",
+          action=`/guestbook/${entry.id}/hide`
+        )
+          .modal-header
+            h5#guestbook-hide-modal-label.modal-title.text-danger
+              if entry.pendingRemoderation
+                | Confirm moderated status?
+              else
+                | Hide from public guestbook?
+            button.btn-close(type="button", data-bs-dismiss="modal", aria-label="Close")
+          .modal-body
+            if entry.pendingRemoderation
+              p.small.text-muted.mb-3
+                | The post stays hidden. This clears the “pending re-moderation” flag after you have reviewed the author’s latest edits.
+            else
+              p.small.text-muted.mb-3
+                | The post stays on file; guests will no longer see it on the main guestbook. The author can still view it here.
+            .mb-0
+              label.form-label(for="guestbook-hide-reason") Moderator note (optional)
+              +textareaCounter#guestbook-hide-reason.form-control(
+                name="reason",
+                rows="3",
+                maxlength=moderationReasonMax,
+                placeholder=entry.pendingRemoderation ? "Leave blank to keep the current note, or enter a new note…" : "e.g. Spam, off-topic, or a short note for the couple…"
+              )
+              if entry.pendingRemoderation && entry.moderationReason && entry.moderationReason.length > 0
+                p.form-text.mb-0 A new note replaces the one above; leave the box empty to keep the current note.
+              else
+                p.form-text.mb-0 Optional. The author will see this note on this page.
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button", data-bs-dismiss="modal") Cancel
+            if entry.pendingRemoderation
+              button.btn.btn-primary(type="submit") Confirm moderated
+            else
+              button.btn.btn-danger(type="submit") Hide post
+
+  if isAdmin && entry.moderated
+    #guestbook-unhide-modal.modal.fade(
+      tabindex="-1",
+      aria-labelledby="guestbook-unhide-modal-label",
+      aria-hidden="true"
+    )
+      .modal-dialog.modal-dialog-centered
+        form.modal-content(method="post", action=`/guestbook/${entry.id}/unhide`)
+          .modal-header
+            h5#guestbook-unhide-modal-label.modal-title Show on public guestbook?
+            button.btn-close(type="button", data-bs-dismiss="modal", aria-label="Close")
+          .modal-body
+            p.small.text-muted.mb-0
+              | This message will appear again on the main guestbook for everyone. Any moderator note will be cleared.
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button", data-bs-dismiss="modal") Cancel
+            button.btn.btn-success(type="submit") Show on public

@@ -1,7 +1,7 @@
 doctype html
 include /mixins/flash
 
-html(lang="en")
+html(lang="en-AU")
   head
     meta(charset="UTF-8")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
@@ -22,6 +22,7 @@ html(lang="en")
   body.d-flex.flex-column.min-vh-100
     nav.navbar.navbar-expand-lg.bg-body.border-bottom.sticky-top(role="navigation")
       .container
+        //- todo: change back to '/' in production
         a.navbar-brand.fw-semibold.heading-script(href="/guestbook/__dev/fixture-author") #{coupleNamesShort} 
 
         button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#main-nav" aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation")

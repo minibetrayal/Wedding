@@ -16,6 +16,8 @@ block content
         .vstack.gap-3.mb-2
           +cardLink('/admin/invites', 'envelope-open', 'Manage invitations')
             | View and edit guest invites and related settings.
+          +cardLink('/guestbook/moderation', 'shield-exclamation', 'Guestbook moderation')
+            | Review hidden posts the author edited after removal — confirm or show publicly.
 
         //- Log out — full-width control, easy to hit with a thumb
         .mt-4.pt-3.border-top
