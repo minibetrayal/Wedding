@@ -10,6 +10,9 @@ block title
   | Projector — Admin
 
 block content
+  -
+    const hasMessageText = typeof projector.message === 'string' && projector.message.trim().length > 0
+    const saveDisabledInitial = !hasMessageText && projector.mode === 'message'
   #projector-admin-settings(
     data-mode-url="/admin/projector/mode",
     data-dwell-url="/admin/projector/dwell",
@@ -53,9 +56,13 @@ block content
                 type="radio",
                 name="projector-mode",
                 value="message",
-                checked=projector.mode === 'message'
+                checked=projector.mode === 'message',
+                disabled=!hasMessageText,
+                aria-describedby=hasMessageText ? undefined : 'projector-message-save-hint'
               )
               label.form-check-label(for="mode-message") Message — full-screen text set below (e.g. “Please take your seats”)
+              p#projector-message-save-hint.small.text-muted.mb-0.mt-1.ms-4.ps-1(class=hasMessageText ? 'd-none' : '')
+                | Set a message below before enabling Message mode.
             .form-check
               input.form-check-input#mode-guestbook(
                 type="radio",
@@ -100,19 +107,21 @@ block content
             )
               = projector.message
             .form-text.mb-3
-              | Save updates the text only, or save and switch the projector to message mode so it shows right away. You can leave the text blank if you use other modes.
+              | Save stores the text (empty is allowed unless Message mode is selected in the UI). Save and Display switches to message mode and requires non-empty text. The mode buttons apply immediately; Message mode also saves the current field contents to the projector.
             .d-flex.flex-column.flex-sm-row.align-items-stretch.gap-2
-              button.btn.btn-outline-secondary.d-inline-flex.align-items-center.justify-content-center.gap-2(
+              button#projector-message-btn-save.btn.btn-outline-secondary.d-inline-flex.align-items-center.justify-content-center.gap-2(
                 type="submit",
                 name="messageAction",
-                value="save"
+                value="save",
+                disabled=saveDisabledInitial
               )
                 i.bi.bi-floppy2(aria-hidden="true")
                 | Save
-              button.btn.btn-outline-primary.d-inline-flex.align-items-center.justify-content-center.gap-2(
+              button#projector-message-btn-save-display.btn.btn-outline-primary.d-inline-flex.align-items-center.justify-content-center.gap-2(
                 type="submit",
                 name="messageAction",
-                value="saveAndShow"
+                value="saveAndShow",
+                disabled=!hasMessageText
               )
                 i.bi.bi-projector(aria-hidden="true")
                 | Save and Display

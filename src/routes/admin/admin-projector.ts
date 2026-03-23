@@ -2,7 +2,7 @@ import express from 'express';
 
 import { database } from '../../data/tempConnection';
 import type { ProjectorMode } from '../../data/types/Projector';
-import { scheduleProjectorBroadcast } from '../../util/projectorSse';
+import { broadcast } from '../../util/projectorSse';
 
 const router = express.Router();
 
@@ -37,7 +37,7 @@ router.get('/', async (req, res, next) => {
     try {
         const projector = await database.projector.get();
         const guestbookEntryIds = await database.projector.getGuestbookEntryIds();
-        res.render('pages/admin/projector', {
+        res.render('pages/admin/admin-projector', {
             projector,
             guestbookEntryCount: guestbookEntryIds.length,
             projectorMessageMax: PROJECTOR_MESSAGE_MAX,
@@ -58,8 +58,19 @@ router.post('/mode', express.json(), async (req, res, next) => {
             res.status(400).json({ ok: false, error: 'Invalid mode.' });
             return;
         }
+        if (mode === 'message' && typeof req.body.message === 'string') {
+            const trimmed = req.body.message.trim();
+            if (trimmed.length > PROJECTOR_MESSAGE_MAX) {
+                res.status(400).json({
+                    ok: false,
+                    error: `Message must be at most ${PROJECTOR_MESSAGE_MAX} characters.`,
+                });
+                return;
+            }
+            await database.projector.setMessage(trimmed);
+        }
         await database.projector.setMode(mode);
-        scheduleProjectorBroadcast();
+        await broadcast();
         res.json({ ok: true });
     } catch (err) {
         next(err);
@@ -77,7 +88,7 @@ router.post('/dwell', express.json(), async (req, res, next) => {
             return;
         }
         await database.projector.setDwellMs(dwellSec * 1000);
-        scheduleProjectorBroadcast();
+        await broadcast();
         res.json({ ok: true });
     } catch (err) {
         next(err);
@@ -87,13 +98,17 @@ router.post('/dwell', express.json(), async (req, res, next) => {
 router.post('/message', async (req, res, next) => {
     try {
         const message = typeof req.body.message === 'string' ? req.body.message.trim() : '';
+        const action = req.body.messageAction;
+        const showOnProjector = action === 'saveAndShow';
+
+        if (message.length === 0 && showOnProjector) {
+            req.flash('error', 'Cannot save and display an empty message.');
+            return res.redirect(302, '/admin/projector');
+        }
         if (message.length > PROJECTOR_MESSAGE_MAX) {
             req.flash('error', `Message must be at most ${PROJECTOR_MESSAGE_MAX} characters.`);
             return res.redirect(302, '/admin/projector');
         }
-
-        const action = req.body.messageAction;
-        const showOnProjector = action === 'saveAndShow';
 
         await database.projector.setMessage(message);
         if (showOnProjector) {
@@ -103,7 +118,7 @@ router.post('/message', async (req, res, next) => {
             req.flash('success', 'Message saved.');
         }
 
-        scheduleProjectorBroadcast();
+        await broadcast();
         res.redirect(302, '/admin/projector');
     } catch (err) {
         next(err);

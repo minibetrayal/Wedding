@@ -1,13 +1,13 @@
 import express from 'express';
 
 import { database } from '../data/tempConnection';
-import { openProjectorSseStream } from '../util/projectorSse';
+import { connect } from '../util/projectorSse';
 
 const router = express.Router();
 
 router.get('/stream', async (req, res, next) => {
     try {
-        await openProjectorSseStream(req, res);
+        await connect(req, res);
     } catch (err) {
         next(err);
     }

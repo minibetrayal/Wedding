@@ -10,6 +10,12 @@
     let lastSavedDwell = parseInt(root.dataset.initialDwellSec || '30', 10);
 
     const modeStatus = document.getElementById('projector-mode-status');
+    const messageModeRadio = document.getElementById('mode-message');
+    const messageTextarea = document.getElementById('projector-message');
+    const messageSaveHint = document.getElementById('projector-message-save-hint');
+    const messageBtnSave = document.getElementById('projector-message-btn-save');
+    const messageBtnSaveDisplay = document.getElementById('projector-message-btn-save-display');
+
     const dwellInput = document.getElementById('projector-dwell-slider');
     const dwellLabel = document.getElementById('projector-dwell-label');
     const dwellStatus = document.getElementById('projector-dwell-status');
@@ -45,19 +51,45 @@
         return data;
     }
 
+    function syncMessageSaveButtons() {
+        if (!messageTextarea) return;
+        const hasText = messageTextarea.value.trim().length > 0;
+        const messageSelected = Boolean(messageModeRadio && messageModeRadio.checked);
+        if (messageSaveHint) messageSaveHint.classList.toggle('d-none', hasText);
+        if (messageBtnSave) messageBtnSave.disabled = !hasText && messageSelected;
+        if (messageBtnSaveDisplay) messageBtnSaveDisplay.disabled = !hasText;
+        if (messageModeRadio) {
+            messageModeRadio.disabled = !hasText;
+            if (hasText) messageModeRadio.removeAttribute('aria-describedby');
+            else messageModeRadio.setAttribute('aria-describedby', 'projector-message-save-hint');
+        }
+    }
+
+    if (messageTextarea) {
+        messageTextarea.addEventListener('input', syncMessageSaveButtons);
+        syncMessageSaveButtons();
+    }
+
     root.querySelectorAll('input[name="projector-mode"]').forEach(function (radio) {
         radio.addEventListener('change', async function () {
             if (!radio.checked) return;
+            if (radio.disabled) return;
             const mode = radio.value;
+            const body =
+                mode === 'message' && messageTextarea
+                    ? { mode: 'message', message: messageTextarea.value }
+                    : { mode };
             try {
-                await postJson(modeUrl, { mode });
+                await postJson(modeUrl, body);
                 lastMode = mode;
                 showStatus(modeStatus, 'Mode updated', false);
+                syncMessageSaveButtons();
             } catch (err) {
                 showStatus(modeStatus, err.message || 'Could not save mode', true);
                 root.querySelectorAll('input[name="projector-mode"]').forEach(function (r) {
                     r.checked = r.value === lastMode;
                 });
+                syncMessageSaveButtons();
             }
         });
     });

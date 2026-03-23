@@ -9,8 +9,8 @@ import {
     verifyAdminPassword,
 } from '../../middleware/adminAuth';
 
+import adminProjectorRoutes from './admin-projector';
 import invitesRoutes from './invites';
-import projectorRoutes from './projector';
 
 const router = express.Router();
 
@@ -51,6 +51,6 @@ router.get('/', (req, res) => {
 });
 
 router.use('/invites', invitesRoutes);
-router.use('/projector', projectorRoutes);
+router.use('/projector', adminProjectorRoutes);
 
 export default router;
