@@ -88,13 +88,12 @@ block content
               span.text-muted The guest has not provided any notes.
           dt.col-sm-3.text-muted.small Carpooling
           dd.col-sm-9.mb-0
-            if inv.carpoolRequested
-              p.mb-1
-                span.badge.text-bg-info.text-wrap Requested help with carpooling
-              p.small.text-muted.mb-0
-                | Counted as #{inv.attending()} attending guest#{inv.attending() === 1 ? '' : 's'} on this invite (for planning).
-            else
-              p.small.text-muted.mb-1 Not requested.
+            p.small.mb-1
+              if inv.carpoolRequested
+                span.text-muted Requested carpooling:&nbsp;
+                strong #{inv.attending()}
+              else
+                span.text-muted Not requested.
             p.small.mb-0
               span.text-muted Seats offered for that trip:&nbsp;
               strong #{inv.carpoolSpotsOffered != null ? inv.carpoolSpotsOffered : 0}

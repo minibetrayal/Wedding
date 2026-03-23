@@ -3,3 +3,7 @@ mixin style(name)
 
 mixin script(name)
   script(src=`/js/${name}.js`)
+
+mixin adminScript(name)
+  if isAdmin
+    +script(name)

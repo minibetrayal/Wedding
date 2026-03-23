@@ -58,7 +58,7 @@ block content
           ul.small.mb-2 
             each event, index in scheduledEvents
               li.d-flex.mb-1 
-                span.fw-semibold.d-flex(style=`width: 4.5rem`) #{event.time}
+                span.fw-semibold.d-flex.fixed-width-45rem #{event.time}
                 span — &nbsp;#{event.description}
         else
           | Schedule TBC
@@ -228,13 +228,15 @@ block content
       //- Guestbook and Photos
       +detailsCard('Guestbook and Photos', 'camera')
         ul.small 
+          li.mb-2 
+            | We have booked a professional photographer for the ceremony and group photos. We ask that you 
+            | please refrain from taking your own photos during these times.
+          li.mb-2 
+            | before the ceremony, and at the reception, please feel free to take as many photos as you like!
           li.mb-2
-            | There will be a professional photographer at the ceremony and reception, but please feel free to 
-            | take your own photos on the day
-          li.mb-2
-            | You can also write a message for us in our 
+            | You can share your photos with us in our 
             a.link-primary(href="/guestbook") digital guestbook
-            | , where you can upload photos too.
+            | , along with a message for us.
               
       //- Gifts
       +detailsCard('Gifts', 'gift')

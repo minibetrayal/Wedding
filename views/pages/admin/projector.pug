@@ -1,0 +1,122 @@
+extends /layout
+include /mixins/inclusions
+include /mixins/textareaCounter
+
+block append styles
+  +style('admin')
+  +textareaCounterStyle
+
+block title
+  | Projector — Admin
+
+block content
+  #projector-admin-settings(
+    data-mode-url="/admin/projector/mode",
+    data-dwell-url="/admin/projector/dwell",
+    data-initial-mode=projector.mode,
+    data-initial-dwell-sec=dwellSecondsSnapped
+  )
+    .container.py-4
+      nav.mb-3(aria-label="Breadcrumb")
+        ol.breadcrumb.mb-0
+          li.breadcrumb-item
+            a.link-secondary(href="/admin") Admin
+          li.breadcrumb-item.active(aria-current="page") Projector
+
+      .d-flex.flex-column.flex-sm-row.align-items-stretch.align-items-sm-start.justify-content-between.gap-3.mb-4
+        div
+          h1.h3.mb-1 Reception projector
+          p.text-muted.small.mb-0
+            | Use the options below to choose how the projector displays content.
+        a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.align-self-stretch.align-self-sm-center(
+          href="/projector",
+          target="_blank",
+          rel="noopener noreferrer"
+        )
+          i.bi.bi-box-arrow-up-right(aria-hidden="true")
+          | Open projector
+
+      .card.border.shadow-sm.mb-3
+        .card-body
+          legend.form-label.fw-semibold.mb-3 Display mode
+          .vstack.gap-2
+            .form-check
+              input.form-check-input#mode-home(
+                type="radio",
+                name="projector-mode",
+                value="home",
+                checked=projector.mode === 'home'
+              )
+              label.form-check-label(for="mode-home") Home — rotating photos of #{coupleNames}
+            .form-check
+              input.form-check-input#mode-message(
+                type="radio",
+                name="projector-mode",
+                value="message",
+                checked=projector.mode === 'message'
+              )
+              label.form-check-label(for="mode-message") Message — full-screen text set below (e.g. “Please take your seats”)
+            .form-check
+              input.form-check-input#mode-guestbook(
+                type="radio",
+                name="projector-mode",
+                value="guestbook",
+                checked=projector.mode === 'guestbook'
+              )
+              label.form-check-label(for="mode-guestbook") Guestbook — rotate through public posts
+              p.small.text-muted.mb-0.mt-1.ms-4.ps-1
+                | #{guestbookEntryCount} eligible post#{guestbookEntryCount === 1 ? '' : 's'} (visible, not moderated).
+          p#projector-mode-status.small.text-muted.mb-0.mt-2(role="status", aria-live="polite")
+
+      .card.border.shadow-sm.mb-3
+        .card-body
+          label.form-label.fw-semibold(for="projector-dwell-slider") Seconds per guestbook slide
+          .d-flex.align-items-center.gap-3.flex-wrap
+            input#projector-dwell-slider.form-range.flex-grow-1(
+              type="range",
+              min=dwellMinSec,
+              max=dwellMaxSec,
+              step=dwellStepSec,
+              value=dwellSecondsSnapped,
+              aria-valuemin=dwellMinSec,
+              aria-valuemax=dwellMaxSec,
+              aria-valuenow=dwellSecondsSnapped,
+              aria-describedby="projector-dwell-hint"
+            )
+            span#projector-dwell-label.fw-semibold.tabular-nums #{dwellSecondsSnapped}s
+          p#projector-dwell-hint.form-text.mb-1
+            | #{dwellMinSec}–#{dwellMaxSec} seconds.
+          p#projector-dwell-status.small.text-muted.mb-0(role="status", aria-live="polite")
+
+      form(method="post", action="/admin/projector/message")
+        .card.border.shadow-sm.mb-4
+          .card-body
+            label.form-label.fw-semibold(for="projector-message") Message text
+            +textareaCounter#projector-message.form-control(
+              name="message",
+              rows="4",
+              maxlength=projectorMessageMax,
+              placeholder="Shown when “Message” mode is selected"
+            )
+              = projector.message
+            .form-text.mb-3
+              | Save updates the text only, or save and switch the projector to message mode so it shows right away. You can leave the text blank if you use other modes.
+            .d-flex.flex-column.flex-sm-row.align-items-stretch.gap-2
+              button.btn.btn-outline-secondary.d-inline-flex.align-items-center.justify-content-center.gap-2(
+                type="submit",
+                name="messageAction",
+                value="save"
+              )
+                i.bi.bi-floppy2(aria-hidden="true")
+                | Save
+              button.btn.btn-outline-primary.d-inline-flex.align-items-center.justify-content-center.gap-2(
+                type="submit",
+                name="messageAction",
+                value="saveAndShow"
+              )
+                i.bi.bi-projector(aria-hidden="true")
+                | Save and Display
+
+block script
+  +textareaCounterScript
+  +adminScript('admin-projector')

@@ -1,5 +1,6 @@
 extends /layout
 include /mixins/hero
+include /mixins/guestbookCard
 include /mixins/textareaCounter
 
 block title
@@ -7,6 +8,7 @@ block title
 
 block styles
   +heroStyle
+  +guestbookCardStyle
   +textareaCounterStyle
 
 block content
@@ -66,11 +68,15 @@ block content
                     else
                       | Author edited while hidden — confirm it stays moderated, or show it on the public guestbook.
             header.mb-4
+              -
+                const hasGbDisplayName = entry.displayName && entry.displayName.trim()
               h1.h3.mb-2
-                if entry.displayName && entry.displayName.trim()
-                  | #{entry.displayName.trim()}
-                else
-                  span.text-muted Guest
+                span.guestbook-author-name(class=!hasGbDisplayName ? 'guestbook-author-name--anonymous' : '')
+                  i.bi.bi-person(aria-hidden="true")
+                  if hasGbDisplayName
+                    | #{entry.displayName.trim()}
+                  else
+                    | Anonymous
               .d-flex.flex-wrap.gap-2.text-muted.small
                 time(datetime=entry.created ? entry.created.toISOString() : undefined)
                   | Posted #{entry.formatCreated()}
@@ -153,3 +159,6 @@ block modal
           .modal-footer
             button.btn.btn-outline-secondary(type="button", data-bs-dismiss="modal") Cancel
             button.btn.btn-success(type="submit") Show on public
+
+block script
+  +textareaCounterScript

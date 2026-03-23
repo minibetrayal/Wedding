@@ -1,0 +1,47 @@
+@import "theme";
+
+.gallery-photo-img {
+  width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+.photo-gallery-wrap {
+  position: relative;
+}
+
+.photo-gallery-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.gallery-card {
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.75rem 2rem rgba($body-color, 0.09) !important;
+  }
+
+  .gallery-photo-link {
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 0 1px rgba($body-color, 0.06);
+      pointer-events: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-card {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}

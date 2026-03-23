@@ -1,26 +1,125 @@
 extends /layout
 include /mixins/hero
+include /mixins/gradientRule
+include /mixins/textareaCounter
+include /mixins/inclusions
 
 block title
   | #{coupleNamesShort} — Photos
 
 block styles
   +heroStyle
+  +gradientRuleStyle
+  +textareaCounterStyle
+  +style('photoGallery')
 
 block content
   .container.py-4
-    +hero('Photo gallery')
-    .row.justify-content-center.mt-4
-      .col-12.col-lg-8.col-xl-7
-        .card.border-0.shadow-sm.overflow-hidden
-          .card-body.p-4.p-md-5
-            p.lead.mb-3.mb-md-4
-              | The professional photo gallery will be uploaded here after the event.
-            p.text-muted.mb-4.mb-md-5
-              | If you would like to share your own photos with us, visit our digital guestbook — we would love to see the day through your eyes.
-            .d-flex.flex-column.flex-sm-row.align-items-stretch.align-items-sm-center.justify-content-center.gap-2
-              a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2(
-                href="/guestbook"
+    +hero('Photo Gallery')
+
+    if isAdmin
+      .card.border-0.shadow-sm.my-4
+        .card-body.p-4
+          h2.h5.mb-1.d-inline-flex.align-items-center.gap-2
+            i.bi.bi-images.text-primary(aria-hidden="true")
+            | Upload professional photos
+          p.text-muted.small.mb-3
+            | Images are stored on the server and shown below. You can select multiple files at once (up to 40 per upload, 20 MB each).
+          form(
+            method="post"
+            action="/photos/professional"
+            enctype="multipart/form-data"
+          )
+            .mb-3
+              label.form-label(for="gallery-photos-input") Image files
+              input#gallery-photos-input.form-control(
+                type="file"
+                name="photos"
+                accept="image/*"
+                multiple
+                required
               )
-                i.bi.bi-journal-text(aria-hidden="true")
-                | Open the guestbook
+            button.btn.btn-primary.d-inline-flex.align-items-center.gap-2(type="submit")
+              i.bi.bi-cloud-upload(aria-hidden="true")
+              | Upload
+
+    if professionalPhotos && professionalPhotos.length
+      section.photo-gallery-wrap.pb-4.pb-md-5(aria-label="Professional wedding photos")
+        .photo-gallery-inner
+          .text-center.mb-4.mb-lg-5.px-2
+            p.vibes-script.fs-3.text-body.mb-2.pt-1 Moments from the day
+            +gradientRule
+            p.text-muted.small.mx-auto.mb-0
+              | Each image opens full size in a new tab. Thank you to everyone who shared in our celebration.
+
+          .row.row-cols-1.row-cols-md-2.row-cols-xl-3.g-4.mb-4
+            each photo in professionalPhotos
+              .col
+                figure.card.gallery-card.h-100.border-0.shadow-sm.overflow-hidden.mb-0
+                  a.gallery-photo-link.d-block.bg-body-secondary(
+                    href=`/photos/${photo.id}`
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  )
+                    img.gallery-photo-img(
+                      src=`/photos/${photo.id}`
+                      alt=photo.caption ? photo.caption : 'Wedding photo'
+                      loading="lazy"
+                    )
+                  figcaption.card-body.p-3.p-md-4
+                    if photo.caption
+                      p.mb-0.text-body #{photo.caption}
+                    else if isAdmin
+                      p.mb-0.text-muted.small.fst-italic No caption yet
+                    else
+                      span.visually-hidden Wedding photograph
+                    if isAdmin
+                      form.mt-3(method="post" action=`/photos/professional/${photo.id}/caption`)
+                        label.form-label.small.mb-1(for=`caption-${photo.id}`) Caption
+                        +textareaCounter.form-control.form-control-sm.mb-0(
+                          id='caption-' + photo.id,
+                          name="caption",
+                          rows="2",
+                          maxlength=photoCaptionMaxLength,
+                          placeholder="Optional caption"
+                        ) #{photo.caption || ''}
+                        .d-flex.flex-column.flex-md-row.gap-2.mt-2
+                          button.btn.btn-sm.btn-outline-primary.d-inline-flex.align-items-center.justify-content-center.gap-1.flex-md-fill(
+                            type="submit"
+                          )
+                            i.bi.bi-check-lg(aria-hidden="true")
+                            | Save caption
+                          button.btn.btn-sm.btn-outline-danger.d-inline-flex.align-items-center.justify-content-center.gap-1.flex-md-fill(
+                            type="submit"
+                            formaction=`/photos/professional/${photo.id}/delete`
+                            onclick="return confirm('Remove this photo from the gallery? The file will be deleted.');"
+                          )
+                            i.bi.bi-trash(aria-hidden="true")
+                            | Delete photo
+
+      if !isAdmin
+        p.text-muted.small.text-center.mb-0
+          | Guest snapshots are welcome in our&nbsp;
+          a(href="/guestbook") digital guestbook
+          | .
+
+    else
+      .row.justify-content-center.mt-4
+        .col-12.col-lg-8.col-xl-7
+          .card.border-0.shadow-sm.overflow-hidden
+            .card-body.p-4.p-md-5.text-center
+              p.vibes-script.fs-4.text-body.mb-3 Coming soon
+              +gradientRule(0, 4)
+              p.lead.mb-3.mb-md-4
+                | The professional photo gallery will appear here once photos are uploaded.
+              p.text-muted.mb-4.mb-md-5
+                | If you would like to share your own photos with us, visit our digital guestbook — we would love to see the day through your eyes.
+              .d-flex.flex-column.flex-sm-row.align-items-stretch.align-items-sm-center.justify-content-center.gap-2
+                a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2(
+                  href="/guestbook"
+                )
+                  i.bi.bi-journal-text(aria-hidden="true")
+                  | Open the guestbook
+
+block script
+  +textareaCounterScript

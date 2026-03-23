@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { database, DbNotFoundError } from '../../data/database';
+import { database, DbNotFoundError } from '../../data/tempConnection';
 import { parseCarpoolSpotsOffered } from '../../util/inviteCarpool';
 
 const router = express.Router();
@@ -99,7 +99,9 @@ router.post('/', async (req, res, next) => {
         }
         const invite = await database.invites.create(name, invitees);
         const carpoolRequested = req.body.carpoolRequested === '1' || req.body.carpoolRequested === 'on';
-        const carpoolSpotsOffered = parseCarpoolSpotsOffered(req.body.carpoolSpotsOffered);
+        const carpoolSpotsOffered = carpoolRequested
+            ? 0
+            : parseCarpoolSpotsOffered(req.body.carpoolSpotsOffered);
         if (phone || email || notes || carpoolRequested || carpoolSpotsOffered > 0) {
             await database.invites.update(
                 invite.id,
@@ -177,7 +179,9 @@ router.post('/:inviteId/edit', async (req, res, next) => {
         }
         await database.invites.updateInvite(inviteId, name, nextInvitees);
         const carpoolRequested = req.body.carpoolRequested === '1' || req.body.carpoolRequested === 'on';
-        const carpoolSpotsOffered = parseCarpoolSpotsOffered(req.body.carpoolSpotsOffered);
+        const carpoolSpotsOffered = carpoolRequested
+            ? 0
+            : parseCarpoolSpotsOffered(req.body.carpoolSpotsOffered);
         await database.invites.update(
             invite.id,
             typeof phone === 'string' && phone.trim() ? phone.trim() : undefined,

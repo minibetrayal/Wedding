@@ -6,7 +6,6 @@
   - isNew: boolean — true for create flow (affects headings, submit label, form action default)
   Optional overrides:
   - formAction: string — POST target (defaults: /admin/invites if isNew, else /admin/invites/:id/edit)
-  - htmlFormId: string — DOM id for the form (default: invite-edit-form)
   websiteUrl is available from res.locals for reference (optional)
   UI: recipient name + each guest name stay visible; other invitation fields and per-guest RSVP/dietary
   sit in Bootstrap collapses (same field names/POST shape as before).
@@ -27,8 +26,6 @@ block content
       ? '/admin/invites'
       : '/admin/invites/' + (inv.id || '') + '/edit'
     const actionUrl = typeof formAction === 'string' ? formAction : defaultAction
-    const resolvedFormId =
-      typeof htmlFormId === 'string' && htmlFormId.length ? htmlFormId : 'invite-edit-form'
     const guestRows =
       inv.invitees && inv.invitees.length
         ? inv.invitees
@@ -59,7 +56,7 @@ block content
           | Recipient and guest names are shown first. Expand the sections below when you need to modify phone, email, notes, RSVP state, or dietary details.
 
     form(
-      id=resolvedFormId,
+      id='invite-edit-form',
       method="post",
       action=actionUrl,
       novalidate
@@ -132,10 +129,7 @@ block content
                 .form-text.small Message or notes the guest leaves when responding.
 
               fieldset.mt-3.mb-0.border-0.p-0
-                legend.form-label.small.text-muted.mb-2.px-0 Ceremony → reception (carpool)
-                  span.visually-hidden (optional)
-                p.small.text-muted.mb-2
-                  | Carpooling from ceremony to reception.
+                label.form-label Carpooling
                 .form-check.mb-2
                   input#invite-carpool-requested.form-check-input(
                     type="checkbox",
@@ -143,23 +137,26 @@ block content
                     value="1",
                     checked=!!inv.carpoolRequested
                   )
-                  label.form-check-label(for="invite-carpool-requested")
-                    | We need carpooling from the ceremony to the reception for people on this invitation
+                  label.form-check-label(for="invite-carpool-requested") Carpooling Requested
                 .mb-0
-                  label.form-label.small(for="invite-carpool-spots") Spare seats we can offer for that trip
+                  label.form-label.small(for="invite-carpool-spots") Carpooling seats offered
                   input#invite-carpool-spots.form-control(
                     type="number",
                     name="carpoolSpotsOffered",
                     min="0",
                     max="50",
                     step="1",
-                    value=inv.carpoolSpotsOffered != null ? inv.carpoolSpotsOffered : 0
+                    value=inv.carpoolRequested ? 0 : (inv.carpoolSpotsOffered != null ? inv.carpoolSpotsOffered : 0),
+                    readonly=inv.carpoolRequested || false,
+                    aria-disabled=inv.carpoolRequested ? 'true' : false
                   )
-                  .form-text.small
-                    | If you are driving and have empty seats (e.g. two guests in a five-seat car), enter how many extra people you could take. Use 0 if none.
+                  p#invite-carpool-spots-hint.small.text-muted.mb-0(class=inv.carpoolRequested ? '' : 'd-none')
+                    | Not applicable while carpooling is requested.
+                  .form-text.small#invite-carpool-spots-form-text(class=inv.carpoolRequested ? 'd-none' : '')
+                    | Spare seats this party can offer for others (0 if none). Disabled while “Carpooling requested” is checked.
 
               fieldset.mt-3.mb-0.border-0.p-0
-                legend.form-label.small.text-muted.mb-2.px-0 RSVP status
+                legend.form-label RSVP status
                   span.visually-hidden (optional overrides)
                 p.small.text-muted.mb-2
                   | Normally set when the guest opens the invite or submits an RSVP. Adjust here if you need to correct or reset state.
@@ -364,192 +361,4 @@ block modal
 
 block script
   +script('formValidate')
-  -
-    const scriptFormId =
-      typeof htmlFormId === 'string' && htmlFormId.length ? htmlFormId : 'invite-edit-form'
-  script.
-    (function () {
-      var formId = !{JSON.stringify(scriptFormId)};
-      var rowsContainer = document.querySelector('#' + formId + ' .invitee-rows');
-      var form = document.getElementById(formId);
-      var addBtn = form ? form.querySelector('.add-invitee') : null;
-      if (!rowsContainer || !addBtn || !form) return;
-
-      var removeModalEl = document.getElementById('remove-guest-modal');
-      var removeModalLead = document.getElementById('remove-guest-modal-lead');
-      var removeModalConfirm = document.getElementById('remove-guest-modal-confirm');
-      var removeModal =
-        removeModalEl && typeof bootstrap !== 'undefined'
-          ? bootstrap.Modal.getOrCreateInstance(removeModalEl)
-          : null;
-      var pendingRemoveRow = null;
-
-      if (removeModalEl) {
-        removeModalEl.addEventListener('hidden.bs.modal', function () {
-          pendingRemoveRow = null;
-        });
-      }
-
-      if (removeModalConfirm && removeModal) {
-        removeModalConfirm.addEventListener('click', function () {
-          if (!pendingRemoveRow) return;
-          var row = pendingRemoveRow;
-          pendingRemoveRow = null;
-          removeModal.hide();
-          row.remove();
-          reindexRows();
-          syncRemoveButtons();
-        });
-      }
-
-      function nextIndex() {
-        return rowsContainer.querySelectorAll('[data-invitee-row]').length;
-      }
-
-      function syncRemoveButtons() {
-        var rows = rowsContainer.querySelectorAll('[data-invitee-row]');
-        var showRemove = rows.length > 1;
-        rows.forEach(function (row) {
-          var btn = row.querySelector('.remove-invitee');
-          if (btn) btn.classList.toggle('d-none', !showRemove);
-        });
-      }
-
-      function addRow() {
-        var i = nextIndex();
-        var wrap = document.createElement('div');
-        wrap.className = 'invitee-row card card-body py-3 px-3 border';
-        wrap.setAttribute('data-invitee-row', '');
-        wrap.innerHTML =
-          '<input type="hidden" class="invitee-id-input" name="invitees[' + i + '][id]" value="">' +
-          '<div class="d-flex align-items-end gap-2">' +
-          '<div class="flex-grow-1 min-w-0">' +
-          '<label class="form-label small mb-1" for="invitee-' + i + '-name">Guest name' +
-          '<span class="text-danger" aria-hidden="true">&nbsp;*</span></label>' +
-          '<input class="form-control invitee-name-input" id="invitee-' + i + '-name" type="text" ' +
-          'name="invitees[' + i + '][name]" required autocomplete="name" placeholder="Full name">' +
-          '<div class="invalid-feedback">Please enter this guest\'s name.</div>' +
-          '</div>' +
-          '<div class="d-flex flex-shrink-0 gap-1 align-items-center">' +
-          '<button class="invitee-extra-toggle btn btn-outline-secondary d-inline-flex align-items-center gap-1 collapsed" type="button" ' +
-          'data-bs-toggle="collapse" data-bs-target="#invitee-' + i + '-extra" aria-expanded="false" aria-controls="invitee-' + i + '-extra" ' +
-          'aria-label="More fields for guest">' +
-          '<span class="visually-hidden">More for guest</span>' +
-          '<i class="bi bi-sliders" aria-hidden="true"></i>' +
-          '<span class="d-none d-md-inline">RSVP & dietary</span>' +
-          '<i class="bi bi-chevron-down small collapse-chevron" aria-hidden="true"></i>' +
-          '</button>' +
-          '<button class="btn btn-outline-danger remove-invitee d-inline-flex align-items-center gap-1" type="button" title="Remove guest" aria-label="Remove guest">' +
-          '<i class="bi bi-trash" aria-hidden="true"></i><span class="d-none d-md-inline">Remove</span></button>' +
-          '</div></div>' +
-          '<div class="collapse invitee-extra-collapse mt-2" id="invitee-' + i + '-extra">' +
-          '<div class="pt-3 border-top">' +
-          '<div class="row g-2 align-items-start"><div class="col-12">' +
-          '<fieldset class="p-0 m-0 border-0">' +
-          '<legend class="form-label small mb-1 px-0">Attending</legend>' +
-          '<div class="btn-group invitee-attending-group w-100 w-sm-auto rounded-pill overflow-hidden" role="group" aria-label="Attending status for guest">' +
-          '<input class="btn-check invitee-attending-radio" type="radio" name="invitees[' + i + '][attending]" id="invitee-' + i + '-attend-no" value="false">' +
-          '<label class="btn btn-outline-danger" for="invitee-' + i + '-attend-no">No</label>' +
-          '<input class="btn-check invitee-attending-radio" type="radio" name="invitees[' + i + '][attending]" id="invitee-' + i + '-attend-none" value="" checked>' +
-          '<label class="btn btn-outline-dark" for="invitee-' + i + '-attend-none">Not answered</label>' +
-          '<input class="btn-check invitee-attending-radio" type="radio" name="invitees[' + i + '][attending]" id="invitee-' + i + '-attend-yes" value="true">' +
-          '<label class="btn btn-outline-primary" for="invitee-' + i + '-attend-yes">Yes</label>' +
-          '</div></fieldset></div></div>' +
-          '<div class="row g-2 mt-1"><div class="col-12">' +
-          '<label class="form-label small mb-1" for="invitee-' + i + '-dietary">Dietary requirements</label>' +
-          '<textarea class="form-control invitee-dietary-input" id="invitee-' + i + '-dietary" name="invitees[' + i + '][dietaryRestrictions]" rows="2" placeholder="The guest has not specified any dietary requirements"></textarea>' +
-          '</div></div></div></div>';
-        rowsContainer.appendChild(wrap);
-        reindexRows();
-        syncRemoveButtons();
-        var input = wrap.querySelector('.invitee-name-input');
-        if (input) input.focus();
-      }
-
-      rowsContainer.addEventListener('click', function (e) {
-        var t = e.target;
-        if (!t.closest) return;
-        var remove = t.closest('.remove-invitee');
-        if (!remove) return;
-        var row = remove.closest('[data-invitee-row]');
-        if (!row || rowsContainer.querySelectorAll('[data-invitee-row]').length <= 1) return;
-        var nameInput = row.querySelector('.invitee-name-input');
-        var nameVal = (nameInput && nameInput.value ? nameInput.value : '').trim();
-        var question = nameVal
-          ? 'Remove "' + nameVal.replace(/"/g, "'") + '" from this invitation? You can reload before saving to undo.'
-          : 'Remove this guest from this invitation? You can reload before saving to undo.';
-        if (!removeModal || !removeModalLead) {
-          if (!window.confirm(question)) return;
-          row.remove();
-          reindexRows();
-          syncRemoveButtons();
-          return;
-        }
-        removeModalLead.textContent = nameVal
-          ? 'Remove "' + nameVal.replace(/"/g, "'") + '" from this invitation?'
-          : 'Remove this guest from this invitation?';
-        pendingRemoveRow = row;
-        removeModal.show();
-      });
-
-      function reindexRows() {
-        var attendSuffixes = ['no', 'none', 'yes'];
-        rowsContainer.querySelectorAll('[data-invitee-row]').forEach(function (row, i) {
-          var nameInput = row.querySelector('.invitee-name-input');
-          var idInput = row.querySelector('.invitee-id-input');
-          var dietary = row.querySelector('.invitee-dietary-input');
-          var labels = row.querySelectorAll('label.form-label');
-          var group = row.querySelector('.invitee-attending-group');
-          if (idInput) idInput.name = 'invitees[' + i + '][id]';
-          if (nameInput) {
-            nameInput.name = 'invitees[' + i + '][name]';
-            nameInput.id = 'invitee-' + i + '-name';
-          }
-          row.querySelectorAll('input.invitee-attending-radio').forEach(function (radio, ri) {
-            radio.name = 'invitees[' + i + '][attending]';
-            radio.id = 'invitee-' + i + '-attend-' + attendSuffixes[ri];
-          });
-          row.querySelectorAll('.invitee-attending-group label').forEach(function (lbl, li) {
-            lbl.setAttribute('for', 'invitee-' + i + '-attend-' + attendSuffixes[li]);
-          });
-          if (group) {
-            group.setAttribute('aria-label', 'Attending status for guest ' + (i + 1));
-          }
-          if (dietary) {
-            dietary.name = 'invitees[' + i + '][dietaryRestrictions]';
-            dietary.id = 'invitee-' + i + '-dietary';
-          }
-          if (labels[0]) labels[0].setAttribute('for', 'invitee-' + i + '-name');
-          if (labels[1]) labels[1].setAttribute('for', 'invitee-' + i + '-dietary');
-          var extraCollapse = row.querySelector('.invitee-extra-collapse');
-          var extraToggle = row.querySelector('.invitee-extra-toggle');
-          if (extraCollapse) {
-            extraCollapse.id = 'invitee-' + i + '-extra';
-          }
-          if (extraToggle) {
-            extraToggle.setAttribute('data-bs-target', '#invitee-' + i + '-extra');
-            extraToggle.setAttribute('aria-controls', 'invitee-' + i + '-extra');
-            extraToggle.setAttribute('aria-label', 'More fields for guest ' + (i + 1));
-            var vh = extraToggle.querySelector('.visually-hidden');
-            if (vh) vh.textContent = 'More for guest ' + (i + 1);
-          }
-        });
-      }
-
-      addBtn.addEventListener('click', function () {
-        addRow();
-      });
-
-      syncRemoveButtons();
-
-      var deleteForm = document.getElementById('delete-invite-form');
-      var deleteModalConfirm = document.getElementById('delete-invite-modal-confirm');
-      var deleteModalEl = document.getElementById('delete-invite-modal');
-      if (deleteForm && deleteModalConfirm && deleteModalEl && typeof bootstrap !== 'undefined') {
-        var deleteModalInstance = bootstrap.Modal.getOrCreateInstance(deleteModalEl);
-        deleteModalConfirm.addEventListener('click', function () {
-          deleteModalInstance.hide();
-          deleteForm.submit();
-        });
-      }
-    })();
+  +adminScript('invite-edit')

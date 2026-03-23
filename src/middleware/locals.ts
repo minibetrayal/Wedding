@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 
 import { formatDate, formatTime, getDateParts } from '../util/timeUtils';
+import { hasValidAdminCookie } from './adminAuth';
 
 const heroImagesDir = path.join(__dirname, '../../public/images/hero');
 
@@ -137,6 +138,8 @@ export default async function locals(req: express.Request, res: express.Response
         }
     }
     res.locals.receptionMenu.sort((a: { index: number }, b: { index: number }) => a.index - b.index);
+
+    res.locals.isAdmin = hasValidAdminCookie(req);
 
     next();
 }

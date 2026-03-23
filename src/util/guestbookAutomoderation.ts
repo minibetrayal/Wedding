@@ -10,23 +10,28 @@ const BARE_DOMAIN_RE =
 /** Word-boundary matches; extend or trim for your tone. */
 const PROFANITY_WORDS = [
     'arse',
+    'ass',
     'asshole',
-    'bastard',
     'bitch',
-    'bloody',
-    'bollocks',
     'bullshit',
     'cock',
-    'crap',
+    'cockhead',
     'cunt',
-    'damn',
     'dick',
+    'dickhead',
     'fuck',
     'piss',
+    'pussies',
+    'pussy',
     'shit',
+    'shithead',
     'slut',
+    'sluthead',
     'twat',
     'whore',
+    'nigga',
+    'nigger',
+    'niggers'
 ];
 
 function escapeRegex(s: string): string {

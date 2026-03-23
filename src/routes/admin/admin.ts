@@ -10,6 +10,7 @@ import {
 } from '../../middleware/adminAuth';
 
 import invitesRoutes from './invites';
+import projectorRoutes from './projector';
 
 const router = express.Router();
 
@@ -50,5 +51,6 @@ router.get('/', (req, res) => {
 });
 
 router.use('/invites', invitesRoutes);
+router.use('/projector', projectorRoutes);
 
 export default router;

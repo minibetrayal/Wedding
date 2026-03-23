@@ -1,15 +1,110 @@
 import express from 'express';
-import { database, DbError, DbNotFoundError } from '../data/database';
+
+import { database, DbError, DbNotFoundError } from '../data/tempConnection';
+import { hasValidAdminCookie, requireAdmin } from '../middleware/adminAuth';
+import { uploadProfessionalGallery } from '../middleware/professionalGalleryUpload';
 import { HttpError } from '../types/HttpError';
 
 const router = express.Router();
+
+/** Matches client-side maxlength on the photos page caption editor. */
+const PHOTO_CAPTION_MAX_LENGTH = 500;
 
 function toHttpDate(date: Date): string {
     return new Date(date).toUTCString();
 }
 
-router.get('/', (req, res) => {
-    res.render('pages/photos');
+router.get('/', async (req, res, next) => {
+    try {
+        const professionalPhotos = await database.photos.getAll(true);
+        professionalPhotos.sort(
+            (a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime(),
+        );
+        res.render('pages/photos', {
+            professionalPhotos,
+            photoCaptionMaxLength: PHOTO_CAPTION_MAX_LENGTH,
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.post(
+    '/professional',
+    requireAdmin,
+    uploadProfessionalGallery(() => '/photos'),
+    async (req, res, next) => {
+        const files = req.files;
+        if (!Array.isArray(files) || files.length === 0) {
+            req.flash('error', 'Please choose at least one image.');
+            return res.redirect(302, '/photos');
+        }
+        try {
+            for (const file of files) {
+                await database.photos.create(
+                    file.originalname || 'photo',
+                    file.mimetype,
+                    file.buffer,
+                    true,
+                    undefined,
+                );
+            }
+            req.flash(
+                'success',
+                files.length === 1 ? 'Photo uploaded.' : `${files.length} photos uploaded.`,
+            );
+            res.redirect(302, '/photos');
+        } catch (err) {
+            next(err);
+        }
+    },
+);
+
+router.post('/professional/:photoId/caption', requireAdmin, async (req, res, next) => {
+    const { photoId } = req.params;
+    const raw = req.body?.caption;
+    const caption =
+        typeof raw === 'string' ? raw.trim().slice(0, PHOTO_CAPTION_MAX_LENGTH) : '';
+    try {
+        const photo = await database.photos.get(photoId);
+        if (!photo.professional) {
+            req.flash('error', 'That photo is not part of the gallery.');
+            return res.redirect(302, '/photos');
+        }
+        await database.photos.updateCaption(photoId, caption.length > 0 ? caption : undefined);
+        req.flash('success', 'Caption saved.');
+        res.redirect(302, '/photos');
+    } catch (err) {
+        if (err instanceof DbNotFoundError) {
+            req.flash('error', 'Photo not found.');
+            return res.redirect(302, '/photos');
+        }
+        if (err instanceof DbError) {
+            req.flash('error', err.message);
+            return res.redirect(302, '/photos');
+        }
+        next(err);
+    }
+});
+
+router.post('/professional/:photoId/delete', requireAdmin, async (req, res, next) => {
+    const { photoId } = req.params;
+    try {
+        const photo = await database.photos.get(photoId);
+        if (!photo.professional) {
+            req.flash('error', 'That photo is not part of the gallery.');
+            return res.redirect(302, '/photos');
+        }
+        await database.photos.delete(photoId);
+        req.flash('success', 'Photo removed from the gallery.');
+        res.redirect(302, '/photos');
+    } catch (err) {
+        if (err instanceof DbNotFoundError) {
+            req.flash('error', 'Photo not found.');
+            return res.redirect(302, '/photos');
+        }
+        next(err);
+    }
 });
 
 router.get('/:photoId', async (req, res, next) => {

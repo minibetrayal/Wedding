@@ -1,0 +1,11 @@
+include /mixins/inclusions
+
+mixin gradientRuleStyle
+  +style('gradientRule')
+
+mixin gradientRule(mt = 0, mb = 3)
+  .gradient-rule.mx-auto(
+    class=[mt > 0 ? `mt-${mt}` : null, mb > 0 ? `mb-${mb}` : null].filter(Boolean).join(' ')
+    role="presentation"
+    aria-hidden="true"
+  )

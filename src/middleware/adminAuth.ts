@@ -31,6 +31,7 @@ type PostLoginRedirectRule = { isPrefix: boolean; path: string };
 const ALLOWED_POST_LOGIN_REDIRECTS: PostLoginRedirectRule[] = [
     { isPrefix: true, path: '/admin' },
     { isPrefix: false, path: '/guestbook/moderation' },
+    { isPrefix: true, path: '/photos' },
 ];
 
 /**

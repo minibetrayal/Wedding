@@ -1,7 +1,52 @@
-extends /layout
+extends /layout-projector
+include /mixins/inclusions
+include /mixins/hero
+
+block styles
+  +heroStyle
+  +style('projector')
 
 block title
-  | Projector
+  | #{coupleNamesShort} — Projector
 
 block content
-  h1 Projector
+  -
+    const rawMode = projector && projector.mode ? projector.mode : 'home'
+    //- Guestbook UI removed for now; treat as home so one panel stays visible.
+    const mode = rawMode === 'guestbook' ? 'home' : rawMode
+    const initialPayload = JSON.stringify({
+      mode: rawMode,
+      message: projector && typeof projector.message === 'string' ? projector.message : '',
+      dwellMs: projector && typeof projector.dwellMs === 'number' ? projector.dwellMs : 30000,
+    }).replace(/</g, '\\u003c')
+
+  script#projector-initial(type="application/json")!= initialPayload
+
+  #projector-root.projector-root(
+    role="region",
+    aria-label="Wedding projector display",
+    data-mode=rawMode
+  )
+    section#projector-panel-home.projector-panel.projector-panel--home(
+      class=mode === 'home' ? 'is-active' : undefined,
+      aria-hidden=mode === 'home' ? 'false' : 'true',
+      aria-label="Welcome"
+    )
+      .projector-panel-inner.w-100
+        +hero(heroImages)
+
+    section#projector-panel-message.projector-panel.projector-panel--message(
+      class=mode === 'message' ? 'is-active' : undefined,
+      aria-hidden=mode === 'message' ? 'false' : 'true',
+      aria-label="Announcement"
+    )
+      .projector-panel-inner
+        .projector-message-wrap
+          if projector.message && projector.message.trim()
+            p#projector-message-body.projector-message-text.text-prewrap #{projector.message}
+          else
+            p#projector-message-body.projector-message-text.projector-message-empty.mb-0
+              | No message text yet — set one in admin (Projector).
+
+block script
+  +script('projector')

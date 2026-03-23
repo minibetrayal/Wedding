@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { database, DbNotFoundError } from '../data/database';
+import { database, DbNotFoundError } from '../data/tempConnection';
 import { hasValidAdminCookie } from '../middleware/adminAuth';
 import { clearRsvpCookie, getRsvpCookie, setRsvpCookie } from '../middleware/rsvpCookie';
 import { normalizeArray } from '../util/arrayUtils';

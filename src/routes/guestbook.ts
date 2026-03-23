@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 
-import { database, DbNotFoundError } from '../data/database';
+import { database, DbNotFoundError } from '../data/tempConnection';
 import { getAuthorCookie, isViewerAuthor, setAuthorCookie } from '../middleware/authorCookie';
 import { uploadPhoto } from '../middleware/guestbookUpload';
 import { Author } from '../data/types/Author';
@@ -12,6 +12,7 @@ import {
     formatAutomoderationReason,
     isGuestbookAutomaticModerationReason,
 } from '../util/guestbookAutomoderation';
+import { scheduleProjectorBroadcast } from '../util/projectorSse';
 
 const router = express.Router();
 
@@ -46,9 +47,8 @@ async function get(
     if (page > totalPages) page = totalPages;
     const offset = (page - 1) * limit;
     const entries = filteredEntries.slice(offset, offset + limit);
-    const isAdmin = hasValidAdminCookie(req);
 
-    res.render('pages/guestbook', { entries, page, limit, totalEntries, listMode, isAdmin });
+    res.render('pages/guestbook', { entries, page, limit, totalEntries, listMode });
 }
 
 /** Development only: set author cookie to seeded fixture user, then open My posts with all list states. */
@@ -140,6 +140,7 @@ router.post('/new', uploadPhoto(() => '/guestbook/new'), async (req, res, next) 
                 'Your message was saved but is not on the public guestbook yet — a moderator will review it shortly (automatic checks).'
             );
         }
+        scheduleProjectorBroadcast();
         req.flash('success', 'Your message was posted.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entry.id)}`);
     } catch (err) {
@@ -163,7 +164,6 @@ router.get('/:entryId', async (req, res, next) => {
         res.render('pages/guestbook-view', {
             entry,
             isAuthor,
-            isAdmin,
             isAutomoderated: isGuestbookAutomaticModerationReason(entry.moderationReason),
             moderationReasonMax: MODERATION_REASON_MAX,
         });
@@ -242,6 +242,7 @@ router.post('/:entryId/edit',
                 'Your update was saved but the post is not on the public guestbook until a moderator reviews it (automatic checks).'
             );
         }
+        scheduleProjectorBroadcast();
         req.flash('success', 'Your message was updated.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
     } catch (err) {
@@ -265,6 +266,7 @@ router.post('/:entryId/delete', async (req, res, next) => {
             await database.photos.delete(entry.photo.id);
         }
         await database.guestbook.delete(entryId);
+        scheduleProjectorBroadcast();
         req.flash('success', 'Your message was deleted.');
         res.redirect(302, '/guestbook/mine');
     } catch (err) {
@@ -287,6 +289,7 @@ router.post('/:entryId/hide', async (req, res, next) => {
         const reasonRaw = typeof req.body.reason === 'string' ? req.body.reason.trim() : '';
         const reason = reasonRaw.length > 0 ? reasonRaw.slice(0, MODERATION_REASON_MAX) : undefined;
         await database.guestbook.hide(entryId, reason);
+        scheduleProjectorBroadcast();
         req.flash('success', 'This message is now hidden from the public guestbook.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
     } catch (err) {
@@ -307,6 +310,7 @@ router.post('/:entryId/unhide', async (req, res, next) => {
         const entryId = req.params.entryId;
         await database.guestbook.get(entryId);
         await database.guestbook.show(entryId);
+        scheduleProjectorBroadcast();
         req.flash('success', 'This message is visible on the public guestbook again.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
     } catch (err) {

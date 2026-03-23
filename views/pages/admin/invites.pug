@@ -1,14 +1,8 @@
 extends /layout
+include /mixins/inclusions
 
 block append styles
-  style.
-    .invite-list-item--has-details {
-      background-color: rgba(var(--bs-info-rgb), 0.07);
-    }
-    a.invite-list-item--has-details.list-group-item-action:hover,
-    a.invite-list-item--has-details.list-group-item-action:focus-visible {
-      background-color: rgba(var(--bs-info-rgb), 0.12);
-    }
+  +style('invites')
 
 block title
   | Invitations — Admin
@@ -88,34 +82,69 @@ block content
     h2.h6.text-muted.text-uppercase.mb-2 All invitations
     if invites.length
       p.small.text-muted.mb-3
-        span.d-block.mb-2 Status (left border)
-        span.ms-1
-          span.text-secondary.me-2.text-nowrap
+        span.d-block.mb-2 Click a label to filter the list; click again to show all.
+        span.ms-1(
+          role="group"
+          aria-label="Filter invitations by status or badge"
+        )
+          button.invite-filter-legend.text-secondary.me-2.text-nowrap(
+            type="button"
+            data-invite-filter="not-seen"
+            aria-pressed="false"
+          )
             i.bi.bi-envelope.me-1(aria-hidden="true")
             | Not seen
-          span.text-info.me-2.text-nowrap
+          button.invite-filter-legend.text-info.me-2.text-nowrap(
+            type="button"
+            data-invite-filter="seen"
+            aria-pressed="false"
+          )
             i.bi.bi-envelope-open.me-1(aria-hidden="true")
             | Seen
-          span.text-warning.me-2.text-nowrap
+          button.invite-filter-legend.text-warning.me-2.text-nowrap(
+            type="button"
+            data-invite-filter="declined"
+            aria-pressed="false"
+          )
             i.bi.bi-x-lg.me-1(aria-hidden="true")
             | Declined
-          span.text-success.me-2.text-nowrap
+          button.invite-filter-legend.text-success.me-2.text-nowrap(
+            type="button"
+            data-invite-filter="attending"
+            aria-pressed="false"
+          )
             i.bi.bi-people-fill.me-1(aria-hidden="true")
             | Attending
-          span.text-dark.me-2.text-nowrap
+          button.invite-filter-legend.text-dark.me-2.text-nowrap(
+            type="button"
+            data-invite-filter="guest-note"
+            aria-pressed="false"
+          )
             i.bi.bi-chat-left-text.me-1(aria-hidden="true")
             | Guest note on invite
-          span.text-dark.me-2.text-nowrap
+          button.invite-filter-legend.text-dark.me-2.text-nowrap(
+            type="button"
+            data-invite-filter="dietary"
+            aria-pressed="false"
+          )
             i.bi.bi-fork-knife.me-1(aria-hidden="true")
             | Special dietary info
-          span.text-danger.me-2.text-nowrap
+          button.invite-filter-legend.text-danger.me-2.text-nowrap(
+            type="button"
+            data-invite-filter="carpool-requested"
+            aria-pressed="false"
+          )
             i.bi.bi-car-front.me-1(aria-hidden="true")
             | Carpool requested
-          span.text-success.me-2.text-nowrap
+          button.invite-filter-legend.text-success.me-2.text-nowrap(
+            type="button"
+            data-invite-filter="carpool-offered"
+            aria-pressed="false"
+          )
             i.bi.bi-car-front.me-1(aria-hidden="true")
             | Carpool spots offered
 
-      .list-group.shadow-sm
+      .list-group.shadow-sm(data-invite-list)
         - 
           const d = [
             ['Not seen', 'secondary', 'envelope'],
@@ -125,11 +154,17 @@ block content
           ]
         each invite in invites
           - const index = invite.seen ? (invite.responded ? (invite.attending() > 0 ? 3 : 2) : 1) : 0;
+          - const statusFilterKeys = ['not-seen', 'seen', 'declined', 'attending'];
+          - const inviteFilterTags = [statusFilterKeys[index]];
           - const hasGuestNote = typeof invite.notes === 'string' && invite.notes.trim().length > 0
           - const hasAttendingDietary = invite.invitees.some((g) => g.attending === true && typeof g.dietaryRestrictions === 'string' && g.dietaryRestrictions.trim().length > 0)
           - const carpoolSpotsN = Number(invite.carpoolSpotsOffered)
           - const hasCarpoolOffered = Number.isFinite(carpoolSpotsN) && carpoolSpotsN > 0
           - const hasCarpoolRequested = !!invite.carpoolRequested
+          - if (hasGuestNote) inviteFilterTags.push('guest-note');
+          - if (hasAttendingDietary) inviteFilterTags.push('dietary');
+          - if (hasCarpoolRequested) inviteFilterTags.push('carpool-requested');
+          - if (hasCarpoolOffered) inviteFilterTags.push('carpool-offered');
           - const carpoolRequestedSeatsLabel = invite.responded ? String(invite.attending()) : '—'
           - const carpoolRequestedTitle = invite.responded ? ('Carpool requested — seats (attending guests): ' + invite.attending()) : 'Carpool requested — RSVP not yet submitted; seat count shown after they respond'
           - const carpoolOfferedTitle = 'Offering ' + carpoolSpotsN + ' spare carpool seat' + (carpoolSpotsN === 1 ? '' : 's')
@@ -139,7 +174,8 @@ block content
             class=[
               `border-start border-4 border-${d[index][1]}`,
               hasDetailsHighlight && 'invite-list-item--has-details',
-            ].filter(Boolean).join(' ')
+            ].filter(Boolean).join(' '),
+            data-invite-filters=inviteFilterTags.join(' ')
           )
             .flex-shrink-0
               i.bi.fs-4(class=`bi-${d[index][2]} text-${d[index][1]}` aria-hidden="true")
@@ -176,6 +212,7 @@ block content
               span.visually-hidden Status:&nbsp;
               | #{d[index][0]}
             i.bi.bi-chevron-right.text-muted(aria-hidden="true")
+      p#invite-filter-empty.small.text-muted.mt-2.mb-0.d-none(role="status" aria-live="polite") No invitations match this filter.
     else
       .border.rounded-3.bg-body-secondary.bg-opacity-10.p-4.p-md-5.text-center
         i.bi.bi-inbox.display-4.text-muted.mb-3.d-block(aria-hidden="true")
@@ -185,3 +222,6 @@ block content
         a.btn.btn-primary.d-inline-flex.align-items-center.gap-2(href="/admin/invites/new")
           i.bi.bi-plus-lg(aria-hidden="true")
           | Create invitation
+
+block script
+  +adminScript('invites')

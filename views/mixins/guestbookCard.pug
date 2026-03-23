@@ -13,6 +13,8 @@ mixin guestbookCard(entry, previewMaxChars)
 		const entryHref = '/guestbook/' + entry.id
 		const isModerated = Boolean(entry.moderated)
 		const isNotPublic = !entry.visible
+		const hasDisplayName = Boolean(entry.displayName && entry.displayName.trim())
+		const authorPublicLabel = hasDisplayName ? entry.displayName.trim() : 'Anonymous'
 		let entryCardClass = 'guestbook-entry-card border-0 shadow-sm position-relative'
 	if isModerated
 		- entryCardClass += ' guestbook-entry-card--moderated'
@@ -33,17 +35,17 @@ mixin guestbookCard(entry, previewMaxChars)
 								| Not on public guestbook
 				header.d-flex.flex-wrap.align-items-baseline.justify-content-between.gap-2.mb-2
 					.fw-semibold
-						if entry.displayName && entry.displayName.trim()
-							| #{entry.displayName.trim()}
-						else
-							span.text-muted Guest
+						span.guestbook-author-name(class=!hasDisplayName ? 'text-body-tertiary' : '')
+							i.bi.bi-person(aria-hidden="true")
+							if hasDisplayName
+								| #{entry.displayName.trim()}
+							else
+								| Anonymous
 					time.small.text-muted(datetime=entry.created ? entry.created.toISOString() : undefined)
 						| #{entry.formatCreated()}
 				.guestbook-entry-body
 					if fullText.length > 0
 						p.mb-0.text-break.text-prewrap #{previewText}
-						if isTruncated
-							p.small.text-muted.mb-0.mt-1 Open the post to read the full message.
 					if entry.photo
 						.mt-3.guestbook-card-photo-wrap.rounded.border.bg-body-secondary.p-1
 							img.guestbook-card-photo.rounded(
@@ -51,7 +53,9 @@ mixin guestbookCard(entry, previewMaxChars)
 								alt="Guestbook photo preview",
 								loading="lazy"
 							)
+					if fullText.length > 0 && isTruncated
+						p.small.text-muted.mb-0.mt-1 Open the post to read the full message.
 				a.stretched-link(
 					href=entryHref,
-					aria-label=entry.displayName && entry.displayName.trim() ? 'View full message from ' + entry.displayName.trim() : 'View full message'
+					aria-label='View full message from ' + authorPublicLabel
 				)

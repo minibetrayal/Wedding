@@ -8,3 +8,13 @@ $secondary: $sapphire;
 
 $font-family-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 $headings-font-family:   "Playfair Display", Georgia, "Times New Roman", serif;
+
+$body-bg: #f6f4ef;
+$body-color: #142026;
+
+$link-color: $sapphire;
+$link-hover-color: darken($sapphire, 8%);
+
+// Softer, modern feel
+$border-radius-lg: 1rem;
+$card-border-radius: 1rem;

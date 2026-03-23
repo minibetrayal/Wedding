@@ -5,7 +5,7 @@ import path from 'path';
 
 import { HttpError } from './types/HttpError';
 import { STATUS_CODES } from 'http';
-import { database } from './data/database';
+import { database } from './data/tempConnection';
 
 import locals from './middleware/locals';
 import flashMiddleware from './middleware/flashMiddleware';
