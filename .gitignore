@@ -5,8 +5,7 @@ node_modules/
 dist/
 build/
 public/styles/
-public/js/bootstrap.bundle.min.js
-public/icons/
+public/**/bootstrap*.*
 *.tsbuildinfo
 
 # Uploads / generated
@@ -41,4 +40,4 @@ coverage/
 *.tgz
 
 # Dummy data
-dummyData/ferryTimetable.json
+dummyData/identifying/

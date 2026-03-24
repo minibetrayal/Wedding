@@ -22,6 +22,34 @@ block content
     form#ferry-form(method="post", action="/admin/ferry")
       .card.border-0.shadow-sm.mb-3
         .card-body.p-4
+          h2.h6.mb-3 Details page
+          .row.g-3.mb-1
+            .col-12
+              label.form-label.small.mb-1(for="ferry-timetable-link") Ferry timetable link
+              input#ferry-timetable-link.form-control(
+                type="url",
+                name="ferryTimetableLink",
+                value=ferryTimetableLink,
+                placeholder="https://…",
+                autocomplete="off"
+              )
+              p.form-text.small.mb-0
+                | Full URL for the ferry timetable link (including https://)
+            .col-12
+              label.form-label.small.mb-1(for="ferry-cost") Ferry cost
+              input#ferry-cost.form-control(
+                type="text",
+                name="ferryCost",
+                value=ferryCost,
+                placeholder='e.g. $5',
+                autocomplete="off"
+              )
+              p.form-text.small.mb-0
+                | Cost for the ferry crossing (per person, each way)
+
+      .card.border-0.shadow-sm.mb-3
+        .card-body.p-4
+          h2.h6.mb-3 Suggested services
           #ferry-rows.vstack.gap-4
             each row, i in ferryRows
               .ferry-row.border.rounded-3.p-3.bg-body-secondary.bg-opacity-25(data-row-index=i)
@@ -40,8 +68,8 @@ block content
                       required,
                       aria-label=`Service ${i + 1} direction`
                     )
-                      option(value="island", selected=row.to === 'island') To island
-                      option(value="mainland", selected=row.to === 'mainland') To mainland
+                      option(value="island", selected=row.to === 'island') To Island
+                      option(value="mainland", selected=row.to === 'mainland') To Mainland
                   .col-12.col-md-6.col-lg-3
                     label.form-label.small.mb-1 Platform
                     input.form-control.form-control-sm(
@@ -94,8 +122,8 @@ block content
                     required,
                     aria-label="Service direction"
                   )
-                    option(value="island", selected) To island
-                    option(value="mainland") To mainland
+                    option(value="island", selected) To Island
+                    option(value="mainland") To Mainland
                 .col-12.col-md-6.col-lg-3
                   label.form-label.small.mb-1 Platform
                   input.form-control.form-control-sm(

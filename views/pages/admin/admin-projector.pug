@@ -15,8 +15,10 @@ block content
   #projector-admin-settings(
     data-mode-url="/admin/projector/mode",
     data-dwell-url="/admin/projector/dwell",
+    data-paused-url="/admin/projector/pause",
     data-initial-mode=projector.mode,
-    data-initial-dwell-sec=dwellSecondsSnapped
+    data-initial-dwell-sec=dwellSecondsSnapped,
+    data-initial-paused=projector.paused ? 'true' : 'false'
   )
     nav.mb-3(aria-label="Breadcrumb")
       ol.breadcrumb.mb-0
@@ -96,6 +98,23 @@ block content
         p#projector-dwell-hint.form-text.mb-1
           | #{dwellMinSec}–#{dwellMaxSec} seconds.
         p#projector-dwell-status.small.text-muted.mb-0(role="status", aria-live="polite")
+
+    .card.border.shadow-sm.mb-3
+      .card-body
+        legend.form-label.fw-semibold.mb-2 Guestbook rotation
+        p.small.text-muted.mb-3
+          | While the projector is in Guestbook mode, entries advance automatically. Pause to hold the current entry on screen (e.g. during speeches). Play resumes rotation after the dwell time.
+        button#projector-pause-toggle.btn.btn-outline-secondary.d-inline-flex.align-items-center.gap-2(
+          type="button",
+          aria-pressed=projector.paused ? 'true' : 'false'
+        )
+          if projector.paused
+            i#projector-pause-icon.bi.bi-play-fill(aria-hidden="true")
+            span#projector-pause-label Play rotation
+          else
+            i#projector-pause-icon.bi.bi-pause-fill(aria-hidden="true")
+            span#projector-pause-label Pause rotation
+        p#projector-pause-status.small.text-muted.mb-0.mt-2(role="status", aria-live="polite")
 
     form(method="post", action="/admin/projector/message")
       .card.border.shadow-sm.mb-4

@@ -1,0 +1,32 @@
+{
+    "island": {
+        "name": "Example Island"
+    },
+    "islandFerry": {
+        "name": "Example Island Ferry Terminal"
+    },
+    "ceremony": {
+        "name": "123 Sample Street",
+        "address": "123 Sample Street, Example Island, State 4000"
+    },
+    "reception": {
+        "name": "Example Hotel",
+        "address": "Example Hotel, Main Town, State 4001"
+    },
+    "receptionParking": {
+        "name": "Example Hotel Car Park",
+        "address": "Example Hotel, Main Town, State 4001"
+    },
+    "mainland": {
+        "name": "Mainland Marina",
+        "address": "Mainland Marina, Harbour Road, Main Town, State 4001"
+    },
+    "trainStation": {
+        "name": "Main Town Station",
+        "address": "Main Town Station, Station Street, Main Town, State 4001"
+    },
+    "carPark": {
+        "name": "Example Road Car Park",
+        "address": "Example Road Car Park, Main Town, State 4001"
+    }
+}

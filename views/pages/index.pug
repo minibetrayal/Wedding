@@ -15,7 +15,8 @@ block styles
 block content
   +hero(heroImages).mb-5
 
-  +countdown(scheduledEvents.find(event => event.key === ceremonyKey).rawTime)
+  if ceremonyRawTime
+    +countdown(ceremonyRawTime)
 
   .vstack.gap-3.mb-2
     +cardLink('/rsvp', 'calendar-check', 'RSVP')

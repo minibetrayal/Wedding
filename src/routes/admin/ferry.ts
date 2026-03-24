@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { raw } from 'express';
 
 import { getDataConnection as dataConnection } from '../../data/def/DataConnection';
 import type { FerryService, FerryServiceTo } from '../../data/def/types/FerryService';
@@ -74,8 +74,13 @@ function parseServicesFromBody(body: unknown): FerryService[] {
 router.get('/', async (req, res, next) => {
     try {
         const ferryRows = await loadFormRows();
+        const ferry = dataConnection().ferryServices;
+        const ferryTimetableLink = await ferry.getLink();
+        const ferryCost = await ferry.getCost();
         res.render('pages/admin/ferry', {
             ferryRows,
+            ferryTimetableLink,
+            ferryCost,
         });
     } catch (err) {
         next(err);
@@ -84,21 +89,19 @@ router.get('/', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
     try {
+        const ferryTimetableLink = typeof req.body.ferryTimetableLink === 'string' ? req.body.ferryTimetableLink.trim() : '';
+        const ferryCost = typeof req.body.ferryCost === 'string' ? req.body.ferryCost.trim() : '';
         const services = parseServicesFromBody(req.body);
-        await dataConnection().ferryServices.replaceAll(services);
+        const ferry = dataConnection().ferryServices;
+        await ferry.setLink(ferryTimetableLink);
+        await ferry.setCost(ferryCost);
+        await ferry.replaceAll(services);
         req.flash('success', 'Ferry timetable updated.');
         res.redirect(302, '/admin/ferry');
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Could not save ferry timetable.';
         req.flash('error', message);
-        try {
-            const ferryRows = await loadFormRows();
-            res.status(400).render('pages/admin/ferry', {
-                ferryRows,
-            });
-        } catch {
-            next(err);
-        }
+        res.redirect(302, '/admin/ferry');
     }
 });
 

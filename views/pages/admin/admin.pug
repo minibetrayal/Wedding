@@ -1,8 +1,12 @@
 extends /layout
 include /mixins/cardLink
+include /mixins/gemline
 
 block title
   | Admin
+
+block styles
+  +gemlineStyle
 
 block content
   .row.justify-content-center
@@ -12,7 +16,7 @@ block content
         | Manage wedding site content.
 
       //- Stack of tappable cards (Bootstrap utilities only; mobile-first)
-      .vstack.gap-3.mb-2
+      .vstack.gap-3
         +cardLink('/admin/invites', 'envelope-open', 'Manage invitations')
           | View and edit guest invites and related settings.
         +cardLink('/admin/projector', 'projector', 'Reception projector')
@@ -20,7 +24,15 @@ block content
         +cardLink('/guestbook/moderation', 'shield-exclamation', 'Guestbook moderation')
           | Review hidden posts the author edited after removal — confirm or show publicly.
 
+      +gemline(3, 3)
+
       .vstack.gap-3.mb-2
+        +cardLink('/admin/names', 'people', 'Names & contact')
+          | Names and contact information.
+        +cardLink('/admin/schedule', 'calendar-event', 'Schedule')
+          | Event times for the day.
+        +cardLink('/admin/locations', 'geo-alt', 'Locations')
+          | Ceremony, reception, ferry, and other place names and addresses.
         +cardLink('/admin/hero', 'image', 'Hero carousel')
           | Upload, edit and remove images used on the home page carousel.
         +cardLink('/admin/ferry', 'water', 'Ferry timetable')

@@ -15,7 +15,7 @@
         }
         const weights = entryIds.map(entry => 1 / (guestbookEntries[entry] || 1));
         const total = weights.reduce((a, b) => a + b, 0);
-        let nextGuestbookId = null;
+        let nextGuestbookId = previousGuestbookId;
         while (entryIds.length > 1 && previousGuestbookId === nextGuestbookId) {
             let r = Math.random() * total;
             for (let i = 0; i < entryIds.length; i++) {
@@ -55,6 +55,7 @@
 
     let previousGuestbookTime;
     let changeGuestbookTimeout = null;
+    let lastPaused = false;
 
     function setGuestbookMessage(entryInfo) {
         const wrap = document.querySelector('.projector-guestbook-wrap');
@@ -149,6 +150,10 @@
         setGuestbookMessage(entryInfo);
 
         const dwellMs = state.dwellMs;
+        if (state.paused) {
+            changeGuestbookTimeout = null;
+            return;
+        }
         changeGuestbookTimeout = setTimeout(changeGuestbook, dwellMs);
     }
 
@@ -160,15 +165,47 @@
 
         document.querySelector('.projector-message').textContent = state.message || '';
         document.querySelector('.projector-state').textContent = JSON.stringify(state).replace(/</g, '\\u003c');
-        syncGuestbookEmptyState(state.entryIds);
+        const entryIdsForWeights = state.entryIds || [];
+        syncGuestbookEmptyState(entryIdsForWeights);
         Array.from(Object.keys(guestbookEntries)).forEach(entryId => {
-            if (!state.entryIds.includes(entryId)) {
+            if (!entryIdsForWeights.includes(entryId)) {
                 delete guestbookEntries[entryId];
             }
         });
 
-        if (!previousGuestbookTime || (Date.now() - previousGuestbookTime) >= state.dwellMs) {
+        clearTimeout(changeGuestbookTimeout);
+        changeGuestbookTimeout = null;
+
+        const resumeFromPaused = state.mode === 'guestbook' && !state.paused && lastPaused;
+        lastPaused = Boolean(state.paused);
+
+        if (state.mode !== 'guestbook') {
+            previousGuestbookTime = undefined;
+            return;
+        }
+
+        const entryIds = state.entryIds || [];
+        if (entryIds.length === 0) {
+            return;
+        }
+
+        if (state.paused) {
+            if (!previousGuestbookTime) {
+                changeGuestbook();
+            }
+            return;
+        }
+
+        if (resumeFromPaused) {
+            changeGuestbookTimeout = setTimeout(changeGuestbook, state.dwellMs);
+            return;
+        }
+
+        if (!previousGuestbookTime || Date.now() - previousGuestbookTime >= state.dwellMs) {
             changeGuestbook();
+        } else {
+            const elapsed = Date.now() - previousGuestbookTime;
+            changeGuestbookTimeout = setTimeout(changeGuestbook, Math.max(0, state.dwellMs - elapsed));
         }
     }
 

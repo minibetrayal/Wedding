@@ -7,6 +7,8 @@ import type { FerryService, FerryServiceTo } from '../def/types/FerryService';
 import { heroFocusYToCaptionOrStyle } from '../../util/heroPhotoStyle';
 import { DataPopulator } from '../def/interfaces/DataPopulator';
 import { DataConnection } from '../def/DataConnection';
+import type { ScheduleSnapshot } from '../def/types/ScheduledEvent';
+import { Location, LocationType } from '../def/types/Location';
 
 type InviteSeedJson = {
     name: string;
@@ -25,7 +27,7 @@ type GuestbookSeedJson = {
     content?: string;
     visible: boolean;
     daysAgo: number;
-    /** If true and `dummyData/dummy-photos` has image files, attach a random one. */
+    /** If true and the resolved `dummy-photos` dir has image files, attach a random one. */
     attachDummyPhoto?: boolean;
 };
 
@@ -37,17 +39,49 @@ type FerryTimetableJson = {
         via: string;
         arriving: string;
     }>;
+    link: string;
+    cost: string;
 };
 
+type NamesJson = {
+    names: string;
+    namesShort: string;
+    contactName: string;
+    contactPhone: string;
+};
+
+type ScheduleJson = {
+    arrival: number;
+    ceremony: number;
+    reception: number;
+    endOfDay: number;
+    events: Array<{ name: string; time: string }>;
+};
+
+/** Each present key in JSON must include `name` (string); `address` is optional. */
+type LocationsJsonRow = { name: string; address?: string };
+
+function getDummyDataFileOrDir(filename: string): string {
+    const filePath = path.join(process.cwd(), 'dummyData', 'identifying', filename);
+    if (fs.existsSync(filePath)) return filePath;
+    return path.join(process.cwd(), 'dummyData', 'example', filename);
+}
+
+/** Project-relative path with forward slashes, for logs and thrown errors. */
+function dummyDataPathForLog(absPath: string): string {
+    return path.relative(process.cwd(), absPath).split(path.sep).join('/');
+}
+
 export class DummyDataPopulator implements DataPopulator {
-    private static readonly dummyDataDir = path.join(process.cwd(), 'dummyData');
-    private static readonly dummyPhotosSourceDir = path.join(DummyDataPopulator.dummyDataDir, 'dummy-photos');
-    private static readonly heroImagesSourceDir = path.join(DummyDataPopulator.dummyDataDir, 'hero-images');
-    private static readonly invitesJsonPath = path.join(DummyDataPopulator.dummyDataDir, 'invites.json');
-    private static readonly guestbookJsonPath = path.join(DummyDataPopulator.dummyDataDir, 'guestbook.json');
-    private static readonly ferryTimetableJsonPath = path.join(DummyDataPopulator.dummyDataDir, 'ferryTimetable.json');
+    private static readonly dummyPhotosSourceDir = path.join(getDummyDataFileOrDir('dummy-photos'));
+    private static readonly heroImagesSourceDir = path.join(getDummyDataFileOrDir('hero-images'));
+    private static readonly invitesJsonPath = path.join(getDummyDataFileOrDir('invites.json'));
+    private static readonly guestbookJsonPath = path.join(getDummyDataFileOrDir('guestbook.json'));
+    private static readonly ferryTimetableJsonPath = path.join(getDummyDataFileOrDir('ferryTimetable.json'));
+    private static readonly namesJsonPath = path.join(getDummyDataFileOrDir('names.json'));
+    private static readonly scheduleJsonPath = path.join(getDummyDataFileOrDir('schedule.json'));
+    private static readonly locationsJsonPath = path.join(getDummyDataFileOrDir('locations.json'));
     private static readonly dummyPhotoFilenameRe = /\.(jpe?g|png|gif|webp)$/i;
-    /** First N files from sorted `dummy-photos` are seeded as professional gallery images. */
     private static readonly professionalDummyPhotoMax = 5;
 
     async populate(connection: DataConnection): Promise<void> {
@@ -56,10 +90,168 @@ export class DummyDataPopulator implements DataPopulator {
         await this.createHeroPhotosFromHeroImagesDir(connection);
         await this.createProfessionalPhotosFromDummyPhotosDir(connection);
         await this.createGuestbookEntries(connection);
+        await this.loadNames(connection);
+        await this.loadSchedule(connection);
+        await this.loadLocations(connection);
+    }
+
+    async loadNames(connection: DataConnection): Promise<void> {
+        const names = await DummyDataPopulator.readNamesJson();
+        await connection.names.setNames(names.names);
+        await connection.names.setNamesShort(names.namesShort);
+        await connection.names.setContactName(names.contactName);
+        await connection.names.setContactPhone(names.contactPhone);
+    }
+
+    async loadLocations(connection: DataConnection): Promise<void> {
+        const data = await DummyDataPopulator.readLocationsJson();
+        if (!data) return;
+        const validTypes = new Set<LocationType>(Object.values(LocationType));
+        for (const key of Object.keys(data)) {
+            if (!validTypes.has(key as LocationType)) {
+                throw new Error(
+                    `Unknown location key "${key}" in ${dummyDataPathForLog(DummyDataPopulator.locationsJsonPath)}`,
+                );
+            }
+        }
+        for (const type of Object.values(LocationType)) {
+            const raw = data[type];
+            let name = '';
+            let address: string | undefined;
+            if (raw !== undefined) {
+                if (typeof raw !== 'object' || raw === null || typeof (raw as LocationsJsonRow).name !== 'string') {
+                    throw new Error(
+                        `${dummyDataPathForLog(DummyDataPopulator.locationsJsonPath)}: "${type}" must be an object with a string "name"`,
+                    );
+                }
+                const entry = raw as LocationsJsonRow;
+                name = entry.name.trim();
+                address =
+                    typeof entry.address === 'string' && entry.address.trim()
+                        ? entry.address.trim()
+                        : undefined;
+            }
+            await connection.locations.set(type, new Location(name, address));
+        }
+    }
+
+    async loadSchedule(connection: DataConnection): Promise<void> {
+        const data = await DummyDataPopulator.readScheduleJson();
+        if (!data) return;
+        const events = data.events.map((e) => ({ name: e.name.trim(), time: e.time.trim() }));
+        if (events.length === 0) {
+            throw new Error(
+                `${dummyDataPathForLog(DummyDataPopulator.scheduleJsonPath)} must include at least one event`,
+            );
+        }
+        const max = events.length - 1;
+        const { arrival, ceremony, reception, endOfDay } = data;
+        if (
+            arrival < 0 ||
+            arrival > max ||
+            ceremony < 0 ||
+            ceremony > max ||
+            reception < 0 ||
+            reception > max ||
+            endOfDay < 0 ||
+            endOfDay > max
+        ) {
+            throw new Error(
+                `${dummyDataPathForLog(DummyDataPopulator.scheduleJsonPath)}: arrival, ceremony, reception, and endOfDay must be indices from 0 to ${max}`,
+            );
+        }
+        const snapshot: ScheduleSnapshot = {
+            events,
+            arrival,
+            ceremony,
+            reception,
+            endOfDay,
+        };
+        await connection.schedule.set(snapshot);
+    }
+
+    private static async readScheduleJson(): Promise<ScheduleJson | null> {
+        try {
+            const raw = await fs.promises.readFile(DummyDataPopulator.scheduleJsonPath, 'utf8');
+            const parsed = JSON.parse(raw) as unknown;
+            if (!parsed || typeof parsed !== 'object') {
+                throw new Error(`${dummyDataPathForLog(DummyDataPopulator.scheduleJsonPath)} must contain a JSON object`);
+            }
+            const o = parsed as Record<string, unknown>;
+            if (
+                !Array.isArray(o.events) ||
+                typeof o.arrival !== 'number' ||
+                typeof o.ceremony !== 'number' ||
+                typeof o.reception !== 'number' ||
+                typeof o.endOfDay !== 'number'
+            ) {
+                throw new Error(
+                    `${dummyDataPathForLog(DummyDataPopulator.scheduleJsonPath)} must contain arrival, ceremony, reception, endOfDay (numbers) and events (array)`,
+                );
+            }
+            return parsed as ScheduleJson;
+        } catch (err) {
+            const code = (err as NodeJS.ErrnoException).code;
+            if (code === 'ENOENT') {
+                if (process.env.NODE_ENV === 'development') {
+                    console.warn(
+                        `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.scheduleJsonPath)} not found; skipping schedule.`,
+                    );
+                }
+                return null;
+            }
+            throw err;
+        }
+    }
+
+    private static async readNamesJson(): Promise<NamesJson> {
+        try {
+            const raw = await fs.promises.readFile(DummyDataPopulator.namesJsonPath, 'utf8');
+            const parsed = JSON.parse(raw) as unknown;
+            if (!parsed || typeof parsed !== 'object') {
+                throw new Error(`${dummyDataPathForLog(DummyDataPopulator.namesJsonPath)} must contain a JSON object`);
+            }
+            return parsed as NamesJson;
+        } catch (err) {
+            const code = (err as NodeJS.ErrnoException).code;
+            if (code === 'ENOENT') {
+                if (process.env.NODE_ENV === 'development') {
+                    console.warn(
+                        `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.namesJsonPath)} not found; skipping names.`,
+                    );
+                }
+                return { names: '', namesShort: '', contactName: '', contactPhone: '' };
+            }
+            throw err;
+        }
+    }
+
+    private static async readLocationsJson(): Promise<Partial<Record<LocationType, LocationsJsonRow>> | null> {
+        try {
+            const raw = await fs.promises.readFile(DummyDataPopulator.locationsJsonPath, 'utf8');
+            const parsed = JSON.parse(raw) as unknown;
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                throw new Error(
+                    `${dummyDataPathForLog(DummyDataPopulator.locationsJsonPath)} must contain a JSON object`,
+                );
+            }
+            return parsed as Partial<Record<LocationType, LocationsJsonRow>>;
+        } catch (err) {
+            const code = (err as NodeJS.ErrnoException).code;
+            if (code === 'ENOENT') {
+                if (process.env.NODE_ENV === 'development') {
+                    console.warn(
+                        `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.locationsJsonPath)} not found; skipping locations.`,
+                    );
+                }
+                return null;
+            }
+            throw err;
+        }
     }
 
     /**
-     * Seed `hero` photos from `dummyData/hero-images` (sorted by path).
+     * Seed `hero` photos from the resolved `hero-images` directory (`dummyData/identifying/…` or `dummyData/example/…`), sorted by path.
      * Filenames like `hero-2.15.jpg` set vertical focus (15 → `object-position: 50% 15%`), matching the old filename hint convention.
      */
     async createHeroPhotosFromHeroImagesDir(db: DataConnection): Promise<void> {
@@ -102,7 +294,7 @@ export class DummyDataPopulator implements DataPopulator {
     }
 
     /**
-     * Seed a few `professional` photos from `dummyData/dummy-photos` (first files when sorted by path).
+     * Seed a few `professional` photos from the resolved `dummy-photos` directory (first files when sorted by path).
      */
     async createProfessionalPhotosFromDummyPhotosDir(db: DataConnection): Promise<void> {
         const paths = await DummyDataPopulator.listSortedDummyPhotoPaths();
@@ -160,14 +352,16 @@ export class DummyDataPopulator implements DataPopulator {
             const raw = await fs.promises.readFile(DummyDataPopulator.invitesJsonPath, 'utf8');
             const parsed = JSON.parse(raw) as unknown;
             if (!Array.isArray(parsed)) {
-                throw new Error('dummyData/invites.json must contain a JSON array');
+                throw new Error(`${dummyDataPathForLog(DummyDataPopulator.invitesJsonPath)} must contain a JSON array`);
             }
             return parsed as InviteSeedJson[];
         } catch (err) {
             const code = (err as NodeJS.ErrnoException).code;
             if (code === 'ENOENT') {
                 if (process.env.NODE_ENV === 'development') {
-                    console.warn('[DummyData] dummyData/invites.json not found; skipping invite seeds.');
+                    console.warn(
+                        `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.invitesJsonPath)} not found; skipping invite seeds.`,
+                    );
                 }
                 return [];
             }
@@ -180,14 +374,16 @@ export class DummyDataPopulator implements DataPopulator {
             const raw = await fs.promises.readFile(DummyDataPopulator.guestbookJsonPath, 'utf8');
             const parsed = JSON.parse(raw) as unknown;
             if (!Array.isArray(parsed)) {
-                throw new Error('dummyData/guestbook.json must contain a JSON array');
+                throw new Error(`${dummyDataPathForLog(DummyDataPopulator.guestbookJsonPath)} must contain a JSON array`);
             }
             return parsed as GuestbookSeedJson[];
         } catch (err) {
             const code = (err as NodeJS.ErrnoException).code;
             if (code === 'ENOENT') {
                 if (process.env.NODE_ENV === 'development') {
-                    console.warn('[DummyData] dummyData/guestbook.json not found; skipping guestbook seeds.');
+                    console.warn(
+                        `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.guestbookJsonPath)} not found; skipping guestbook seeds.`,
+                    );
                 }
                 return [];
             }
@@ -204,14 +400,18 @@ export class DummyDataPopulator implements DataPopulator {
                 typeof parsed !== 'object' ||
                 !Array.isArray((parsed as FerryTimetableJson).services)
             ) {
-                throw new Error('dummyData/ferryTimetable.json must contain a { services: [...] } object');
+                throw new Error(
+                    `${dummyDataPathForLog(DummyDataPopulator.ferryTimetableJsonPath)} must contain a { services: [...] } object`,
+                );
             }
             return parsed as FerryTimetableJson;
         } catch (err) {
             const code = (err as NodeJS.ErrnoException).code;
             if (code === 'ENOENT') {
                 if (process.env.NODE_ENV === 'development') {
-                    console.warn('[DummyData] dummyData/ferryTimetable.json not found; skipping ferry timetable.');
+                    console.warn(
+                        `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.ferryTimetableJsonPath)} not found; skipping ferry timetable.`,
+                    );
                 }
                 return null;
             }
@@ -226,7 +426,9 @@ export class DummyDataPopulator implements DataPopulator {
             const time = new Date(row.time);
             const arriving = new Date(row.arriving);
             if (Number.isNaN(time.getTime()) || Number.isNaN(arriving.getTime())) {
-                throw new Error('Invalid ferry timetable date in dummyData/ferryTimetable.json');
+                throw new Error(
+                    `Invalid ferry timetable date in ${dummyDataPathForLog(DummyDataPopulator.ferryTimetableJsonPath)}`,
+                );
             }
             return {
                 to: row.to,
@@ -237,6 +439,8 @@ export class DummyDataPopulator implements DataPopulator {
             };
         });
         await db.ferryServices.replaceAll(services);
+        await db.ferryServices.setLink(data.link.trim());
+        await db.ferryServices.setCost(data.cost.trim());
     }
 
     async createInvites(db: DataConnection): Promise<void> {

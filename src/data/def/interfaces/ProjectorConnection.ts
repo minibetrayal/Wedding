@@ -5,5 +5,6 @@ export interface ProjectorConnection {
     setMode(mode: ProjectorMode): Promise<void>;
     setMessage(message: string): Promise<void>;
     setDwellMs(dwellMs: number): Promise<void>;
+    setPaused(paused: boolean): Promise<void>;
     getGuestbookEntryIds(): Promise<string[]>;
 }

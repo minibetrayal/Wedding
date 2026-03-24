@@ -1,0 +1,66 @@
+extends /layout
+
+block title
+  | Names & contact — Admin
+
+block content
+  .container.py-4
+    nav.mb-3(aria-label="Breadcrumb")
+      ol.breadcrumb.mb-0
+        li.breadcrumb-item
+          a.link-secondary(href="/admin") Admin
+        li.breadcrumb-item.active(aria-current="page") Names & Contact
+
+    .mb-4
+      h1.h3.mb-1 Names & Contact Information
+
+    form(method="post", action="/admin/names")
+      .card.border-0.shadow-sm.mb-3
+        .card-body.p-4
+          .row.g-3
+            .col-12
+              label.form-label.fw-semibold(for="names") Full names
+              input#names.form-control(
+                type="text",
+                name="names",
+                value=names,
+                autocomplete="organization",
+                placeholder='e.g. Alex & Martin'
+              )
+              p.form-text.small.mb-0 Used in page titles, footer, copy, etc.
+            .col-12
+              label.form-label.fw-semibold(for="names-short") Short names
+              input#names-short.form-control(
+                type="text",
+                name="namesShort",
+                value=namesShort,
+                autocomplete="off",
+                placeholder='e.g. A&M'
+              )
+              p.form-text.small.mb-0 Navbar brand and short titles.
+            .col-12
+              label.form-label.fw-semibold(for="contact-name") MC / contact name
+              input#contact-name.form-control(
+                type="text",
+                name="contactName",
+                value=contactName,
+                autocomplete="name",
+                placeholder='e.g. Jamie'
+              )
+              p.form-text.small.mb-0 Shown on the Details page under “Contact on the day”.
+            .col-12
+              label.form-label.fw-semibold(for="contact-phone") Contact phone
+              input#contact-phone.form-control(
+                type="tel",
+                name="contactPhone",
+                value=contactPhone,
+                autocomplete="tel",
+                placeholder='e.g. 0400 000 000'
+              )
+              p.form-text.small.mb-0 Shown as a tel: link next to the contact name.
+
+      .d-flex.flex-wrap.gap-2
+        button.btn.btn-primary(type="submit")
+          i.bi.bi-check2.me-1(aria-hidden="true")
+          | Save
+        a.btn.btn-outline-secondary(href="/admin") Cancel

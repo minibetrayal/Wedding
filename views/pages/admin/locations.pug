@@ -1,0 +1,50 @@
+extends /layout
+
+block title
+  | Locations — Admin
+
+block content
+  .container.py-4
+    nav.mb-3(aria-label="Breadcrumb")
+      ol.breadcrumb.mb-0
+        li.breadcrumb-item
+          a.link-secondary(href="/admin") Admin
+        li.breadcrumb-item.active(aria-current="page") Locations
+
+    .mb-4
+      h1.h3.mb-1 Locations
+      p.text-muted.small.mb-0
+        | Short label and optional full address (used for map links and some headings). Keys match the Details page and home hero island name.
+
+    form(method="post", action="/admin/locations")
+      .card.border-0.shadow-sm.mb-3
+        .card-body.p-4
+          each row, index in locationRows
+            .border-bottom.pb-3.mb-3(class=index === locationRows.length - 1 ? 'border-0 pb-0 mb-0' : '')
+              h6.mb-2 #{row.label}
+              .row.g-3
+                .col-12.col-md-5
+                  label.form-label.small.mb-1(for=`loc-${row.type}-name`) Short name
+                  input.form-control(
+                    id=`loc-${row.type}-name`,
+                    type="text",
+                    name=`locations[${row.type}][name]`,
+                    value=row.name,
+                    autocomplete="off"
+                  )
+                .col-12.col-md-7
+                  label.form-label.small.mb-1(for=`loc-${row.type}-address`) Full address (optional)
+                  input.form-control(
+                    id=`loc-${row.type}-address`,
+                    type="text",
+                    name=`locations[${row.type}][address]`,
+                    value=row.address,
+                    autocomplete="street-address",
+                    placeholder="Full line for maps / long form copy"
+                  )
+
+      .d-flex.flex-wrap.gap-2
+        button.btn.btn-primary(type="submit")
+          i.bi.bi-check2.me-1(aria-hidden="true")
+          | Save
+        a.btn.btn-outline-secondary(href="/admin") Cancel

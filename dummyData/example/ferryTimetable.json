@@ -1,4 +1,6 @@
 {
+  "link": "https://example.com/ferry-timetable",
+  "cost": "$5",
   "services": [
     {
       "to": "island",

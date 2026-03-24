@@ -1,56 +1,43 @@
 import express from 'express';
 
-import { formatDate, formatTime, getDateParts } from '../util/timeUtils';
+import { formatDate, getDateParts } from '../util/timeUtils';
+import { parseScheduleTimeToDate } from '../util/scheduleDisplay';
 import { hasValidAdminCookie } from './adminAuth';
 import { getDataConnection as dataConnection } from '../data/def/DataConnection';
-
-type ScheduledEvent = {
-    time: string;
-    rawTime: Date;
-    description: string;
-    key: string;
-}
+import { LocationType } from '../data/def/types/Location';
 
 export default async function locals(req: express.Request, res: express.Response, next: express.NextFunction) {
-    res.locals.heroImages = await dataConnection().photos.getAll('hero')
-        .then(photos => photos.map(photo => {
-                return {
-                    url: `/photos/${photo.id}`,
-                    style: photo.captionOrStyle,
-                };
-            })) ?? [];
+    const [heroPhotos, coupleNamesShort, coupleNames, scheduleSnapshot, island] = await Promise.all([
+        dataConnection().photos.getAll('hero'),
+        dataConnection().names.getNamesShort(),
+        dataConnection().names.getNames(),
+        dataConnection().schedule.get(),
+        dataConnection().locations.get(LocationType.island),
+    ]);
+    res.locals.heroImages =
+        heroPhotos?.map((photo) => ({
+            url: `/photos/${photo.id}`,
+            style: photo.captionOrStyle,
+        })) ?? [];
+    res.locals.coupleNamesShort = coupleNamesShort;
+    res.locals.coupleNames = coupleNames;
 
     if (process.env.EVENT_DATE) {
-        res.locals.eventDate = formatDate(process.env.EVENT_DATE);
-        res.locals.eventDateParts = getDateParts(process.env.EVENT_DATE);
+        const eventDate = process.env.EVENT_DATE;
+        res.locals.eventDate = formatDate(eventDate);
+        res.locals.eventDateParts = getDateParts(eventDate);
 
-
-        if (process.env.ARRIVAL_TIME_KEY) res.locals.arrivalTimeKey = process.env.ARRIVAL_TIME_KEY;
-        if (process.env.CEREMONY_TIME_KEY) res.locals.ceremonyKey = process.env.CEREMONY_TIME_KEY;
-        if (process.env.RECEPTION_TIME_KEY) res.locals.receptionKey = process.env.RECEPTION_TIME_KEY;
-        
         if (process.env.EVENT_TIMEZONE_LABEL) res.locals.eventTimezoneLabel = process.env.EVENT_TIMEZONE_LABEL;
         if (process.env.EVENT_TIMEZONE) res.locals.eventTimezone = process.env.EVENT_TIMEZONE;
 
-        res.locals.scheduledEvents = [];
-        for (let key of Object.keys(process.env)) {
-            if (!key || !process.env[key]) continue;
-            if (key.startsWith('SCHEDULE_')) {
-                res.locals.scheduledEvents.push({
-                    time: formatTime(process.env.EVENT_DATE, process.env[key]),
-                    rawTime: new Date(`${process.env.EVENT_DATE}T${process.env[key]}`),
-                    description: key
-                        .replace('SCHEDULE_', '')
-                        .split('_')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                        .join(' '),
-                    key: key
-                });
-            }
+        const ceremony = scheduleSnapshot.events[scheduleSnapshot.ceremony];
+        if (ceremony) {
+            res.locals.ceremonyRawTime = parseScheduleTimeToDate(eventDate, ceremony.time);
         }
-        res.locals.scheduledEvents.sort((a: ScheduledEvent, b: ScheduledEvent) => a.rawTime.getTime() - b.rawTime.getTime());
     }
-    for (let keyType of ['locations', 'links', 'times', 'costs']) {
+    res.locals.islandName = island.name;
+
+    for (let keyType of ['times']) {
         res.locals[keyType] = {};
         for (let key of Object.keys(process.env)) {
             if (!key || !process.env[key]) continue;
@@ -64,10 +51,6 @@ export default async function locals(req: express.Request, res: express.Response
     }
     // Public site origin (no trailing slash required) — QR codes, absolute links, etc.
     res.locals.websiteUrl = process.env.WEBSITE_URL;
-    res.locals.coupleNamesShort = process.env.COUPLE_NAMES_SHORT;
-    res.locals.coupleNames = process.env.COUPLE_NAMES;
-    res.locals.contactName = process.env.CONTACT_NAME;
-    res.locals.contactPhone = process.env.CONTACT_PHONE;
 
     res.locals.receptionMenu = [];
     for (let key of Object.keys(process.env)) {

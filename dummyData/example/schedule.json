@@ -1,0 +1,40 @@
+{
+    "arrival": 0,
+    "ceremony": 1,
+    "reception": 4,
+    "endOfDay": 7,
+    "events": [
+        {
+            "name": "Arrival and Welcome",
+            "time": "12:00"
+        },
+        {
+            "name": "Ceremony Begins",
+            "time": "14:00"
+        },
+        {
+            "name": "Drinks and Mingling",
+            "time": "14:30"
+        },
+        {
+            "name": "Return to Mainland",
+            "time": "15:30"
+        },
+        {
+            "name": "Reception",
+            "time": "16:00"
+        },
+        {
+            "name": "Dinner",
+            "time": "17:30"
+        },
+        {
+            "name": "Party",
+            "time": "19:00"
+        },
+        {
+            "name": "End of the Day",
+            "time": "21:00"
+        }
+    ]
+}

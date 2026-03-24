@@ -8,6 +8,9 @@ import { Photo, PhotoType } from "../def/types/Photo";
 import { Invitee } from "../def/types/Invitee";
 import { Projector, ProjectorMode } from "../def/types/Projector";
 import { FerryService, FerryServiceTo } from "../def/types/FerryService";
+import { Names } from "../def/types/Names";
+import { DEFAULT_SCHEDULE_SNAPSHOT, type ScheduleSnapshot } from "../def/types/ScheduledEvent";
+import { Location, LocationType } from "../def/types/Location";
 
 import { ConnectionSupplier } from "../def/interfaces/ConnectionSupplier";
 import { AuthorConnection } from "../def/interfaces/AuthorConnection";
@@ -17,9 +20,11 @@ import { InviteeConnection } from "../def/interfaces/InviteeConnection";
 import { PhotoConnection } from "../def/interfaces/PhotoConnection";
 import { ProjectorConnection } from "../def/interfaces/ProjectorConnection";
 import { FerryServiceConnection } from "../def/interfaces/FerryServiceConnection";
+import { NamesConnection } from "../def/interfaces/NamesConnection";
+import { ScheduleConnection } from "../def/interfaces/ScheduleConnection";
+import { LocationConnection } from "../def/interfaces/LocationConnection";
 
 import { DbNotFoundError } from "../dbErrors";
-
 
 const alpha = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const photosDir = path.join(process.cwd(), 'photos');
@@ -29,11 +34,17 @@ let authors: Author[] = [];
 let guestbook: GuestbookEntry[] = [];
 let photos: Photo[] = [];
 let invitees: Invitee[] = [];
-let projector: Projector = new Projector('home', '', 30_000, false);
 let ferryServices: FerryService[] = [];
+let ferryServiceLink: string = '';
+let ferryServiceCost: string = '';
+let projector: Projector = new Projector('home', '', 30_000, false);
+let names: Names = new Names('', '', '', '');
+
+let schedule: ScheduleSnapshot = {...DEFAULT_SCHEDULE_SNAPSHOT};
+let locations: Partial<Record<LocationType, Location>> = {};
+
 
 const created: Set<string> = new Set();
-
 function createSimpleId(): string {
     const length = 6;
     const chars = alpha.split('');
@@ -296,6 +307,9 @@ class TempProjectorConnection implements ProjectorConnection {
     async setDwellMs(dwellMs: number): Promise<void> {
         projector.dwellMs = dwellMs;
     }
+    async setPaused(paused: boolean): Promise<void> {
+        projector.paused = paused;
+    }
     async getGuestbookEntryIds(): Promise<string[]> {
         return guestbook.filter(e => e.visible && !e.moderated).map(e => e.id);
     }
@@ -312,6 +326,92 @@ class TempFerryServiceConnection implements FerryServiceConnection {
         ferryServices.length = 0;
         ferryServices.push(...services);
     }
+    async getLink(): Promise<string> {
+        return ferryServiceLink;
+    }
+    async setLink(link: string): Promise<void> {
+        ferryServiceLink = link;
+    }
+    async getCost(): Promise<string> {
+        return ferryServiceCost;
+    }
+    async setCost(cost: string): Promise<void> {
+        ferryServiceCost = cost;
+    }
+}
+
+class TempNamesConnection implements NamesConnection {
+    async getNames(): Promise<string> {
+        return names.names;
+    }
+    async setNames(newNames: string): Promise<void> {
+        names.names = newNames;
+    }
+    async getNamesShort(): Promise<string> {
+        return names.namesShort;
+    }
+    async setNamesShort(namesShort: string): Promise<void> {
+        names.namesShort = namesShort;
+    }
+    async getContactName(): Promise<string> {
+        return names.contactName;
+    }
+    async setContactName(contactName: string): Promise<void> {
+        names.contactName = contactName;
+    }
+    async getContactPhone(): Promise<string> {
+        return names.contactPhone;
+    }
+    async setContactPhone(contactPhone: string): Promise<void> {
+        names.contactPhone = contactPhone;
+    }
+}
+
+class TempScheduleConnection implements ScheduleConnection {
+    async get(): Promise<ScheduleSnapshot> {
+        return {...schedule};
+    }
+
+    async set(snapshot: ScheduleSnapshot): Promise<void> {
+        if (snapshot.events.length === 0) {
+            schedule = {...DEFAULT_SCHEDULE_SNAPSHOT};
+            return;
+        }
+        const max = snapshot.events.length - 1;
+        if (
+            snapshot.arrival < 0 ||
+            snapshot.arrival > max ||
+            snapshot.ceremony < 0 ||
+            snapshot.ceremony > max ||
+            snapshot.reception < 0 ||
+            snapshot.reception > max ||
+            snapshot.endOfDay < 0 ||
+            snapshot.endOfDay > max
+        ) {
+            throw new Error(
+                'Schedule arrival, ceremony, reception, and end-of-day indices must match a row in the events list.',
+            );
+        }
+        schedule = {...snapshot};
+    }
+}
+
+class TempLocationConnection implements LocationConnection {
+    async get(type: LocationType): Promise<Location> {
+        return locations[type] ?? new Location('', '');
+    }
+
+    async getAll(): Promise<Record<LocationType, Location>> {
+        const out = {} as Record<LocationType, Location>;
+        for (const t of Object.values(LocationType)) {
+            out[t] = await this.get(t);
+        }
+        return out;
+    }
+
+    async set(type: LocationType, location: Location): Promise<void> {
+        locations[type] = location;
+    }
 }
 
 export class TempConnectionSupplier implements ConnectionSupplier {
@@ -323,7 +423,12 @@ export class TempConnectionSupplier implements ConnectionSupplier {
         photos.length = 0;
         invitees.length = 0;
         ferryServices.length = 0;
+        ferryServiceLink = '';
+        ferryServiceCost = '';
         projector = new Projector('home', '', 30_000, false);
+        names = new Names('', '', '', '');
+        schedule = {...DEFAULT_SCHEDULE_SNAPSHOT};
+        locations = {};
         created.clear();
     }
 
@@ -347,5 +452,14 @@ export class TempConnectionSupplier implements ConnectionSupplier {
     }
     getFerryServiceConnection(): FerryServiceConnection {
         return new TempFerryServiceConnection();
+    }
+    getNamesConnection(): NamesConnection {
+        return new TempNamesConnection();
+    }
+    getScheduleConnection(): ScheduleConnection {
+        return new TempScheduleConnection();
+    }
+    getLocationConnection(): LocationConnection {
+        return new TempLocationConnection();
     }
 }

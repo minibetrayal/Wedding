@@ -77,6 +77,21 @@ router.post('/mode', express.json(), async (req, res, next) => {
     }
 });
 
+router.post('/pause', express.json(), async (req, res, next) => {
+    try {
+        const raw = req.body?.paused;
+        if (typeof raw !== 'boolean') {
+            res.status(400).json({ ok: false, error: 'Expected boolean "paused".' });
+            return;
+        }
+        await dataConnection().projector.setPaused(raw);
+        await broadcast();
+        res.json({ ok: true });
+    } catch (err) {
+        next(err);
+    }
+});
+
 router.post('/dwell', express.json(), async (req, res, next) => {
     try {
         const dwellSec = parseDwellSeconds(req.body?.dwellSeconds);

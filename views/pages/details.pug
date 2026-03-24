@@ -15,7 +15,8 @@ block title
   | #{coupleNamesShort} — Details
 
 block content
-  +countdown(scheduledEvents.find(event => event.key === ceremonyKey).rawTime)
+  if ceremonyRawTime
+    +countdown(ceremonyRawTime)
 
   h1.h4.mb-1.mt-4 Wedding Details 
   p.text-muted.mb-4 Everything you need to know for the day 
@@ -26,16 +27,16 @@ block content
     //- When and Where
     +detailsCard('When & Where', 'calendar-event')
       p.small.mb-2 
-        | The Ceremony will be held at our beautify island property, at 
-        strong #{locations.ceremony}
+        | The Ceremony will be held at our beautiful island property, at 
+        strong #{locations.ceremony.mapLine()}
         | , starting at 
-        strong #{scheduledEvents.find(event => event.key === ceremonyKey).time}
+        strong #{scheduledEvents[scheduleCeremonyIndex] ? scheduledEvents[scheduleCeremonyIndex].time : '—'}
         | .
       .my-2 
-        +mapButton(locations.ceremony)
+        +mapButton(locations.ceremony.mapLine())
 
       p.small.mb-2
-        | We welcome you to arrive from #{scheduledEvents.find(event => event.key === arrivalTimeKey).time} onwards.
+        | We welcome you to arrive from #{scheduledEvents[scheduleArrivalIndex] ? scheduledEvents[scheduleArrivalIndex].time : '—'} onwards.
 
     //- Dress Code
     +detailsCard('Dress Code', 'person-check')
@@ -63,41 +64,44 @@ block content
             li.d-flex.mb-1 
               span.fw-semibold.d-flex.fixed-width-45rem #{event.time}
               span — &nbsp;#{event.description}
+        if scheduledEvents[scheduleEndOfDayIndex]
+          p.small.text-muted.mb-0
+            | We expect to wrap up around #{scheduledEvents[scheduleEndOfDayIndex].time}.
       else
         | Schedule TBC
 
-      p.small.text-muted.mb-0
+      p.small.text-muted.mb-0.mt-2
         | We'll keep the formalities short - the goal is a relaxed, fun day for everyone.
 
     //- Getting There
     +detailsCard('Getting There', 'car-front')
       ul.small
         li.mb-2
-          | Travel to #{locations.islandShort} is by ferry from #{locations.mainlandShort}. 
-          +mapButton(locations.mainland)
+          | Travel to #{locations.island.name} is by ferry from #{locations.mainland.name}. 
+          +mapButton(locations.mainland.mapLine())
         li.mb-2
-          | #{locations.mainlandShort} also has a bus station with regular services throughout the day.
-          | There is also a bus service to the marina from #{locations.trainStationShort}, which takes 
+          | #{locations.mainland.name} also has a bus station with regular services throughout the day.
+          | There is also a bus service to the marina from #{locations.trainStation.name}, which takes 
           | about #{times.trainToMainland} minutes.
-          +mapButton(locations.trainStation)
+          +mapButton(locations.trainStation.mapLine())
         li.mb-2
-          | There is parking available at #{locations.mainlandShort}, but it is limited and may be subject 
-          | to availability. We suggest using the overflow parking, at the nearby #{locations.carParkShort}, 
+          | There is parking available at #{locations.mainland.name}, but it is limited and may be subject 
+          | to availability. We suggest using the overflow parking, at the nearby #{locations.carPark.name}, 
           | from which there is about a #{times.carParkToIsland} minute walk across a footbridge to 
-          | #{locations.islandShort}.
-          +mapButton(locations.carPark)
+          | #{locations.island.name}.
+          +mapButton(locations.carPark.mapLine())
 
     //- Ferry
     +detailsCard('Ferry', 'water')
       ul.small 
         li.mb-2
-          | The ferry service between #{locations.mainlandShort} and #{locations.islandShort} takes #{times.mainlandToIsland} minutes,
+          | The ferry service between #{locations.mainland.name} and #{locations.island.name} takes #{times.mainlandToIsland} minutes,
           | depending on the direction of travel.
         li.mb-2
           | You are welcome to arrive any time after&nbsp;
-          strong #{scheduledEvents.find(event => event.key === arrivalTimeKey).time}
+          strong #{scheduledEvents[scheduleArrivalIndex] ? scheduledEvents[scheduleArrivalIndex].time : '—'}
           | ,&nbsp;but the official event does not start until&nbsp;
-          strong #{scheduledEvents.find(event => event.key === ceremonyKey).time}
+          strong #{scheduledEvents[scheduleCeremonyIndex] ? scheduledEvents[scheduleCeremonyIndex].time : '—'}
           | .&nbsp;The ferry service operates daily, with regular services throughout the day.
           | Bear this in mind as you plan your journey.
         li.mb-2
@@ -118,7 +122,7 @@ block content
               li.mb-2 
                 strong Ferry service times will be confirmed closer to the event.
         li.mb-2
-          | The cost for the ferry crossing is #{costs.ferry} per person each way.
+          | The cost for the ferry crossing is #{ferryServices.cost} per person each way.
           | Tickets are available for purchase from the ferry terminal, or on the boat itself.
           | If paying by credit/debit card, simply tap your card or phone to the reader when you board and 
           | disembark the ferry.
@@ -144,7 +148,7 @@ block content
 
         div 
           a.small.fw-semibold.link-primary(
-              href=links.ferryTimetable,
+              href=ferryServices.link,
               target="_blank",
               rel="noopener"
           ) Ferry timetable
@@ -152,12 +156,12 @@ block content
     //- Accommodation
     +detailsCard('Accommodation', 'house')
       p.small.mb-2 
-        | If you'd like to stay on #{locations.islandShort}, there are a handful of holiday rentals available.
+        | If you'd like to stay on #{locations.island.name}, there are a handful of holiday rentals available.
 
       ul.small 
         li.mb-2
           | Search for&nbsp;
-          strong “#{locations.islandShort}”
+          strong “#{locations.island.name}”
           | &nbsp;on Airbnb, Stayz, Booking.com, or similar.
         li.mb-2
           | If you plan to stay overnight, we suggest booking early — options on the island can be limited.
@@ -169,14 +173,14 @@ block content
     +detailsCard('On the Island', 'person-walking')
       ul.small 
         li.mb-2
-          | When you arrive at #{locations.islandShort}, there is a #{times.islandToCeremony} minute walk to 
+          | When you arrive at #{locations.island.name}, there is a #{times.islandToCeremony} minute walk to 
           | the ceremony location. If you'd like to enjoy this walk, please take this time into account.
         li.mb-2
           | If you'd prefer to avoid the walk (which includes a steep hill), let us know in your RSVP,
           | and we can arrange for a taxi to pick you up from the ferry terminal and take you to the ceremony location.
         li.mb-2
-          | The ceremony will take place on our beautiful island property, at #{locations.ceremonyShort}.
-          +mapButton(locations.ceremony)
+          | The ceremony will take place on our beautiful island property, at #{locations.ceremony.name}.
+          +mapButton(locations.ceremony.mapLine())
 
     //- Ceremony
     +detailsCard('Ceremony', 'gem')
@@ -186,7 +190,7 @@ block content
           | We'll have some drinks and nibbles available, but please feel free to bring your own if you'd like.
         li.mb-2
           | The ceremony will commence at&nbsp;
-          strong #{scheduledEvents.find(event => event.key === ceremonyKey).time}
+          strong #{scheduledEvents[scheduleCeremonyIndex] ? scheduledEvents[scheduleCeremonyIndex].time : '—'}
           | .&nbsp;Please arrive at the ceremony location by this time.
         li.mb-2
           | After the ceremony, we'll be taking some photos, so please stick around for this.
@@ -201,22 +205,22 @@ block content
       ul.small
         li.mb-2
           | The reception will be held at 
-          strong #{locations.reception}
+          strong #{locations.reception.mapLine()}
           | , starting at 
-          strong #{scheduledEvents.find(event => event.key === receptionKey).time}
+          strong #{scheduledEvents[scheduleReceptionIndex] ? scheduledEvents[scheduleReceptionIndex].time : '—'}
           | .
-          +mapButton(locations.reception)
+          +mapButton(locations.reception.mapLine())
         li.mb-2
-          | We ask that you make your own way to the reception venue from #{locations.mainlandShort}.
+          | We ask that you make your own way to the reception venue from #{locations.mainland.name}.
           | If you need assistance with this, let us know in your RSVP and we can arrange carpooling.
         li.mb-2
-          | It's about a #{times.mainlandToReception} minute drive from #{locations.mainlandShort} to #{locations.receptionShort}.
+          | It's about a #{times.mainlandToReception} minute drive from #{locations.mainland.name} to #{locations.reception.name}.
         li.mb-2
-          | There is parking available at #{locations.receptionShort}, as well as roadside parking nearby.
+          | There is parking available at #{locations.reception.name}, as well as roadside parking nearby.
           | If you have trouble finding parking, we suggest a nearby carpark at the nearby 
-          strong #{locations.receptionParkingShort}
+          strong #{locations.receptionParking.name}
           | , from which there is a short walk up a grassy path to the reception.
-          +mapButton(locations.receptionParking)
+          +mapButton(locations.receptionParking.mapLine())
         li.mb-2
           | After #{coupleNames} arrive, there will be more photos before dinner is served.
         li.mb-2

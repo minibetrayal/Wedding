@@ -4,7 +4,8 @@
 
     const modeUrl = root.dataset.modeUrl;
     const dwellUrl = root.dataset.dwellUrl;
-    if (!modeUrl || !dwellUrl) return;
+    const pauseUrl = root.dataset.pausedUrl;
+    if (!modeUrl || !dwellUrl || !pauseUrl) return;
 
     let lastMode = root.dataset.initialMode || 'home';
     let lastSavedDwell = parseInt(root.dataset.initialDwellSec || '30', 10);
@@ -20,6 +21,12 @@
     const dwellLabel = document.getElementById('projector-dwell-label');
     const dwellStatus = document.getElementById('projector-dwell-status');
     const guestbookCountHint = document.getElementById('projector-guestbook-count-hint');
+    const pauseToggle = document.getElementById('projector-pause-toggle');
+    const pauseIcon = document.getElementById('projector-pause-icon');
+    const pauseLabel = document.getElementById('projector-pause-label');
+    const pauseStatus = document.getElementById('projector-pause-status');
+
+    let rotationPaused = root.dataset.initialPaused === 'true';
 
     const DWELL_DEBOUNCE_MS = 1300;
 
@@ -33,12 +40,30 @@
             ' (visible, not moderated).';
     }
 
+    function syncPauseUi(paused) {
+        rotationPaused = Boolean(paused);
+        if (!pauseToggle || !pauseIcon || !pauseLabel) return;
+        pauseToggle.setAttribute('aria-pressed', rotationPaused ? 'true' : 'false');
+        if (rotationPaused) {
+            pauseIcon.className = 'bi bi-play-fill';
+            pauseLabel.textContent = 'Play rotation';
+        } else {
+            pauseIcon.className = 'bi bi-pause-fill';
+            pauseLabel.textContent = 'Pause rotation';
+        }
+    }
+
+    syncPauseUi(rotationPaused);
+
     const projectorStream = new EventSource('/projector/stream');
     projectorStream.addEventListener('state', function (ev) {
         try {
             const state = JSON.parse(ev.data);
             const ids = Array.isArray(state.entryIds) ? state.entryIds : [];
             setGuestbookEligibleCount(ids.length);
+            if (typeof state.paused === 'boolean') {
+                syncPauseUi(state.paused);
+            }
         } catch (_) {}
     });
 
@@ -125,6 +150,19 @@
     }
 
     let dwellDebounce = null;
+
+    if (pauseToggle) {
+        pauseToggle.addEventListener('click', async function () {
+            const nextPaused = !rotationPaused;
+            try {
+                await postJson(pauseUrl, { paused: nextPaused });
+                syncPauseUi(nextPaused);
+                showStatus(pauseStatus, nextPaused ? 'Rotation paused' : 'Rotation playing', false);
+            } catch (err) {
+                showStatus(pauseStatus, err.message || 'Could not update pause', true);
+            }
+        });
+    }
 
     if (dwellInput && dwellLabel) {
         updateDwellLabel(lastSavedDwell);
