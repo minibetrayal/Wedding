@@ -1,0 +1,34 @@
+[
+  {
+    "displayName": "Mia K.",
+    "content": "So happy for you both — see you on the day!",
+    "visible": true,
+    "daysAgo": 4
+  },
+  {
+    "displayName": "The office crew",
+    "content": "We are raising a metaphorical glass from the break room — congratulations on the wedding. Your save-the-date has been on the fridge, the whiteboard, and someone’s monitor wallpaper for weeks, so you have officially broken our collective cool. Half of us only know you from retreats and client dinners, and you still made us feel like friends, not plus-ones on a spreadsheet. We have argued about gifts, rehearsed our group photo faces, and promised not to mention “the incident” at the Christmas party (unless the speeches go long). Wishing you inbox zero until the aisle, kind weather, and a honeymoon where the only “stand-up” is on the beach. Cannot wait to watch you both say the words, eat the cake, and dance like nobody is grading footwork.",
+    "visible": true,
+    "daysAgo": 3
+  },
+  {
+    "displayName": "Leo",
+    "content": "Brought a snap from our hike — thanks for letting us share the weekend with you.",
+    "visible": true,
+    "daysAgo": 2,
+    "attachDummyPhoto": true
+  },
+  {
+    "displayName": "Sam & Taylor",
+    "content": "We are still grinning from when you told us — you know the night: takeaway on the floor, someone’s phone playing the same song on repeat, and the kind of laughter that makes neighbours wonder. You two have been the steady heart of our crowd for years: the ones who remember birthdays, mediate group chat drama, and somehow always have snacks. Watching you plan this wedding has been its own love story — every thoughtful detail, every stressed spreadsheet, every “we will figure it out” text at midnight. We are honoured to be there when you make it official, to cheer until our voices go, and to hold your drinks while you hug everyone twice. Here is to the vows, the music, the cake, and every ordinary Tuesday that comes after. We love you both more than this message can say — so we will prove it on the dance floor.",
+    "visible": true,
+    "daysAgo": 1,
+    "attachDummyPhoto": true
+  },
+  {
+    "displayName": "Anonymous",
+    "visible": true,
+    "daysAgo": 0,
+    "attachDummyPhoto": true
+  }
+]

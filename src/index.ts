@@ -5,7 +5,8 @@ import path from 'path';
 
 import { HttpError } from './types/HttpError';
 import { STATUS_CODES } from 'http';
-import { database } from './data/tempConnection';
+
+import { DataConnection } from './data/def/DataConnection';
 
 import locals from './middleware/locals';
 import flashMiddleware from './middleware/flashMiddleware';
@@ -94,8 +95,16 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
   }
 });
 
+
+import { TempConnectionSupplier } from './data/impl/TempConnectionSupplier';
+import { DummyDataPopulator } from './data/impl/DummyDataPopulator';
+
 async function start(): Promise<void> {
-  await database.init(); // eager init: seed / future DB connect before accepting traffic
+  const connectionSupplier = new TempConnectionSupplier();
+  const dummyDataPopulator = new DummyDataPopulator();
+
+  await DataConnection.init(connectionSupplier, dummyDataPopulator);
+
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
   });

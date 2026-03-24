@@ -1,7 +1,7 @@
 import express from 'express';
 
-import { database } from '../../data/tempConnection';
-import type { ProjectorMode } from '../../data/types/Projector';
+import { getDataConnection as dataConnection } from '../../data/def/DataConnection';
+import type { ProjectorMode } from '../../data/def/types/Projector';
 import { broadcast } from '../../util/projectorSse';
 
 const router = express.Router();
@@ -9,7 +9,7 @@ const router = express.Router();
 const MIN_DWELL_SEC = 5;
 const MAX_DWELL_SEC = 60;
 const DWELL_STEP_SEC = 5;
-const PROJECTOR_MESSAGE_MAX = 500;
+const PROJECTOR_MESSAGE_MAX = 100;
 
 function parseMode(raw: unknown): ProjectorMode | null {
     if (raw === 'home' || raw === 'guestbook' || raw === 'message') {
@@ -35,8 +35,8 @@ function snapDwellSeconds(ms: number): number {
 
 router.get('/', async (req, res, next) => {
     try {
-        const projector = await database.projector.get();
-        const guestbookEntryIds = await database.projector.getGuestbookEntryIds();
+        const projector = await dataConnection().projector.get();
+        const guestbookEntryIds = await dataConnection().projector.getGuestbookEntryIds();
         res.render('pages/admin/admin-projector', {
             projector,
             guestbookEntryCount: guestbookEntryIds.length,
@@ -67,9 +67,9 @@ router.post('/mode', express.json(), async (req, res, next) => {
                 });
                 return;
             }
-            await database.projector.setMessage(trimmed);
+            await dataConnection().projector.setMessage(trimmed);
         }
-        await database.projector.setMode(mode);
+        await dataConnection().projector.setMode(mode);
         await broadcast();
         res.json({ ok: true });
     } catch (err) {
@@ -87,7 +87,7 @@ router.post('/dwell', express.json(), async (req, res, next) => {
             });
             return;
         }
-        await database.projector.setDwellMs(dwellSec * 1000);
+        await dataConnection().projector.setDwellMs(dwellSec * 1000);
         await broadcast();
         res.json({ ok: true });
     } catch (err) {
@@ -110,9 +110,9 @@ router.post('/message', async (req, res, next) => {
             return res.redirect(302, '/admin/projector');
         }
 
-        await database.projector.setMessage(message);
+        await dataConnection().projector.setMessage(message);
         if (showOnProjector) {
-            await database.projector.setMode('message');
+            await dataConnection().projector.setMode('message');
             req.flash('success', 'Message saved and the projector is now in message mode.');
         } else {
             req.flash('success', 'Message saved.');

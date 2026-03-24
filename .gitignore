@@ -39,3 +39,6 @@ Thumbs.db
 coverage/
 .nyc_output/
 *.tgz
+
+# Dummy data
+dummyData/ferryTimetable.json

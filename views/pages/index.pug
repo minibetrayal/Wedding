@@ -1,12 +1,29 @@
 extends /layout
 include /mixins/hero
+include /mixins/gradientRule
+include /mixins/cardLink
+include /mixins/countdown
 
 block title
   | #{coupleNames}
 
 block styles
   +heroStyle
+  +gradientRuleStyle
+  +countdownStyle
 
 block content
-  .container.py-4 
-    +hero(heroImages)
+  +hero(heroImages).mb-5
+
+  +countdown(scheduledEvents.find(event => event.key === ceremonyKey).rawTime)
+
+  .vstack.gap-3.mb-2
+    +cardLink('/rsvp', 'calendar-check', 'RSVP')
+      | Received an invitation? Let us know if you can join us!
+    +cardLink('/details', 'calendar-event', 'Wedding details')
+      | Everything you need for the day — when and where, dress code, getting there, and more.
+    +cardLink('/guestbook', 'journal-richtext', 'Guestbook')
+      | Whether or not you can attend, you can read messages from other guests and leave a note, memory, or photo for us.
+
+block script
+  +countdownScript

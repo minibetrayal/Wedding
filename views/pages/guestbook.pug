@@ -46,111 +46,110 @@ block content
     const paginationShowLast = windowEnd < totalPages
     const paginationTrailEllipsis = windowEnd < totalPages - 1
 
-  .container.py-4
-    +hero(isModeration ? 'Guestbook Moderation' : 'Guestbook')
+  +hero(isModeration ? 'Guestbook Moderation' : 'Guestbook')
 
-    //- Primary actions (routes to be implemented)
-    .row.justify-content-center.mt-4
-      .col-12.col-lg-10.col-xl-8
-        .d-flex.flex-column.flex-sm-row.gap-2.gap-sm-3.mb-4.mb-lg-5
-          a.btn.btn-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
-            href="/guestbook/new"
+  //- Primary actions (routes to be implemented)
+  .row.justify-content-center.mt-4
+    .col-12.col-lg-10.col-xl-8
+      .d-flex.flex-column.flex-sm-row.gap-2.gap-sm-3.mb-4.mb-lg-5
+        a.btn.btn-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+          href="/guestbook/new"
+        )
+          i.bi.bi-pencil-square(aria-hidden="true")
+          | Write a message
+        if isEveryone
+          a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+            href="/guestbook/mine"
           )
-            i.bi.bi-pencil-square(aria-hidden="true")
-            | Write a message
-          if isEveryone
-            a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
-              href="/guestbook/mine"
+            i.bi.bi-person-lines-fill(aria-hidden="true")
+            | My posts
+          if isAdmin
+            a.btn.btn-outline-secondary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+              href="/guestbook/moderation"
             )
-              i.bi.bi-person-lines-fill(aria-hidden="true")
-              | My posts
-            if isAdmin
-              a.btn.btn-outline-secondary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
-                href="/guestbook/moderation"
-              )
-                i.bi.bi-shield-exclamation(aria-hidden="true")
-                | Moderation queue
-          else if isMine
-            a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
-              href="/guestbook"
+              i.bi.bi-shield-exclamation(aria-hidden="true")
+              | Moderation queue
+        else if isMine
+          a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+            href="/guestbook"
+          )
+            i.bi.bi-people(aria-hidden="true")
+            | All posts
+          if isAdmin
+            a.btn.btn-outline-secondary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+              href="/guestbook/moderation"
             )
-              i.bi.bi-people(aria-hidden="true")
-              | All posts
-            if isAdmin
-              a.btn.btn-outline-secondary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
-                href="/guestbook/moderation"
-              )
-                i.bi.bi-shield-exclamation(aria-hidden="true")
-                | Moderation queue
-          else if isModeration
-            a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
-              href="/guestbook"
-            )
-              i.bi.bi-people(aria-hidden="true")
-              | All posts
-            a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
-              href="/guestbook/mine"
-            )
-              i.bi.bi-person-lines-fill(aria-hidden="true")
-              | My posts
+              i.bi.bi-shield-exclamation(aria-hidden="true")
+              | Moderation queue
+        else if isModeration
+          a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+            href="/guestbook"
+          )
+            i.bi.bi-people(aria-hidden="true")
+            | All posts
+          a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
+            href="/guestbook/mine"
+          )
+            i.bi.bi-person-lines-fill(aria-hidden="true")
+            | My posts
 
-        h2.h4.text-body-secondary.mb-3
-          if isEveryone
-            | Messages from everyone
-          else if isMine
-            | Messages from me
-          else
-            | Pending re-moderation
-        if isModeration
-          p.small.text-muted.mb-3
-            | If a post has been hidden by a moderator and subsequently edited, it will be shown here until the moderator confirms it should stay hidden or be shown publicly.
-        if total > 0
-          p.small.text-muted.mb-3
-            | Showing #{fromIdx}–#{toIdx} of #{total}
-        if guestbookList.length === 0
-          .card.border-0.shadow-sm
-            .card-body.p-4.p-md-5.text-center.text-muted
-              i.bi.bi-journal-richtext.display-4.d-block.mb-3.opacity-50(aria-hidden="true")
-              p.lead.mb-2 No messages yet.
-              if isEveryone
-                p.small.mb-0 Be the first to leave a note for #{coupleNames}.
-              else if isMine
-                p.small.mb-0 Leave your first note for #{coupleNames}.
-              else
-                p.small.mb-0 Nothing in the queue right now.
+      h2.h4.text-body-secondary.mb-3
+        if isEveryone
+          | Messages from everyone
+        else if isMine
+          | Messages from me
         else
-          ul.list-unstyled.d-flex.flex-column.gap-3.mb-0
-            each entry in guestbookList
-              +guestbookCard(entry)
-              
-        if showPagination
-          nav.mt-4(aria-label="Guestbook pages")
-            ul.pagination.pagination-sm.justify-content-center.flex-wrap.mb-0
-              li.page-item(class=currentPage <= 1 ? 'disabled' : undefined)
-                a.page-link(
-                  href=currentPage <= 1 ? '#' : `${listPath}?page=${currentPage - 1}&limit=${pageSize}`,
-                  aria-disabled=currentPage <= 1 ? 'true' : undefined
-                ) Previous
-              if paginationShowFirst
-                li.page-item
-                  a.page-link(href=`${listPath}?page=1&limit=${pageSize}`) 1
-                if paginationLeadEllipsis
-                  li.page-item.disabled
-                    span.page-link …
-              each p in paginationPages
-                li.page-item(class=p === currentPage ? 'active' : undefined)
-                  if p === currentPage
-                    span.page-link(aria-current="page") #{p}
-                  else
-                    a.page-link(href=`${listPath}?page=${p}&limit=${pageSize}`) #{p}
-              if paginationShowLast
-                if paginationTrailEllipsis
-                  li.page-item.disabled
-                    span.page-link …
-                li.page-item
-                  a.page-link(href=`${listPath}?page=${totalPages}&limit=${pageSize}`) #{totalPages}
-              li.page-item(class=currentPage >= totalPages ? 'disabled' : undefined)
-                a.page-link(
-                  href=currentPage >= totalPages ? '#' : `${listPath}?page=${currentPage + 1}&limit=${pageSize}`,
-                  aria-disabled=currentPage >= totalPages ? 'true' : undefined
-                ) Next
+          | Pending re-moderation
+      if isModeration
+        p.small.text-muted.mb-3
+          | If a post has been hidden by a moderator and subsequently edited, it will be shown here until the moderator confirms it should stay hidden or be shown publicly.
+      if total > 0
+        p.small.text-muted.mb-3
+          | Showing #{fromIdx}–#{toIdx} of #{total}
+      if guestbookList.length === 0
+        .card.border-0.shadow-sm
+          .card-body.p-4.p-md-5.text-center.text-muted
+            i.bi.bi-journal-richtext.display-4.d-block.mb-3.opacity-50(aria-hidden="true")
+            p.lead.mb-2 No messages yet.
+            if isEveryone
+              p.small.mb-0 Be the first to leave a note for #{coupleNames}.
+            else if isMine
+              p.small.mb-0 Leave your first note for #{coupleNames}.
+            else
+              p.small.mb-0 Nothing in the queue right now.
+      else
+        ul.list-unstyled.d-flex.flex-column.gap-3.mb-0
+          each entry in guestbookList
+            +guestbookCard(entry)
+            
+      if showPagination
+        nav.mt-4(aria-label="Guestbook pages")
+          ul.pagination.pagination-sm.justify-content-center.flex-wrap.mb-0
+            li.page-item(class=currentPage <= 1 ? 'disabled' : undefined)
+              a.page-link(
+                href=currentPage <= 1 ? '#' : `${listPath}?page=${currentPage - 1}&limit=${pageSize}`,
+                aria-disabled=currentPage <= 1 ? 'true' : undefined
+              ) Previous
+            if paginationShowFirst
+              li.page-item
+                a.page-link(href=`${listPath}?page=1&limit=${pageSize}`) 1
+              if paginationLeadEllipsis
+                li.page-item.disabled
+                  span.page-link …
+            each p in paginationPages
+              li.page-item(class=p === currentPage ? 'active' : undefined)
+                if p === currentPage
+                  span.page-link(aria-current="page") #{p}
+                else
+                  a.page-link(href=`${listPath}?page=${p}&limit=${pageSize}`) #{p}
+            if paginationShowLast
+              if paginationTrailEllipsis
+                li.page-item.disabled
+                  span.page-link …
+              li.page-item
+                a.page-link(href=`${listPath}?page=${totalPages}&limit=${pageSize}`) #{totalPages}
+            li.page-item(class=currentPage >= totalPages ? 'disabled' : undefined)
+              a.page-link(
+                href=currentPage >= totalPages ? '#' : `${listPath}?page=${currentPage + 1}&limit=${pageSize}`,
+                aria-disabled=currentPage >= totalPages ? 'true' : undefined
+              ) Next

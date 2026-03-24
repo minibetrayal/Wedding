@@ -1,6 +1,7 @@
 import express from 'express';
 
-import { database, DbNotFoundError } from '../data/tempConnection';
+import { getDataConnection as dataConnection } from '../data/def/DataConnection';
+import { DbNotFoundError } from '../data/dbErrors';
 import { hasValidAdminCookie } from '../middleware/adminAuth';
 import { clearRsvpCookie, getRsvpCookie, setRsvpCookie } from '../middleware/rsvpCookie';
 import { normalizeArray } from '../util/arrayUtils';
@@ -29,7 +30,7 @@ router.get('/', async (req, res, next) => {
             const remembered = getRsvpCookie(req);
             if (remembered) {
                 try {
-                    await database.invites.get(remembered);
+                    await dataConnection().invites.get(remembered);
                     return res.redirect(302, `/rsvp/${encodeURIComponent(remembered)}`);
                 } catch (err) {
                     if (err instanceof DbNotFoundError) {
@@ -56,7 +57,7 @@ router.post('/', async (req, res, next) => {
             return res.redirect(302, '/rsvp');
         }
         try {
-            await database.invites.get(code);
+            await dataConnection().invites.get(code);
         } catch (err) {
             if (err instanceof DbNotFoundError) {
                 req.flash('error', 'We could not find an invitation with that code. Check the letters and numbers and try again.');
@@ -73,9 +74,9 @@ router.post('/', async (req, res, next) => {
 router.get('/:inviteId', async (req, res, next) => {
     const inviteId = req.params.inviteId;
     try {
-        const invite = await database.invites.get(inviteId);
+        const invite = await dataConnection().invites.get(inviteId);
         if (!invite.seen && !hasValidAdminCookie(req)) {
-            await database.invites.updateStatus(inviteId, true, invite.responded);
+            await dataConnection().invites.updateStatus(inviteId, true, invite.responded);
         }
         if (!hasValidAdminCookie(req)) {
             setRsvpCookie(res, invite.id);
@@ -95,7 +96,7 @@ router.post('/:inviteId', async (req, res, next) => {
         const inviteId = req.params.inviteId;
         let invite;
         try {
-            invite = await database.invites.get(inviteId);
+            invite = await dataConnection().invites.get(inviteId);
         } catch (err) {
             if (err instanceof DbNotFoundError) {
                 req.flash('error', 'Invitation not found');
@@ -169,14 +170,14 @@ router.post('/:inviteId', async (req, res, next) => {
         }
 
         for (const { invitee, attending, dietary } of parsed) {
-            await database.invitees.update(invitee.id, invitee.name, attending, dietary);
+            await dataConnection().invitees.update(invitee.id, invitee.name, attending, dietary);
         }
 
         const carpoolRequested = req.body.carpoolRequested === '1' || req.body.carpoolRequested === 'on';
         const carpoolSpotsOffered = carpoolRequested
             ? 0
             : parseCarpoolSpotsOffered(req.body.carpoolSpotsOffered);
-        await database.invites.update(
+        await dataConnection().invites.update(
             inviteId,
             phone,
             email,
@@ -186,7 +187,7 @@ router.post('/:inviteId', async (req, res, next) => {
         );
 
         if (!hasValidAdminCookie(req)) {
-            await database.invites.updateStatus(inviteId, true, true);
+            await dataConnection().invites.updateStatus(inviteId, true, true);
         }
 
         req.flash(

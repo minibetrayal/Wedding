@@ -19,13 +19,12 @@ html(lang="en-AU")
     +style('main')
     block styles
 
-    link(rel="icon" type="image/svg+xml" href="/images/anm.svg")
+    link(rel="icon" type="image/svg+xml" href="/icons/anm.svg")
     
   body.d-flex.flex-column.min-vh-100
     nav.navbar.navbar-expand-lg.bg-body.border-bottom.sticky-top(role="navigation")
       .container
-        //- todo: change back to '/' in production
-        a.navbar-brand.fw-semibold.heading-script(href="/guestbook/__dev/fixture-author") #{coupleNamesShort} 
+        a.navbar-brand.fw-semibold.heading-script(href="/") #{coupleNamesShort} 
 
         button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#main-nav" aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation")
           span.navbar-toggler-icon
@@ -48,7 +47,8 @@ html(lang="en-AU")
 
     main.flex-fill 
       .container.py-3.pt-0
-        block content
+        .container.py-4
+          block content
 
     footer.mt-5.py-1.text-center.text-muted.border-top 
       .container 

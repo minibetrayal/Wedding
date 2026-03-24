@@ -5,26 +5,31 @@ block title
   | Admin
 
 block content
-  .container.py-4
-    .row.justify-content-center
-      .col-12.col-md-10.col-lg-7.col-xl-6
-        h1.h3.mb-1 Admin
-        p.text-muted.small.mb-4
-          | Manage wedding site content. Tap a card to open a tool — add more cards here as you build features.
+  .row.justify-content-center
+    .col-12.col-md-10.col-lg-7.col-xl-6
+      h1.h3.mb-1 Admin
+      p.text-muted.small.mb-4
+        | Manage wedding site content.
 
-        //- Stack of tappable cards (Bootstrap utilities only; mobile-first)
-        .vstack.gap-3.mb-2
-          +cardLink('/admin/invites', 'envelope-open', 'Manage invitations')
-            | View and edit guest invites and related settings.
-          +cardLink('/admin/projector', 'projector', 'Reception projector')
-            | Choose home, a custom message, or guestbook rotation and timing for the big screen.
-          +cardLink('/guestbook/moderation', 'shield-exclamation', 'Guestbook moderation')
-            | Review hidden posts the author edited after removal — confirm or show publicly.
+      //- Stack of tappable cards (Bootstrap utilities only; mobile-first)
+      .vstack.gap-3.mb-2
+        +cardLink('/admin/invites', 'envelope-open', 'Manage invitations')
+          | View and edit guest invites and related settings.
+        +cardLink('/admin/projector', 'projector', 'Reception projector')
+          | Choose home, a custom message, or guestbook rotation and timing for the big screen.
+        +cardLink('/guestbook/moderation', 'shield-exclamation', 'Guestbook moderation')
+          | Review hidden posts the author edited after removal — confirm or show publicly.
 
-        //- Log out — full-width control, easy to hit with a thumb
-        .mt-4.pt-3.border-top
-          a.btn.btn-lg.btn-outline-danger.w-100.d-flex.align-items-center.justify-content-center.gap-2.rounded-3(
-            href="/admin/logout"
-          )
-            i.bi.bi-box-arrow-right(aria-hidden="true")
-            | Log out
+      .vstack.gap-3.mb-2
+        +cardLink('/admin/hero', 'image', 'Hero carousel')
+          | Upload, edit and remove images used on the home page carousel.
+        +cardLink('/admin/ferry', 'water', 'Ferry timetable')
+          | Edit suggested ferry services shown on the Details page.
+
+      //- Log out — full-width control, easy to hit with a thumb
+      .mt-4.pt-3.border-top
+        a.btn.btn-lg.btn-outline-danger.w-100.d-flex.align-items-center.justify-content-center.gap-2.rounded-3(
+          href="/admin/logout"
+        )
+          i.bi.bi-box-arrow-right(aria-hidden="true")
+          | Log out

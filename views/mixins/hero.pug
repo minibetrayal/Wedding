@@ -8,7 +8,7 @@ mixin heroStyle
 mixin hero(imagesOrTitle)
   - const images = typeof imagesOrTitle === 'object' && imagesOrTitle.length ? imagesOrTitle : null
   - const title = typeof imagesOrTitle === 'string' ? imagesOrTitle : null
-  .hero.animate-hero.px-4.px-md-5.rounded-4(class=images ? 'py-4 py-md-5' : 'py-2')
+  .hero.animate-hero.px-4.px-md-5.rounded-4(class=images ? 'py-2 pb-4' : 'py-2')&attributes(attributes)
     .d-flex.justify-content-around.flex-wrap.gap-2 
       div 
         h1.text-center.display-5.mb-2 Alex & Martin 

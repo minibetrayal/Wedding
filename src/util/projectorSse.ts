@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 
-import { database } from '../data/tempConnection';
-import type { ProjectorMode } from '../data/types/Projector';
+import { getDataConnection as dataConnection } from '../data/def/DataConnection';
+import type { ProjectorMode } from '../data/def/types/Projector';
 
 const clients = new Set<Response>();
 setInterval(() => {
@@ -15,12 +15,13 @@ setInterval(() => {
 }, 25_000);
 
 export async function broadcast() {
-    const projector = await database.projector.get();
-    const entryIds = await database.projector.getGuestbookEntryIds();
+    const projector = await dataConnection().projector.get();
+    const entryIds = await dataConnection().projector.getGuestbookEntryIds();
     const state = {
         mode: projector.mode,
         message: projector.message,
         dwellMs: projector.dwellMs,
+        paused: projector.paused,
         entryIds,
     };
     const line = `event: state\ndata: ${JSON.stringify(state)}\n\n`;

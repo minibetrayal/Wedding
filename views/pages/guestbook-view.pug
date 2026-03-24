@@ -2,6 +2,7 @@ extends /layout
 include /mixins/hero
 include /mixins/guestbookCard
 include /mixins/textareaCounter
+include /mixins/gradientRule
 
 block title
   | #{coupleNamesShort} — Guestbook message
@@ -10,92 +11,92 @@ block styles
   +heroStyle
   +guestbookCardStyle
   +textareaCounterStyle
+  +gradientRuleStyle
 
 block content
-  .container.py-4
-    +hero('Guestbook')
+  +hero('Guestbook')
 
-    .row.justify-content-center.mt-4
-      .col-12.col-lg-10.col-xl-8
-        .d-flex.flex-wrap.align-items-center.justify-content-between.gap-2.mb-3
-          a.btn.btn-outline-primary(href="/guestbook")
-            i.bi.bi-arrow-left.me-1(aria-hidden="true")
-            | Back to all messages
-          .d-flex.flex-wrap.align-items-center.gap-2
-            if isAuthor
-              a.btn.btn-outline-secondary(href=`/guestbook/${entry.id}/edit`)
-                i.bi.bi-pencil-square.me-1(aria-hidden="true")
-                | Edit post
-            if isAdmin && (!entry.moderated || entry.pendingRemoderation)
-              button.btn.btn-outline-danger.d-inline-flex.align-items-center.gap-2(
-                type="button",
-                data-bs-toggle="modal",
-                data-bs-target="#guestbook-hide-modal"
-              )
-                i.bi.bi-eye-slash(aria-hidden="true")
-                if entry.pendingRemoderation
-                  | Confirm moderated
-                else
-                  | Hide from public
-            if isAdmin && entry.moderated
-              button.btn.btn-outline-success.d-inline-flex.align-items-center.gap-2(
-                type="button",
-                data-bs-toggle="modal",
-                data-bs-target="#guestbook-unhide-modal"
-              )
-                i.bi.bi-eye(aria-hidden="true")
-                | Show on public
+  .row.justify-content-center.mt-4
+    .col-12.col-lg-10.col-xl-8
+      .d-flex.flex-wrap.align-items-center.justify-content-between.gap-2.mb-3
+        a.btn.btn-outline-primary(href="/guestbook")
+          i.bi.bi-arrow-left.me-1(aria-hidden="true")
+          | Back to all messages
+        .d-flex.flex-wrap.align-items-center.gap-2
+          if isAuthor
+            a.btn.btn-outline-secondary(href=`/guestbook/${entry.id}/edit`)
+              i.bi.bi-pencil-square.me-1(aria-hidden="true")
+              | Edit post
+          if isAdmin && (!entry.moderated || entry.pendingRemoderation)
+            button.btn.btn-outline-danger.d-inline-flex.align-items-center.gap-2(
+              type="button",
+              data-bs-toggle="modal",
+              data-bs-target="#guestbook-hide-modal"
+            )
+              i.bi.bi-eye-slash(aria-hidden="true")
+              if entry.pendingRemoderation
+                | Confirm moderated
+              else
+                | Hide from public
+          if isAdmin && entry.moderated
+            button.btn.btn-outline-success.d-inline-flex.align-items-center.gap-2(
+              type="button",
+              data-bs-toggle="modal",
+              data-bs-target="#guestbook-unhide-modal"
+            )
+              i.bi.bi-eye(aria-hidden="true")
+              | Show on public
 
-        article.card.border-0.shadow-sm
-          .card-body.p-4.p-md-5
-            if entry.moderated && (isAuthor || isAdmin)
-              .alert.alert-warning.border-warning.mb-4(role="status")
-                p.fw-semibold.mb-1
-                  i.bi.bi-shield-slash.me-2(aria-hidden="true")
-                  | Hidden from the public guestbook
-                p.small.mb-0.text-body-secondary
-                  | It does not appear on the main list for guests. The author, admins, and #{coupleNames} can still view it here.
-                if entry.moderationReason && entry.moderationReason.length > 0
-                  p.small.mb-0.mt-2
-                    span.text-body-secondary Note:
-                    = ' '
-                    span.text-prewrap #{entry.moderationReason}
-                if isAdmin && entry.pendingRemoderation
-                  p.small.mb-0.mt-2.fw-semibold.text-body-secondary
-                    i.bi.bi-exclamation-circle.me-1(aria-hidden="true")
-                    if isAutomoderated
-                      | Automatic checks flagged this post — confirm it should stay off the public guestbook, or show it for everyone.
-                    else
-                      | Author edited while hidden — confirm it stays moderated, or show it on the public guestbook.
-            header.mb-4
-              -
-                const hasGbDisplayName = entry.displayName && entry.displayName.trim()
-              h1.h3.mb-2
-                span.guestbook-author-name(class=!hasGbDisplayName ? 'guestbook-author-name--anonymous' : '')
-                  i.bi.bi-person(aria-hidden="true")
-                  if hasGbDisplayName
-                    | #{entry.displayName.trim()}
+      article.card.border-0.shadow-sm
+        .card-body.p-4.p-md-5
+          if entry.moderated && (isAuthor || isAdmin)
+            .alert.alert-warning.border-warning.mb-4(role="status")
+              p.fw-semibold.mb-1
+                i.bi.bi-shield-slash.me-2(aria-hidden="true")
+                | Hidden from the public guestbook
+              p.small.mb-0.text-body-secondary
+                | It does not appear on the main list for guests. The author, admins, and #{coupleNames} can still view it here.
+              if entry.moderationReason && entry.moderationReason.length > 0
+                p.small.mb-0.mt-2
+                  span.text-body-secondary Note:
+                  = ' '
+                  span.text-prewrap #{entry.moderationReason}
+              if isAdmin && entry.pendingRemoderation
+                p.small.mb-0.mt-2.fw-semibold.text-body-secondary
+                  i.bi.bi-exclamation-circle.me-1(aria-hidden="true")
+                  if isAutomoderated
+                    | Automatic checks flagged this post — confirm it should stay off the public guestbook, or show it for everyone.
                   else
-                    | Anonymous
-              .d-flex.flex-wrap.gap-2.text-muted.small
-                time(datetime=entry.created ? entry.created.toISOString() : undefined)
-                  | Posted #{entry.formatCreated()}
-                if entry.updated && entry.updated.getTime() !== entry.created.getTime()
-                  span(aria-hidden="true") ·
-                  time(datetime=entry.updated.toISOString())
-                    | Updated #{entry.formatUpdated()}
+                    | Author edited while hidden — confirm it stays moderated, or show it on the public guestbook.
+          header.mb-4
+            -
+              const hasGbDisplayName = entry.displayName && entry.displayName.trim()
+            h1.h3.mb-2
+              span.guestbook-author-name(class=!hasGbDisplayName ? 'guestbook-author-name--anonymous' : '')
+                i.bi.bi-person(aria-hidden="true")
+                if hasGbDisplayName
+                  | #{entry.displayName.trim()}
+                else
+                  | Anonymous
+            .d-flex.flex-wrap.gap-2.text-muted.small
+              time(datetime=entry.created ? entry.created.toISOString() : undefined)
+                | Posted #{entry.formatCreated()}
+              if entry.updated && entry.updated.getTime() !== entry.created.getTime()
+                span(aria-hidden="true") ·
+                time(datetime=entry.updated.toISOString())
+                  | Updated #{entry.formatUpdated()}
 
-            .guestbook-entry-body.fs-5.text-break
-              if entry.content && entry.content.length > 0
-                .mb-0.text-prewrap #{entry.content}
-              if entry.photo
-                figure.mt-4.mb-0(class=entry.content && entry.content.length > 0 ? 'pt-4 border-top' : '')
-                  img.img-fluid.rounded.border.shadow-sm(
-                    src='/photos/' + entry.photo.id,
-                    alt="Guestbook photo"
-                  )
-                  if entry.photo.name
-                    figcaption.small.text-muted.mt-2 #{entry.photo.name}
+          .guestbook-entry-body.fs-5.text-break
+            if entry.content && entry.content.length > 0
+              .mb-0.text-prewrap #{entry.content}
+            if entry.photo
+              if (entry.content && entry.content.length > 0)
+                +gradientRule(4, 4)
+              figure
+                img.img-fluid.rounded.border.shadow-sm(
+                  src='/photos/' + entry.photo.id,
+                  alt="Guestbook photo"
+                )
 
 block modal
   if isAdmin && (!entry.moderated || entry.pendingRemoderation)

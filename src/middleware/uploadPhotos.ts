@@ -6,7 +6,7 @@ import { GuestbookUploadUserError } from './guestbookUpload';
 const MAX_FILES = 40;
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
 
-const professionalGalleryUpload = multer({
+const photosUpload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: MAX_FILE_BYTES },
     fileFilter(_req, file, cb) {
@@ -21,9 +21,9 @@ const professionalGalleryUpload = multer({
 /**
  * Memory upload for professional gallery images (field name `photos`, multiple files).
  */
-export function uploadProfessionalGallery(redirectOnFailure: (req: express.Request) => string) {
+export function uploadPhotos(redirectOnFailure: (req: express.Request) => string) {
     return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        professionalGalleryUpload.array('photos', MAX_FILES)(req, res, (err: unknown) => {
+        photosUpload.array('photos', MAX_FILES)(req, res, (err: unknown) => {
             if (err instanceof multer.MulterError) {
                 if (err.code === 'LIMIT_FILE_SIZE') {
                     req.flash('error', 'One or more images are too large (max 20 MB each).');

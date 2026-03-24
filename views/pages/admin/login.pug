@@ -5,26 +5,25 @@ block title
   | Admin sign in
 
 block content
-  .container-md.py-4
-    h1.h4.mb-3 Admin
-    p.text-muted.small.mb-4 Enter the admin password to continue.
+  h1.h4.mb-3 Admin
+  p.text-muted.small.mb-4 Enter the admin password to continue.
 
-    if error
-      .alert.alert-danger.alert-dismissable(role='alert') #{error}
+  if error
+    .alert.alert-danger.alert-dismissable(role='alert') #{error}
 
-    form(method='post', action='/admin/login' novalidate)
-      input.hidden(type='hidden', name='next', value=next || '/admin')
-      .mb-3
-        label.form-label(for='admin-password') Password
-        input#admin-password.form-control(
-          type='password',
-          name='password',
-          required,
-          autocomplete='current-password',
-          autofocus
-        )
-        .invalid-feedback.mt-s Required
-      button.btn.btn-primary(type='submit') Sign in
+  form(method='post', action='/admin/login' novalidate)
+    input.hidden(type='hidden', name='next', value=next || '/admin')
+    .mb-3
+      label.form-label(for='admin-password') Password
+      input#admin-password.form-control(
+        type='password',
+        name='password',
+        required,
+        autocomplete='current-password',
+        autofocus
+      )
+      .invalid-feedback.mt-s Required
+    button.btn.btn-primary(type='submit') Sign in
 
 block script
   +script('formValidate')

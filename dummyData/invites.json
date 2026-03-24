@@ -1,0 +1,163 @@
+[
+  {
+    "name": "Alex & Jordan",
+    "guests": [
+      {
+        "name": "Alex",
+        "attending": true,
+        "dietaryRestrictions": "Vegetarian — no fish, please."
+      },
+      {
+        "name": "Jordan",
+        "attending": false
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": true,
+    "carpoolSpotsOffered": 0
+  },
+  {
+    "name": "The Chen family",
+    "guests": [
+      {
+        "name": "Pat",
+        "attending": false
+      },
+      {
+        "name": "Kim",
+        "attending": false
+      },
+      {
+        "name": "Lee",
+        "attending": false
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "Sam Taylor",
+    "guests": [
+      {
+        "name": "Sam"
+      }
+    ],
+    "seen": true,
+    "notes": "So excited — let us know if you need anything from us!"
+  },
+  {
+    "name": "Morgan Lee + guest",
+    "guests": [
+      {
+        "name": "Morgan"
+      },
+      {
+        "name": "Plus-one"
+      }
+    ],
+    "seen": true,
+    "notes": "Plus-one’s full name to follow; they’ll share dietary needs once confirmed."
+  },
+  {
+    "name": "Priya & Dev",
+    "guests": [
+      {
+        "name": "Priya",
+        "attending": true,
+        "dietaryRestrictions": "Vegan."
+      },
+      {
+        "name": "Dev",
+        "attending": true
+      },
+      {
+        "name": "Asha",
+        "attending": true,
+        "dietaryRestrictions": "Severe peanut allergy — carries epinephrine."
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": true,
+    "carpoolSpotsOffered": 0
+  },
+  {
+    "name": "The Okafor family",
+    "guests": [
+      {
+        "name": "Chioma",
+        "attending": true
+      },
+      {
+        "name": "David",
+        "attending": true,
+        "dietaryRestrictions": "Diabetic — low-sugar dessert appreciated if possible."
+      },
+      {
+        "name": "Zara",
+        "attending": false
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "notes": "Please let us know if a kids’ meal option is available.",
+    "carpoolRequested": true,
+    "carpoolSpotsOffered": 0
+  },
+  {
+    "name": "Elena Vasquez",
+    "guests": [
+      {
+        "name": "Elena",
+        "attending": true,
+        "dietaryRestrictions": "Halal preferred where possible."
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": false,
+    "carpoolSpotsOffered": 2
+  },
+  {
+    "name": "Ben Carter",
+    "guests": [
+      {
+        "name": "Ben",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "notes": "Flying in that morning — may be ceremony-only if the flight is delayed.",
+    "carpoolRequested": true,
+    "carpoolSpotsOffered": 0
+  },
+  {
+    "name": "River & Jamie",
+    "guests": [
+      {
+        "name": "River",
+        "attending": true,
+        "dietaryRestrictions": "Coeliac — strictly gluten free, cross-contamination matters."
+      },
+      {
+        "name": "Jamie",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "notes": "One of us is GF (River); Jamie has no restrictions.",
+    "carpoolRequested": false,
+    "carpoolSpotsOffered": 3
+  },
+  {
+    "name": "Uncle Theo",
+    "guests": [
+      {
+        "name": "Theo"
+      }
+    ]
+  }
+]

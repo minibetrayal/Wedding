@@ -11,31 +11,30 @@ block title
 block top
 
 block content
-  .container.pt-2.pb-4.pb-md-5
-    +hero('We Invite you to celebrate our wedding')
+  +hero('We Invite you to celebrate our wedding')
 
-    .mt-4.mt-md-5.pt-1
-      form(method="post", action="/rsvp", novalidate)
-        .mb-3
-          label.form-label(for="invite-code") Enter your Invitation code
-          //- max length is actually 6 but this obfuscates that a bit
-          input#invite-code.form-control.form-control-lg.text-uppercase(
-            type="text",
-            name="inviteCode",
-            required,
-            autocomplete="off",
-            autocapitalize="characters",
-            spellcheck="false",
-            inputmode="text",
-            maxlength="10",
-            placeholder="e.g. ABC123",
-            value=inviteCode || '',
-            aria-describedby="invite-code-hint"
-          )
-          .invalid-feedback Please enter your invitation code.
-          .form-text#invite-code-hint
-            | Your invitation code appears on your invitation, below the QR code. Alternatively, you can use your phone's camera to scan the QR code.
-        button.btn.btn-primary.btn-lg.w-100(type="submit") Continue
+  .mt-4.mt-md-5.pt-1
+    form(method="post", action="/rsvp", novalidate)
+      .mb-3
+        label.form-label(for="invite-code") Enter your Invitation code
+        //- max length is actually 6 but this obfuscates that a bit
+        input#invite-code.form-control.form-control-lg.text-uppercase(
+          type="text",
+          name="inviteCode",
+          required,
+          autocomplete="off",
+          autocapitalize="characters",
+          spellcheck="false",
+          inputmode="text",
+          maxlength="10",
+          placeholder="e.g. ABC123",
+          value=inviteCode || '',
+          aria-describedby="invite-code-hint"
+        )
+        .invalid-feedback Please enter your invitation code.
+        .form-text#invite-code-hint
+          | Your invitation code appears on your invitation, below the QR code. Alternatively, you can use your phone's camera to scan the QR code.
+      button.btn.btn-primary.btn-lg.w-100(type="submit") Continue
 
 block script
   +script('formValidate')

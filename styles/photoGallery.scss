@@ -16,11 +16,13 @@
 }
 
 .gallery-card {
-  transition: transform 0.28s ease, box-shadow 0.28s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.75rem 2rem rgba($body-color, 0.09) !important;
+  &:not(.no-animate) {
+    transition: transform 0.28s ease, box-shadow 0.28s ease;
+  
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0.75rem 2rem rgba($body-color, 0.09) !important;
+    }
   }
 
   .gallery-photo-link {

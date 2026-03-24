@@ -21,11 +21,13 @@ html(lang="en-AU")
     link(rel="icon" type="image/svg+xml" href="/images/anm.svg")
 
   body.projector-layout.d-flex.flex-column.min-vh-100.min-dvh-100.bg-body.text-body
-    main.flex-fill.d-flex.flex-column.min-vh-100.min-dvh-100
-      script.projector-state(type="application/json")!= JSON.stringify(projector).replace(/</g, '\\u003c')
+    main.flex-fill.d-flex.flex-column.min-h-0.overflow-hidden.projector-main
+      span.projector-connected
+      //- .projector-conn(aria-hidden="true")
+      script.projector-state(type="application/json")!= JSON.stringify({ ...projector, entryIds }).replace(/</g, '\\u003c')
 
       .projector-root(role="region", aria-label="Wedding projector display")
-        section.projector-section.d-none(data-am-mode="home")
+        section.projector-section.onscreen-container.d-none(data-am-mode="home")
           .projector-panel
             +hero(heroImages)
 
@@ -34,6 +36,38 @@ html(lang="en-AU")
             .projector-message-wrap
               p.projector-message
 
+        section.projector-section.d-none(data-am-mode="guestbook")
+          .projector-panel
+            .projector-guestbook-wrap
+              .projector-guestbook-empty(class=entryIds.length === 0 ? undefined : 'd-none')
+                .card.border-0.shadow-sm
+                  .card-body.p-4.p-md-5.text-center.text-muted
+                    i.bi.bi-journal-richtext.display-4.d-block.mb-3.opacity-50(aria-hidden="true")
+                    p.lead.mb-2 No messages yet.
+                    p.small.mb-0 Be the first to leave a note for #{coupleNames} at
+                    p.small.mb-0
+                      span.projector-guestbook-url #{websiteUrl}/guestbook
+              article.card.projector-guestbook-card.border-0.shadow-sm(class=entryIds.length === 0 ? 'd-none' : undefined)
+                .card-body.p-4
+                  header.projector-guestbook-card__header.d-flex.flex-wrap.align-items-baseline.justify-content-between.gap-2.mb-2
+                    .fw-semibold
+                      span.projector-guestbook-author-name
+                        i.bi.bi-person(aria-hidden="true")
+                        span.projector-guestbook-author
+                    time.projector-guestbook-time.small.text-muted
+                  .projector-guestbook-card__body
+                    p.projector-guestbook-content.mb-0.text-break.text-prewrap
+                    p.projector-guestbook-truncated-note.small.text-muted.mb-0.mt-1.d-none
+                      | Read the full message at 
+                      span.projector-guestbook-url #{websiteUrl}/guestbook
+                    .projector-guestbook-photo-wrap.mt-3.rounded.border.bg-body-secondary.p-1.d-none
+                      img.projector-guestbook-photo.rounded(alt="Guestbook photo" loading="eager")
+
+      aside.projector-footer.card.shadow-sm.w-50(aria-label="Projector footer")
+        .card-body
+          p.projector-footer-text.mb-0.text-center
+            | Write to our digital guestbook at
+            span.projector-guestbook-url(translate="no") #{websiteUrl}/guestbook
 
     +script('bootstrap.bundle.min')
     +script('projector')

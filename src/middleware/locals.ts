@@ -1,58 +1,28 @@
 import express from 'express';
-import path from 'path';
-import fs from 'fs';
 
 import { formatDate, formatTime, getDateParts } from '../util/timeUtils';
 import { hasValidAdminCookie } from './adminAuth';
-
-const heroImagesDir = path.join(__dirname, '../../public/images/hero');
+import { getDataConnection as dataConnection } from '../data/def/DataConnection';
 
 type ScheduledEvent = {
     time: string;
-    sortKey: Date;
+    rawTime: Date;
     description: string;
     key: string;
 }
 
-type FerryService = {
-    platform?: string;
-    time?: string;
-    via?: string;
-    arriving?: string;
-    sortKey: string;
-}
-
-type HeroImage = {
-    url: string;
-    style?: string;
-}
-
-const heroImages: HeroImage[] = [];
-
 export default async function locals(req: express.Request, res: express.Response, next: express.NextFunction) {
-    if (!heroImages.length) {
-        await fs.promises.readdir(heroImagesDir).then(files => {
-            files.forEach(file => {
-                const centerPosition = file.match(/^hero-\d+\.(\d+)\./)?.[1];
-                if (centerPosition) {
-                    heroImages.push({
-                        url: `/images/hero/${file}`,
-                        style: `object-position: center ${centerPosition}%`,
-                    });
-                } else {
-                    heroImages.push({ url: `/images/hero/${file}` });
-                }
-            });
+    res.locals.heroImages = await dataConnection().photos.getAll('hero')
+        .then(photos => photos.map(photo => {
+                return {
+                    url: `/photos/${photo.id}`,
+                    style: photo.captionOrStyle,
+                };
+            })) ?? [];
 
-        }).catch(err => {
-            if (process.env.NODE_ENV === 'development') console.error(err);
-        });
-    }
-
-    res.locals.heroImages = heroImages;
     if (process.env.EVENT_DATE) {
-        res.locals.eventDate = formatDate(process.env.EVENT_DATE, process.env.EVENT_TIMEZONE);
-        res.locals.eventDateParts = getDateParts(process.env.EVENT_DATE, process.env.EVENT_TIMEZONE);
+        res.locals.eventDate = formatDate(process.env.EVENT_DATE);
+        res.locals.eventDateParts = getDateParts(process.env.EVENT_DATE);
 
 
         if (process.env.ARRIVAL_TIME_KEY) res.locals.arrivalTimeKey = process.env.ARRIVAL_TIME_KEY;
@@ -67,8 +37,8 @@ export default async function locals(req: express.Request, res: express.Response
             if (!key || !process.env[key]) continue;
             if (key.startsWith('SCHEDULE_')) {
                 res.locals.scheduledEvents.push({
-                    time: formatTime(process.env.EVENT_DATE, process.env[key], process.env.EVENT_TIMEZONE),
-                    sortKey: new Date(`${process.env.EVENT_DATE}T${process.env[key]}`),
+                    time: formatTime(process.env.EVENT_DATE, process.env[key]),
+                    rawTime: new Date(`${process.env.EVENT_DATE}T${process.env[key]}`),
                     description: key
                         .replace('SCHEDULE_', '')
                         .split('_')
@@ -78,27 +48,7 @@ export default async function locals(req: express.Request, res: express.Response
                 });
             }
         }
-        res.locals.scheduledEvents.sort((a: ScheduledEvent, b: ScheduledEvent) => a.sortKey.getTime() - b.sortKey.getTime());
-
-        const servicesToIsland: Record<string, FerryService> = {};
-        const servicesToMainland: Record<string, FerryService> = {};
-        for (let key of Object.keys(process.env)) {
-            if (!key || !process.env[key]) continue;
-            const match = key.match(/^FERRY_SERVICE_TO_(ISLAND|MAINLAND)_(\d+)_(.*)$/);
-            if (!match) continue;
-
-            const services = match[1] === 'ISLAND' ? servicesToIsland : servicesToMainland;
-
-            const service: FerryService = services[match[2]] ?? { sortKey: match[2] };
-            let value = process.env[key];
-            if (match[3] === 'TIME' || match[3] === 'ARRIVING') {
-                value = formatTime(process.env.EVENT_DATE, value, process.env.EVENT_TIMEZONE);
-            }
-            service[match[3].toLowerCase() as keyof FerryService] = value;
-            services[match[2]] = service;
-        }
-        res.locals.ferryServicesToIsland = Object.values(servicesToIsland);
-        res.locals.ferryServicesToMainland = Object.values(servicesToMainland);
+        res.locals.scheduledEvents.sort((a: ScheduledEvent, b: ScheduledEvent) => a.rawTime.getTime() - b.rawTime.getTime());
     }
     for (let keyType of ['locations', 'links', 'times', 'costs']) {
         res.locals[keyType] = {};

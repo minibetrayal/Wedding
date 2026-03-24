@@ -11,6 +11,8 @@ import {
 
 import adminProjectorRoutes from './admin-projector';
 import invitesRoutes from './invites';
+import heroRoutes from './hero';
+import ferryRoutes from './ferry';
 
 const router = express.Router();
 
@@ -52,5 +54,7 @@ router.get('/', (req, res) => {
 
 router.use('/invites', invitesRoutes);
 router.use('/projector', adminProjectorRoutes);
+router.use('/hero', heroRoutes);
+router.use('/ferry', ferryRoutes);
 
 export default router;

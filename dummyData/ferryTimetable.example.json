@@ -1,0 +1,39 @@
+{
+  "services": [
+    {
+      "to": "island",
+      "platform": "Platform 4",
+      "time": "2027-07-02T12:00:00+10:00",
+      "via": "East Bay Island",
+      "arriving": "2027-07-02T12:18:00+10:00"
+    },
+    {
+      "to": "island",
+      "platform": "Platform 4",
+      "time": "2027-07-02T11:45:00+10:00",
+      "via": "East Bay Island",
+      "arriving": "2027-07-02T12:03:00+10:00"
+    },
+    {
+      "to": "island",
+      "platform": "Platform 3",
+      "time": "2027-07-02T11:15:00+10:00",
+      "via": "South Shore Island",
+      "arriving": "2027-07-02T11:48:00+10:00"
+    },
+    {
+      "to": "mainland",
+      "platform": "Platform 1",
+      "time": "2027-07-02T15:40:00+10:00",
+      "via": "East Bay Island",
+      "arriving": "2027-07-02T15:58:00+10:00"
+    },
+    {
+      "to": "mainland",
+      "platform": "Platform 2",
+      "time": "2027-07-02T15:25:00+10:00",
+      "via": "South Shore Island",
+      "arriving": "2027-07-02T16:08:00+10:00"
+    }
+  ]
+}

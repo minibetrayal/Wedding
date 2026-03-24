@@ -19,8 +19,28 @@
     const dwellInput = document.getElementById('projector-dwell-slider');
     const dwellLabel = document.getElementById('projector-dwell-label');
     const dwellStatus = document.getElementById('projector-dwell-status');
+    const guestbookCountHint = document.getElementById('projector-guestbook-count-hint');
 
     const DWELL_DEBOUNCE_MS = 1300;
+
+    function setGuestbookEligibleCount(n) {
+        if (!guestbookCountHint) return;
+        const count = Math.max(0, Math.floor(Number(n) || 0));
+        guestbookCountHint.textContent =
+            count +
+            ' eligible post' +
+            (count === 1 ? '' : 's') +
+            ' (visible, not moderated).';
+    }
+
+    const projectorStream = new EventSource('/projector/stream');
+    projectorStream.addEventListener('state', function (ev) {
+        try {
+            const state = JSON.parse(ev.data);
+            const ids = Array.isArray(state.entryIds) ? state.entryIds : [];
+            setGuestbookEligibleCount(ids.length);
+        } catch (_) {}
+    });
 
     function showStatus(el, text, isError) {
         if (!el) return;

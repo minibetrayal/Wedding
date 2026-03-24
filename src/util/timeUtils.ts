@@ -1,24 +1,20 @@
-function tz(timezone?: string): { timeZone: string } {
-  return { timeZone: timezone || process.env.EVENT_TIMEZONE! }
-};
-
-export function formatDate(dateString: string, timezone?: string): string {
+export function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('en-AU', {
     dateStyle: 'full',
-    ...tz(timezone)
+    timeZone: process.env.EVENT_TIMEZONE!
   });
 }
 
-export function formatTime(dateString: string, timeString: string, timezone?: string): string {
+export function formatTime(dateString: string, timeString: string): string {
   return new Date(`${dateString}T${timeString}`).toLocaleTimeString('en-AU', {
     timeStyle: 'short',
-    ...tz(timezone)
+    timeZone: process.env.EVENT_TIMEZONE!
   });
 }
 
-export function getDateParts(dateString: string, timezone?: string): any {
+export function getDateParts(dateString: string): { day: string; month: string; year: string } {
   const [day, month, year] = new Date(dateString)
-    .toLocaleDateString('en-AU', { ...tz(timezone), day: 'numeric', month: 'numeric', year: 'numeric' })
+    .toLocaleDateString('en-AU', { timeZone: process.env.EVENT_TIMEZONE!, day: 'numeric', month: 'numeric', year: 'numeric' })
     .split('/');
   return {day, month, year};
 }

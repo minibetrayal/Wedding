@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { database } from '../data/tempConnection';
+import { getDataConnection as dataConnection } from '../data/def/DataConnection';
 import { connect } from '../util/projectorSse';
 
 const router = express.Router();
@@ -14,14 +14,15 @@ router.get('/stream', async (req, res, next) => {
 });
 
 router.get('/', async (req, res) => {
-    const projector = await database.projector.get();
-    res.render('pages/projector', { projector });
+    const projector = await dataConnection().projector.get();
+    const entryIds = await dataConnection().projector.getGuestbookEntryIds();
+    res.render('pages/projector', { projector, entryIds });
 });
 
 router.get('/guestbook/:entryId', async (req, res) => {
     const entryId = req.params.entryId;
     try {
-        const entry = await database.guestbook.get(entryId);
+        const entry = await dataConnection().guestbook.get(entryId);
         if (!entry.visible || entry.moderated) {
             return res.status(404).json({ error: 'Entry not found' });
         }

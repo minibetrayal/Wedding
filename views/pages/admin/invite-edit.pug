@@ -31,282 +31,281 @@ block content
         ? inv.invitees
         : [{ id: '', name: '' }]
 
-  .container.py-4
-    nav.mb-3(aria-label="Breadcrumb")
-      ol.breadcrumb.mb-0
-        li.breadcrumb-item
-          a.link-secondary(href="/admin") Admin
-        li.breadcrumb-item
-          a.link-secondary(href="/admin/invites") Invitations
-        if isNew 
-          li.breadcrumb-item.active(aria-current="page") New invitation
-        else
-          li.breadcrumb-item
-            a.link-secondary(href=`/admin/invites/${inv.id || ''}`) #{inv.name || 'Invitation'}
-          li.breadcrumb-item.active(aria-current="page") Edit
-
-    .mb-4
-      if isNew
-        h1.h3.mb-1 Create invitation
-        p.text-muted.small.mb-0
-          | Add a recipient name and each guest. Use “more” on each block to open contact info, RSVP flags, and per-guest details when you need to correct them.
+  nav.mb-3(aria-label="Breadcrumb")
+    ol.breadcrumb.mb-0
+      li.breadcrumb-item
+        a.link-secondary(href="/admin") Admin
+      li.breadcrumb-item
+        a.link-secondary(href="/admin/invites") Invitations
+      if isNew 
+        li.breadcrumb-item.active(aria-current="page") New invitation
       else
-        h1.h3.mb-1 Edit invitation
-        p.text-muted.small.mb-0
-          | Recipient and guest names are shown first. Expand the sections below when you need to modify phone, email, notes, RSVP state, or dietary details.
+        li.breadcrumb-item
+          a.link-secondary(href=`/admin/invites/${inv.id || ''}`) #{inv.name || 'Invitation'}
+        li.breadcrumb-item.active(aria-current="page") Edit
 
-    form(
-      id='invite-edit-form',
-      method="post",
-      action=actionUrl,
-      novalidate
-    )
-      .card.border.shadow-sm.mb-4
-        .card-body
-          h2.h6.text-uppercase.text-muted.mb-3 Invitation
-          .mb-3
-            label.form-label(for="invite-name") Recipient name
-              span.text-danger(aria-hidden="true") &nbsp;*
-            input#invite-name.form-control(
-              type="text",
-              name="name",
-              required,
-              autocomplete="off",
-              placeholder='Recipient Name',
-              value=inv.name || ''
-            )
-            .invalid-feedback Please enter a recipient name for this invitation.
-            .form-text Shown on your list and to guests where relevant.
+  .mb-4
+    if isNew
+      h1.h3.mb-1 Create invitation
+      p.text-muted.small.mb-0
+        | Add a recipient name and each guest. Use “more” on each block to open contact info, RSVP flags, and per-guest details when you need to correct them.
+    else
+      h1.h3.mb-1 Edit invitation
+      p.text-muted.small.mb-0
+        | Recipient and guest names are shown first. Expand the sections below when you need to modify phone, email, notes, RSVP state, or dietary details.
 
-          button#invite-edit-invitation-extra-toggle.btn.btn-outline-secondary.d-inline-flex.align-items-center.gap-2.collapsed(
-            type="button",
-            data-bs-toggle="collapse",
-            data-bs-target="#invite-edit-invitation-extra",
-            aria-expanded="false",
-            aria-controls="invite-edit-invitation-extra"
+  form(
+    id='invite-edit-form',
+    method="post",
+    action=actionUrl,
+    novalidate
+  )
+    .card.border.shadow-sm.mb-4
+      .card-body
+        h2.h6.text-uppercase.text-muted.mb-3 Invitation
+        .mb-3
+          label.form-label(for="invite-name") Recipient name
+            span.text-danger(aria-hidden="true") &nbsp;*
+          input#invite-name.form-control(
+            type="text",
+            name="name",
+            required,
+            autocomplete="off",
+            placeholder='Recipient Name',
+            value=inv.name || ''
           )
-            .bi.bi-sliders(aria-hidden="true")
-            span More
-            i.bi.bi-chevron-down.small.collapse-chevron(aria-hidden="true")
+          .invalid-feedback Please enter a recipient name for this invitation.
+          .form-text Shown on your list and to guests where relevant.
 
-          #invite-edit-invitation-extra.collapse.mt-3
-            .pt-3.border-top
-              if !isNew && inv.id
-                .mb-3
-                  .small.text-muted.mb-1 Invite ID
-                  code.user-select-all.fs-6.d-block #{inv.id}
-              .row.g-3
-                .col-md-6
-                  label.form-label(for="invite-phone") Phone
-                    span.visually-hidden (from guest)
-                  input#invite-phone.form-control(
-                    type="tel",
-                    name="phone",
-                    autocomplete="tel",
-                    placeholder="Not Provided",
-                    value=inv.phone || ''
-                  )
-                  .form-text.small Supplied by the guest when they RSVP.
-                .col-md-6
-                  label.form-label(for="invite-email") Email
-                    span.visually-hidden (from guest)
-                  input#invite-email.form-control(
-                    type="email",
-                    name="email",
-                    autocomplete="email",
-                    placeholder="Not Provided",
-                    value=inv.email || ''
-                  )
-                  .form-text.small Optionally supplied by the guest when they RSVP.
-              .mb-0.mt-3
-                label.form-label(for="invite-notes") Notes from guest
-                  span.visually-hidden (optional)
-                textarea#invite-notes.form-control(
-                  name="notes",
-                  rows="2",
-                  placeholder="Not Provided"
-                ) #{inv.notes || ''}
-                .form-text.small Message or notes the guest leaves when responding.
-
-              fieldset.mt-3.mb-0.border-0.p-0
-                label.form-label Carpooling
-                .form-check.mb-2
-                  input#invite-carpool-requested.form-check-input(
-                    type="checkbox",
-                    name="carpoolRequested",
-                    value="1",
-                    checked=!!inv.carpoolRequested
-                  )
-                  label.form-check-label(for="invite-carpool-requested") Carpooling Requested
-                .mb-0
-                  label.form-label.small(for="invite-carpool-spots") Carpooling seats offered
-                  input#invite-carpool-spots.form-control(
-                    type="number",
-                    name="carpoolSpotsOffered",
-                    min="0",
-                    max="50",
-                    step="1",
-                    value=inv.carpoolRequested ? 0 : (inv.carpoolSpotsOffered != null ? inv.carpoolSpotsOffered : 0),
-                    readonly=inv.carpoolRequested || false,
-                    aria-disabled=inv.carpoolRequested ? 'true' : false
-                  )
-                  p#invite-carpool-spots-hint.small.text-muted.mb-0(class=inv.carpoolRequested ? '' : 'd-none')
-                    | Not applicable while carpooling is requested.
-                  .form-text.small#invite-carpool-spots-form-text(class=inv.carpoolRequested ? 'd-none' : '')
-                    | Spare seats this party can offer for others (0 if none). Disabled while “Carpooling requested” is checked.
-
-              fieldset.mt-3.mb-0.border-0.p-0
-                legend.form-label RSVP status
-                  span.visually-hidden (optional overrides)
-                p.small.text-muted.mb-2
-                  | Normally set when the guest opens the invite or submits an RSVP. Adjust here if you need to correct or reset state.
-                .form-check.mb-2
-                  input#invite-seen.form-check-input(
-                    type="checkbox",
-                    name="seen",
-                    value="1",
-                    checked=!!inv.seen
-                  )
-                  label.form-check-label(for="invite-seen") Invite has been seen (guest opened the invite)
-                .form-check.mb-0
-                  input#invite-responded.form-check-input(
-                    type="checkbox",
-                    name="responded",
-                    value="1",
-                    checked=!!inv.responded
-                  )
-                  label.form-check-label(for="invite-responded") Guest has responded (RSVP submitted)
-
-      .card.border.shadow-sm.mb-4
-        .card-body
-          .d-flex.flex-wrap.align-items-center.justify-content-between.gap-2.mb-3
-            div
-              h2.h6.text-uppercase.text-muted.mb-0 Guests
-              p.small.text-muted.mb-0
-                | At least one guest is required.
-            button.add-invitee.btn.btn-outline-secondary.d-inline-flex.align-items-center.gap-1(
-              type="button"
-            )
-              i.bi.bi-plus-lg(aria-hidden="true")
-              | Add guest
-
-          .invitee-rows.d-flex.flex-column.gap-2
-            each invitee, index in guestRows
-              .invitee-row.card.card-body.py-3.px-3.border(data-invitee-row)
-                input.invitee-id-input(
-                  type="hidden",
-                  name=`invitees[${index}][id]`,
-                  value=invitee.id || ''
-                )
-                - const attendUnset = invitee.attending !== true && invitee.attending !== false
-                //- align-items-end lines actions up with the bottom of the name column (the input), at every width until wrap
-                .d-flex.align-items-end.gap-2
-                  .flex-grow-1.min-w-0
-                    label.form-label.small.mb-1(for=`invitee-${index}-name`) Guest name
-                      span.text-danger(aria-hidden="true") &nbsp;*
-                    input.form-control.invitee-name-input(
-                      id=`invitee-${index}-name`,
-                      type="text",
-                      name=`invitees[${index}][name]`,
-                      required,
-                      autocomplete="name",
-                      placeholder="Full name",
-                      value=invitee.name || ''
-                    )
-                    .invalid-feedback Please enter this guest's name.
-                  .d-flex.flex-shrink-0.gap-1.align-items-center
-                    button.invitee-extra-toggle.btn.btn-outline-secondary.d-inline-flex.align-items-center.gap-1.collapsed(
-                      type="button",
-                      data-bs-toggle="collapse",
-                      data-bs-target=`#invitee-${index}-extra`,
-                      aria-expanded="false",
-                      aria-controls=`invitee-${index}-extra`,
-                      aria-label=`More fields for guest ${index + 1}`
-                    )
-                      span.visually-hidden More for guest #{index + 1}
-                      i.bi.bi-sliders(aria-hidden="true")
-                      span.d-none.d-md-inline RSVP & dietary
-                      i.bi.bi-chevron-down.small.collapse-chevron(aria-hidden="true")
-                    button.btn.btn-outline-danger.remove-invitee.d-inline-flex.align-items-center.gap-1(
-                      type="button",
-                      title="Remove guest",
-                      aria-label="Remove guest"
-                    )
-                      i.bi.bi-trash(aria-hidden="true")
-                      span.d-none.d-md-inline Remove
-
-                .collapse.invitee-extra-collapse.mt-2(id=`invitee-${index}-extra`)
-                  .pt-3.border-top
-                    .row.g-2.align-items-start
-                      .col-12
-                        fieldset.p-0.m-0.border-0
-                          legend.form-label.small.mb-1.px-0 Attending
-                          .btn-group.invitee-attending-group.w-100.w-sm-auto.rounded-pill.overflow-hidden(
-                            role="group",
-                            aria-label=`Attending status for guest ${index + 1}`
-                          )
-                            input.btn-check.invitee-attending-radio(
-                              type="radio",
-                              name=`invitees[${index}][attending]`,
-                              id=`invitee-${index}-attend-no`,
-                              value="false",
-                              checked=invitee.attending === false
-                            )
-                            label.btn.btn-outline-danger(for=`invitee-${index}-attend-no`) No
-                            input.btn-check.invitee-attending-radio(
-                              type="radio",
-                              name=`invitees[${index}][attending]`,
-                              id=`invitee-${index}-attend-none`,
-                              value="",
-                              checked=attendUnset
-                            )
-                            label.btn.btn-outline-dark(for=`invitee-${index}-attend-none`) Not answered
-                            input.btn-check.invitee-attending-radio(
-                              type="radio",
-                              name=`invitees[${index}][attending]`,
-                              id=`invitee-${index}-attend-yes`,
-                              value="true",
-                              checked=invitee.attending === true
-                            )
-                            label.btn.btn-outline-primary(for=`invitee-${index}-attend-yes`) Yes
-                    .row.g-2.mt-1
-                      .col-12
-                        label.form-label.small.mb-1(for=`invitee-${index}-dietary`) Dietary requirements
-                        textarea.form-control.invitee-dietary-input(
-                          id=`invitee-${index}-dietary`,
-                          name=`invitees[${index}][dietaryRestrictions]`,
-                          rows="2",
-                          placeholder="Not Provided"
-                        ) #{invitee.dietaryRestrictions || ''}
-
-      .d-flex.flex-wrap.align-items-center.gap-2
-        button.btn.btn-primary.d-inline-flex.align-items-center.gap-2(type="submit")
-          i.bi.bi-check-lg(aria-hidden="true")
-          if isNew
-            | Create invitation
-          else
-            | Save changes
-        a.btn.btn-outline-secondary(href="/admin/invites") Cancel
-
-    if !isNew && inv.id
-      hr.my-4.opacity-25
-      section.border.border-danger.rounded-3.p-3.p-md-4.mb-4(aria-labelledby="delete-invite-section-title")
-        h2#delete-invite-section-title.h6.text-danger.mb-2 Danger zone
-        p.small.text-muted.mb-3
-          | Permanently delete this invitation and all guest data attached to it. This cannot be undone.
-        button#delete-invite-open.btn.btn-outline-danger.d-inline-flex.align-items-center.gap-2(
+        button#invite-edit-invitation-extra-toggle.btn.btn-outline-secondary.d-inline-flex.align-items-center.gap-2.collapsed(
           type="button",
-          data-bs-toggle="modal",
-          data-bs-target="#delete-invite-modal"
+          data-bs-toggle="collapse",
+          data-bs-target="#invite-edit-invitation-extra",
+          aria-expanded="false",
+          aria-controls="invite-edit-invitation-extra"
         )
-          i.bi.bi-trash(aria-hidden="true")
-          | Delete invitation
-      form#delete-invite-form.visually-hidden(
-        method="post",
-        action=`/admin/invites/${inv.id}/delete`,
-        aria-hidden="true",
-        tabindex="-1"
+          .bi.bi-sliders(aria-hidden="true")
+          span More
+          i.bi.bi-chevron-down.small.collapse-chevron(aria-hidden="true")
+
+        #invite-edit-invitation-extra.collapse.mt-3
+          .pt-3.border-top
+            if !isNew && inv.id
+              .mb-3
+                .small.text-muted.mb-1 Invite ID
+                code.user-select-all.fs-6.d-block #{inv.id}
+            .row.g-3
+              .col-md-6
+                label.form-label(for="invite-phone") Phone
+                  span.visually-hidden (from guest)
+                input#invite-phone.form-control(
+                  type="tel",
+                  name="phone",
+                  autocomplete="tel",
+                  placeholder="Not Provided",
+                  value=inv.phone || ''
+                )
+                .form-text.small Supplied by the guest when they RSVP.
+              .col-md-6
+                label.form-label(for="invite-email") Email
+                  span.visually-hidden (from guest)
+                input#invite-email.form-control(
+                  type="email",
+                  name="email",
+                  autocomplete="email",
+                  placeholder="Not Provided",
+                  value=inv.email || ''
+                )
+                .form-text.small Optionally supplied by the guest when they RSVP.
+            .mb-0.mt-3
+              label.form-label(for="invite-notes") Notes from guest
+                span.visually-hidden (optional)
+              textarea#invite-notes.form-control(
+                name="notes",
+                rows="2",
+                placeholder="Not Provided"
+              ) #{inv.notes || ''}
+              .form-text.small Message or notes the guest leaves when responding.
+
+            fieldset.mt-3.mb-0.border-0.p-0
+              label.form-label Carpooling
+              .form-check.mb-2
+                input#invite-carpool-requested.form-check-input(
+                  type="checkbox",
+                  name="carpoolRequested",
+                  value="1",
+                  checked=!!inv.carpoolRequested
+                )
+                label.form-check-label(for="invite-carpool-requested") Carpooling Requested
+              .mb-0
+                label.form-label.small(for="invite-carpool-spots") Carpooling seats offered
+                input#invite-carpool-spots.form-control(
+                  type="number",
+                  name="carpoolSpotsOffered",
+                  min="0",
+                  max="50",
+                  step="1",
+                  value=inv.carpoolRequested ? 0 : (inv.carpoolSpotsOffered != null ? inv.carpoolSpotsOffered : 0),
+                  readonly=inv.carpoolRequested || false,
+                  aria-disabled=inv.carpoolRequested ? 'true' : false
+                )
+                p#invite-carpool-spots-hint.small.text-muted.mb-0(class=inv.carpoolRequested ? '' : 'd-none')
+                  | Not applicable while carpooling is requested.
+                .form-text.small#invite-carpool-spots-form-text(class=inv.carpoolRequested ? 'd-none' : '')
+                  | Spare seats this party can offer for others (0 if none). Disabled while “Carpooling requested” is checked.
+
+            fieldset.mt-3.mb-0.border-0.p-0
+              legend.form-label RSVP status
+                span.visually-hidden (optional overrides)
+              p.small.text-muted.mb-2
+                | Normally set when the guest opens the invite or submits an RSVP. Adjust here if you need to correct or reset state.
+              .form-check.mb-2
+                input#invite-seen.form-check-input(
+                  type="checkbox",
+                  name="seen",
+                  value="1",
+                  checked=!!inv.seen
+                )
+                label.form-check-label(for="invite-seen") Invite has been seen (guest opened the invite)
+              .form-check.mb-0
+                input#invite-responded.form-check-input(
+                  type="checkbox",
+                  name="responded",
+                  value="1",
+                  checked=!!inv.responded
+                )
+                label.form-check-label(for="invite-responded") Guest has responded (RSVP submitted)
+
+    .card.border.shadow-sm.mb-4
+      .card-body
+        .d-flex.flex-wrap.align-items-center.justify-content-between.gap-2.mb-3
+          div
+            h2.h6.text-uppercase.text-muted.mb-0 Guests
+            p.small.text-muted.mb-0
+              | At least one guest is required.
+          button.add-invitee.btn.btn-outline-secondary.d-inline-flex.align-items-center.gap-1(
+            type="button"
+          )
+            i.bi.bi-plus-lg(aria-hidden="true")
+            | Add guest
+
+        .invitee-rows.d-flex.flex-column.gap-2
+          each invitee, index in guestRows
+            .invitee-row.card.card-body.py-3.px-3.border(data-invitee-row)
+              input.invitee-id-input(
+                type="hidden",
+                name=`invitees[${index}][id]`,
+                value=invitee.id || ''
+              )
+              - const attendUnset = invitee.attending !== true && invitee.attending !== false
+              //- align-items-end lines actions up with the bottom of the name column (the input), at every width until wrap
+              .d-flex.align-items-end.gap-2
+                .flex-grow-1.min-w-0
+                  label.form-label.small.mb-1(for=`invitee-${index}-name`) Guest name
+                    span.text-danger(aria-hidden="true") &nbsp;*
+                  input.form-control.invitee-name-input(
+                    id=`invitee-${index}-name`,
+                    type="text",
+                    name=`invitees[${index}][name]`,
+                    required,
+                    autocomplete="name",
+                    placeholder="Full name",
+                    value=invitee.name || ''
+                  )
+                  .invalid-feedback Please enter this guest's name.
+                .d-flex.flex-shrink-0.gap-1.align-items-center
+                  button.invitee-extra-toggle.btn.btn-outline-secondary.d-inline-flex.align-items-center.gap-1.collapsed(
+                    type="button",
+                    data-bs-toggle="collapse",
+                    data-bs-target=`#invitee-${index}-extra`,
+                    aria-expanded="false",
+                    aria-controls=`invitee-${index}-extra`,
+                    aria-label=`More fields for guest ${index + 1}`
+                  )
+                    span.visually-hidden More for guest #{index + 1}
+                    i.bi.bi-sliders(aria-hidden="true")
+                    span.d-none.d-md-inline RSVP & dietary
+                    i.bi.bi-chevron-down.small.collapse-chevron(aria-hidden="true")
+                  button.btn.btn-outline-danger.remove-invitee.d-inline-flex.align-items-center.gap-1(
+                    type="button",
+                    title="Remove guest",
+                    aria-label="Remove guest"
+                  )
+                    i.bi.bi-trash(aria-hidden="true")
+                    span.d-none.d-md-inline Remove
+
+              .collapse.invitee-extra-collapse.mt-2(id=`invitee-${index}-extra`)
+                .pt-3.border-top
+                  .row.g-2.align-items-start
+                    .col-12
+                      fieldset.p-0.m-0.border-0
+                        legend.form-label.small.mb-1.px-0 Attending
+                        .btn-group.invitee-attending-group.w-100.w-sm-auto.rounded-pill.overflow-hidden(
+                          role="group",
+                          aria-label=`Attending status for guest ${index + 1}`
+                        )
+                          input.btn-check.invitee-attending-radio(
+                            type="radio",
+                            name=`invitees[${index}][attending]`,
+                            id=`invitee-${index}-attend-no`,
+                            value="false",
+                            checked=invitee.attending === false
+                          )
+                          label.btn.btn-outline-danger(for=`invitee-${index}-attend-no`) No
+                          input.btn-check.invitee-attending-radio(
+                            type="radio",
+                            name=`invitees[${index}][attending]`,
+                            id=`invitee-${index}-attend-none`,
+                            value="",
+                            checked=attendUnset
+                          )
+                          label.btn.btn-outline-dark(for=`invitee-${index}-attend-none`) Not answered
+                          input.btn-check.invitee-attending-radio(
+                            type="radio",
+                            name=`invitees[${index}][attending]`,
+                            id=`invitee-${index}-attend-yes`,
+                            value="true",
+                            checked=invitee.attending === true
+                          )
+                          label.btn.btn-outline-primary(for=`invitee-${index}-attend-yes`) Yes
+                  .row.g-2.mt-1
+                    .col-12
+                      label.form-label.small.mb-1(for=`invitee-${index}-dietary`) Dietary requirements
+                      textarea.form-control.invitee-dietary-input(
+                        id=`invitee-${index}-dietary`,
+                        name=`invitees[${index}][dietaryRestrictions]`,
+                        rows="2",
+                        placeholder="Not Provided"
+                      ) #{invitee.dietaryRestrictions || ''}
+
+    .d-flex.flex-wrap.align-items-center.gap-2
+      button.btn.btn-primary.d-inline-flex.align-items-center.gap-2(type="submit")
+        i.bi.bi-check-lg(aria-hidden="true")
+        if isNew
+          | Create invitation
+        else
+          | Save changes
+      a.btn.btn-outline-secondary(href="/admin/invites") Cancel
+
+  if !isNew && inv.id
+    hr.my-4.opacity-25
+    section.border.border-danger.rounded-3.p-3.p-md-4.mb-4(aria-labelledby="delete-invite-section-title")
+      h2#delete-invite-section-title.h6.text-danger.mb-2 Danger zone
+      p.small.text-muted.mb-3
+        | Permanently delete this invitation and all guest data attached to it. This cannot be undone.
+      button#delete-invite-open.btn.btn-outline-danger.d-inline-flex.align-items-center.gap-2(
+        type="button",
+        data-bs-toggle="modal",
+        data-bs-target="#delete-invite-modal"
       )
+        i.bi.bi-trash(aria-hidden="true")
+        | Delete invitation
+    form#delete-invite-form.visually-hidden(
+      method="post",
+      action=`/admin/invites/${inv.id}/delete`,
+      aria-hidden="true",
+      tabindex="-1"
+    )
 
 block modal
   #remove-guest-modal.modal.fade(

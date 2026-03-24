@@ -9,219 +9,218 @@ block title
 
 block content
 
-  .container.py-4
-    nav.mb-3(aria-label="Breadcrumb")
-      ol.breadcrumb.mb-0
-        li.breadcrumb-item
-          a.link-secondary(href="/admin") Admin
-        li.breadcrumb-item.active(aria-current="page") Invitations
+  nav.mb-3(aria-label="Breadcrumb")
+    ol.breadcrumb.mb-0
+      li.breadcrumb-item
+        a.link-secondary(href="/admin") Admin
+      li.breadcrumb-item.active(aria-current="page") Invitations
 
-    .d-flex.flex-column.flex-sm-row.align-items-stretch.align-items-sm-center.justify-content-between.gap-3.mb-4
-      div
-        h1.h3.mb-1 Manage invitations
-        p.text-muted.small.mb-0 Summary and per-invite status
-      a.btn.btn-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2(href="/admin/invites/new")
+  .d-flex.flex-column.flex-sm-row.align-items-stretch.align-items-sm-center.justify-content-between.gap-3.mb-4
+    div
+      h1.h3.mb-1 Manage invitations
+      p.text-muted.small.mb-0 Summary and per-invite status
+    a.btn.btn-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2(href="/admin/invites/new")
+      i.bi.bi-plus-lg(aria-hidden="true")
+      | Create invitation
+
+  //- Stats
+  .row.row-cols-2.row-cols-md-3.row-cols-lg-6.g-3.mb-4
+    .col
+      .card.h-100.border.shadow-sm
+        .card-body.text-center.py-3.px-2
+          .fs-2.fw-semibold.text-body #{invites.length}
+          .small.text-muted Invites sent
+    .col
+      .card.h-100.border.shadow-sm
+        .card-body.text-center.py-3.px-2
+          .fs-2.fw-semibold.text-body #{invites.reduce((acc, invite) => acc + invite.invitees.length, 0)}
+          .small.text-muted Guests invited
+    .col
+      .card.h-100.border.shadow-sm
+        .card-body.text-center.py-3.px-2
+          .fs-2.fw-semibold.text-body #{invites.filter(invite => !invite.seen).length}
+          .small.text-muted Invites not seen
+    .col
+      .card.h-100.border.shadow-sm
+        .card-body.text-center.py-3.px-2
+          .fs-2.fw-semibold.text-body #{invites.filter(invite => invite.seen).length}
+          .small.text-muted Invites seen
+    .col
+      .card.h-100.border.shadow-sm
+        .card-body.text-center.py-3.px-2
+          .fs-2.fw-semibold.text-body #{invites.filter(invite => invite.responded).length}
+          .small.text-muted Responded
+    .col
+      .card.h-100.border.shadow-sm
+        .card-body.text-center.py-3.px-2
+          .fs-2.fw-semibold.text-body #{invites.reduce((acc, invite) => acc + invite.attending(), 0)}
+          .small.text-muted Attending guests
+
+  .row.row-cols-1.row-cols-sm-2.g-3.mb-4
+    .col
+      .card.h-100.border.shadow-sm
+        .card-body.text-center.py-3.px-2
+          -
+            const totalCarpoolSpotsOffered = invites.reduce(function (acc, inv) {
+              const n = Number(inv.carpoolSpotsOffered)
+              return acc + (Number.isFinite(n) && n > 0 ? n : 0)
+            }, 0)
+          .fs-2.fw-semibold.text-body #{totalCarpoolSpotsOffered}
+          .small.text-muted Carpool spots offered
+    .col
+      .card.h-100.border.shadow-sm
+        .card-body.text-center.py-3.px-2
+          -
+            const totalCarpoolSeatsRequested = invites.reduce(function (acc, inv) {
+              if (!inv.carpoolRequested || !inv.responded) return acc
+              return acc + inv.attending()
+            }, 0)
+          .fs-2.fw-semibold.text-body #{totalCarpoolSeatsRequested}
+          .small.text-muted Carpool seats requested
+
+  h2.h6.text-muted.text-uppercase.mb-2 All invitations
+  if invites.length
+    p.small.text-muted.mb-3
+      span.d-block.mb-2 Click a label to filter the list; click again to show all.
+      span.ms-1(
+        role="group"
+        aria-label="Filter invitations by status or badge"
+      )
+        button.invite-filter-legend.text-secondary.me-2.text-nowrap(
+          type="button"
+          data-invite-filter="not-seen"
+          aria-pressed="false"
+        )
+          i.bi.bi-envelope.me-1(aria-hidden="true")
+          | Not seen
+        button.invite-filter-legend.text-info.me-2.text-nowrap(
+          type="button"
+          data-invite-filter="seen"
+          aria-pressed="false"
+        )
+          i.bi.bi-envelope-open.me-1(aria-hidden="true")
+          | Seen
+        button.invite-filter-legend.text-warning.me-2.text-nowrap(
+          type="button"
+          data-invite-filter="declined"
+          aria-pressed="false"
+        )
+          i.bi.bi-x-lg.me-1(aria-hidden="true")
+          | Declined
+        button.invite-filter-legend.text-success.me-2.text-nowrap(
+          type="button"
+          data-invite-filter="attending"
+          aria-pressed="false"
+        )
+          i.bi.bi-people-fill.me-1(aria-hidden="true")
+          | Attending
+        button.invite-filter-legend.text-dark.me-2.text-nowrap(
+          type="button"
+          data-invite-filter="guest-note"
+          aria-pressed="false"
+        )
+          i.bi.bi-chat-left-text.me-1(aria-hidden="true")
+          | Guest note on invite
+        button.invite-filter-legend.text-dark.me-2.text-nowrap(
+          type="button"
+          data-invite-filter="dietary"
+          aria-pressed="false"
+        )
+          i.bi.bi-fork-knife.me-1(aria-hidden="true")
+          | Special dietary info
+        button.invite-filter-legend.text-danger.me-2.text-nowrap(
+          type="button"
+          data-invite-filter="carpool-requested"
+          aria-pressed="false"
+        )
+          i.bi.bi-car-front.me-1(aria-hidden="true")
+          | Carpool requested
+        button.invite-filter-legend.text-success.me-2.text-nowrap(
+          type="button"
+          data-invite-filter="carpool-offered"
+          aria-pressed="false"
+        )
+          i.bi.bi-car-front.me-1(aria-hidden="true")
+          | Carpool spots offered
+
+    .list-group.shadow-sm(data-invite-list)
+      - 
+        const d = [
+          ['Not seen', 'secondary', 'envelope'],
+          ['Seen', 'info', 'envelope-open'],
+          ['Declined', 'warning', 'x-lg'],
+          ['Attending', 'success', 'people-fill'],
+        ]
+      each invite in invites
+        - const index = invite.seen ? (invite.responded ? (invite.attending() > 0 ? 3 : 2) : 1) : 0;
+        - const statusFilterKeys = ['not-seen', 'seen', 'declined', 'attending'];
+        - const inviteFilterTags = [statusFilterKeys[index]];
+        - const hasGuestNote = typeof invite.notes === 'string' && invite.notes.trim().length > 0
+        - const hasAttendingDietary = invite.invitees.some((g) => g.attending === true && typeof g.dietaryRestrictions === 'string' && g.dietaryRestrictions.trim().length > 0)
+        - const carpoolSpotsN = Number(invite.carpoolSpotsOffered)
+        - const hasCarpoolOffered = Number.isFinite(carpoolSpotsN) && carpoolSpotsN > 0
+        - const hasCarpoolRequested = !!invite.carpoolRequested
+        - if (hasGuestNote) inviteFilterTags.push('guest-note');
+        - if (hasAttendingDietary) inviteFilterTags.push('dietary');
+        - if (hasCarpoolRequested) inviteFilterTags.push('carpool-requested');
+        - if (hasCarpoolOffered) inviteFilterTags.push('carpool-offered');
+        - const carpoolRequestedSeatsLabel = invite.responded ? String(invite.attending()) : '—'
+        - const carpoolRequestedTitle = invite.responded ? ('Carpool requested — seats (attending guests): ' + invite.attending()) : 'Carpool requested — RSVP not yet submitted; seat count shown after they respond'
+        - const carpoolOfferedTitle = 'Offering ' + carpoolSpotsN + ' spare carpool seat' + (carpoolSpotsN === 1 ? '' : 's')
+        - const hasDetailsHighlight = hasGuestNote || hasAttendingDietary
+        a.list-group-item.list-group-item-action.d-flex.align-items-center.gap-3.py-3.px-3(
+          href=`/admin/invites/${invite.id}`,
+          class=[
+            `border-start border-4 border-${d[index][1]}`,
+            hasDetailsHighlight && 'invite-list-item--has-details',
+          ].filter(Boolean).join(' '),
+          data-invite-filters=inviteFilterTags.join(' ')
+        )
+          .flex-shrink-0
+            i.bi.fs-4(class=`bi-${d[index][2]} text-${d[index][1]}` aria-hidden="true")
+          .flex-grow-1.min-w-0
+            .fw-semibold.text-body.d-flex.flex-column.flex-sm-row.flex-sm-wrap.align-items-start.align-items-sm-center.gap-1
+              span.text-break #{invite.name}
+              .d-flex.flex-wrap.align-items-center.gap-1
+                if hasGuestNote
+                  span.badge.rounded-pill.text-bg-dark.border.border-dark(
+                    title="This invite has guest notes"
+                  )
+                    i.bi.bi-chat-left-text(aria-hidden="true")
+                    span.visually-hidden Guest note
+                    span.d-none.d-sm-inline.ms-1 Note
+                if hasAttendingDietary
+                  span.badge.rounded-pill.text-bg-dark.border.border-dark(
+                    title="At least one attending guest listed dietary requirements"
+                  )
+                    i.bi.bi-fork-knife(aria-hidden="true")
+                    span.visually-hidden Dietary requirements
+                    span.d-none.d-sm-inline.ms-1 Dietary
+                if hasCarpoolRequested
+                  span.badge.rounded-pill.text-bg-danger.border.border-danger(title=carpoolRequestedTitle)
+                    i.bi.bi-car-front(aria-hidden="true")
+                    span.visually-hidden #{carpoolRequestedTitle}
+                    span.ms-1(aria-hidden="true") #{carpoolRequestedSeatsLabel}
+                if hasCarpoolOffered
+                  span.badge.rounded-pill.text-bg-success.border.border-success(title=carpoolOfferedTitle)
+                    i.bi.bi-car-front(aria-hidden="true")
+                    span.visually-hidden #{carpoolOfferedTitle}
+                    span.ms-1(aria-hidden="true") #{carpoolSpotsN}
+            .small.text-muted.mt-2.mt-sm-0 #{invite.attending()} attending · #{invite.invitees.length} invited
+          .flex-shrink-0.small.text-muted.text-end
+            span.visually-hidden Status:&nbsp;
+            | #{d[index][0]}
+          i.bi.bi-chevron-right.text-muted(aria-hidden="true")
+    p#invite-filter-empty.small.text-muted.mt-2.mb-0.d-none(role="status" aria-live="polite") No invitations match this filter.
+  else
+    .border.rounded-3.bg-body-secondary.bg-opacity-10.p-4.p-md-5.text-center
+      i.bi.bi-inbox.display-4.text-muted.mb-3.d-block(aria-hidden="true")
+      p.fw-semibold.mb-2 No invitations yet
+      p.text-muted.small.mb-4
+        | When you add invitations, they will show up here with status and guest counts.
+      a.btn.btn-primary.d-inline-flex.align-items-center.gap-2(href="/admin/invites/new")
         i.bi.bi-plus-lg(aria-hidden="true")
         | Create invitation
-
-    //- Stats
-    .row.row-cols-2.row-cols-md-3.row-cols-lg-6.g-3.mb-4
-      .col
-        .card.h-100.border.shadow-sm
-          .card-body.text-center.py-3.px-2
-            .fs-2.fw-semibold.text-body #{invites.length}
-            .small.text-muted Invites sent
-      .col
-        .card.h-100.border.shadow-sm
-          .card-body.text-center.py-3.px-2
-            .fs-2.fw-semibold.text-body #{invites.reduce((acc, invite) => acc + invite.invitees.length, 0)}
-            .small.text-muted Guests invited
-      .col
-        .card.h-100.border.shadow-sm
-          .card-body.text-center.py-3.px-2
-            .fs-2.fw-semibold.text-body #{invites.filter(invite => !invite.seen).length}
-            .small.text-muted Invites not seen
-      .col
-        .card.h-100.border.shadow-sm
-          .card-body.text-center.py-3.px-2
-            .fs-2.fw-semibold.text-body #{invites.filter(invite => invite.seen).length}
-            .small.text-muted Invites seen
-      .col
-        .card.h-100.border.shadow-sm
-          .card-body.text-center.py-3.px-2
-            .fs-2.fw-semibold.text-body #{invites.filter(invite => invite.responded).length}
-            .small.text-muted Responded
-      .col
-        .card.h-100.border.shadow-sm
-          .card-body.text-center.py-3.px-2
-            .fs-2.fw-semibold.text-body #{invites.reduce((acc, invite) => acc + invite.attending(), 0)}
-            .small.text-muted Attending guests
-
-    .row.row-cols-1.row-cols-sm-2.g-3.mb-4
-      .col
-        .card.h-100.border.shadow-sm
-          .card-body.text-center.py-3.px-2
-            -
-              const totalCarpoolSpotsOffered = invites.reduce(function (acc, inv) {
-                const n = Number(inv.carpoolSpotsOffered)
-                return acc + (Number.isFinite(n) && n > 0 ? n : 0)
-              }, 0)
-            .fs-2.fw-semibold.text-body #{totalCarpoolSpotsOffered}
-            .small.text-muted Carpool spots offered
-      .col
-        .card.h-100.border.shadow-sm
-          .card-body.text-center.py-3.px-2
-            -
-              const totalCarpoolSeatsRequested = invites.reduce(function (acc, inv) {
-                if (!inv.carpoolRequested || !inv.responded) return acc
-                return acc + inv.attending()
-              }, 0)
-            .fs-2.fw-semibold.text-body #{totalCarpoolSeatsRequested}
-            .small.text-muted Carpool seats requested
-
-    h2.h6.text-muted.text-uppercase.mb-2 All invitations
-    if invites.length
-      p.small.text-muted.mb-3
-        span.d-block.mb-2 Click a label to filter the list; click again to show all.
-        span.ms-1(
-          role="group"
-          aria-label="Filter invitations by status or badge"
-        )
-          button.invite-filter-legend.text-secondary.me-2.text-nowrap(
-            type="button"
-            data-invite-filter="not-seen"
-            aria-pressed="false"
-          )
-            i.bi.bi-envelope.me-1(aria-hidden="true")
-            | Not seen
-          button.invite-filter-legend.text-info.me-2.text-nowrap(
-            type="button"
-            data-invite-filter="seen"
-            aria-pressed="false"
-          )
-            i.bi.bi-envelope-open.me-1(aria-hidden="true")
-            | Seen
-          button.invite-filter-legend.text-warning.me-2.text-nowrap(
-            type="button"
-            data-invite-filter="declined"
-            aria-pressed="false"
-          )
-            i.bi.bi-x-lg.me-1(aria-hidden="true")
-            | Declined
-          button.invite-filter-legend.text-success.me-2.text-nowrap(
-            type="button"
-            data-invite-filter="attending"
-            aria-pressed="false"
-          )
-            i.bi.bi-people-fill.me-1(aria-hidden="true")
-            | Attending
-          button.invite-filter-legend.text-dark.me-2.text-nowrap(
-            type="button"
-            data-invite-filter="guest-note"
-            aria-pressed="false"
-          )
-            i.bi.bi-chat-left-text.me-1(aria-hidden="true")
-            | Guest note on invite
-          button.invite-filter-legend.text-dark.me-2.text-nowrap(
-            type="button"
-            data-invite-filter="dietary"
-            aria-pressed="false"
-          )
-            i.bi.bi-fork-knife.me-1(aria-hidden="true")
-            | Special dietary info
-          button.invite-filter-legend.text-danger.me-2.text-nowrap(
-            type="button"
-            data-invite-filter="carpool-requested"
-            aria-pressed="false"
-          )
-            i.bi.bi-car-front.me-1(aria-hidden="true")
-            | Carpool requested
-          button.invite-filter-legend.text-success.me-2.text-nowrap(
-            type="button"
-            data-invite-filter="carpool-offered"
-            aria-pressed="false"
-          )
-            i.bi.bi-car-front.me-1(aria-hidden="true")
-            | Carpool spots offered
-
-      .list-group.shadow-sm(data-invite-list)
-        - 
-          const d = [
-            ['Not seen', 'secondary', 'envelope'],
-            ['Seen', 'info', 'envelope-open'],
-            ['Declined', 'warning', 'x-lg'],
-            ['Attending', 'success', 'people-fill'],
-          ]
-        each invite in invites
-          - const index = invite.seen ? (invite.responded ? (invite.attending() > 0 ? 3 : 2) : 1) : 0;
-          - const statusFilterKeys = ['not-seen', 'seen', 'declined', 'attending'];
-          - const inviteFilterTags = [statusFilterKeys[index]];
-          - const hasGuestNote = typeof invite.notes === 'string' && invite.notes.trim().length > 0
-          - const hasAttendingDietary = invite.invitees.some((g) => g.attending === true && typeof g.dietaryRestrictions === 'string' && g.dietaryRestrictions.trim().length > 0)
-          - const carpoolSpotsN = Number(invite.carpoolSpotsOffered)
-          - const hasCarpoolOffered = Number.isFinite(carpoolSpotsN) && carpoolSpotsN > 0
-          - const hasCarpoolRequested = !!invite.carpoolRequested
-          - if (hasGuestNote) inviteFilterTags.push('guest-note');
-          - if (hasAttendingDietary) inviteFilterTags.push('dietary');
-          - if (hasCarpoolRequested) inviteFilterTags.push('carpool-requested');
-          - if (hasCarpoolOffered) inviteFilterTags.push('carpool-offered');
-          - const carpoolRequestedSeatsLabel = invite.responded ? String(invite.attending()) : '—'
-          - const carpoolRequestedTitle = invite.responded ? ('Carpool requested — seats (attending guests): ' + invite.attending()) : 'Carpool requested — RSVP not yet submitted; seat count shown after they respond'
-          - const carpoolOfferedTitle = 'Offering ' + carpoolSpotsN + ' spare carpool seat' + (carpoolSpotsN === 1 ? '' : 's')
-          - const hasDetailsHighlight = hasGuestNote || hasAttendingDietary
-          a.list-group-item.list-group-item-action.d-flex.align-items-center.gap-3.py-3.px-3(
-            href=`/admin/invites/${invite.id}`,
-            class=[
-              `border-start border-4 border-${d[index][1]}`,
-              hasDetailsHighlight && 'invite-list-item--has-details',
-            ].filter(Boolean).join(' '),
-            data-invite-filters=inviteFilterTags.join(' ')
-          )
-            .flex-shrink-0
-              i.bi.fs-4(class=`bi-${d[index][2]} text-${d[index][1]}` aria-hidden="true")
-            .flex-grow-1.min-w-0
-              .fw-semibold.text-body.d-flex.flex-column.flex-sm-row.flex-sm-wrap.align-items-start.align-items-sm-center.gap-1
-                span.text-break #{invite.name}
-                .d-flex.flex-wrap.align-items-center.gap-1
-                  if hasGuestNote
-                    span.badge.rounded-pill.text-bg-dark.border.border-dark(
-                      title="This invite has guest notes"
-                    )
-                      i.bi.bi-chat-left-text(aria-hidden="true")
-                      span.visually-hidden Guest note
-                      span.d-none.d-sm-inline.ms-1 Note
-                  if hasAttendingDietary
-                    span.badge.rounded-pill.text-bg-dark.border.border-dark(
-                      title="At least one attending guest listed dietary requirements"
-                    )
-                      i.bi.bi-fork-knife(aria-hidden="true")
-                      span.visually-hidden Dietary requirements
-                      span.d-none.d-sm-inline.ms-1 Dietary
-                  if hasCarpoolRequested
-                    span.badge.rounded-pill.text-bg-danger.border.border-danger(title=carpoolRequestedTitle)
-                      i.bi.bi-car-front(aria-hidden="true")
-                      span.visually-hidden #{carpoolRequestedTitle}
-                      span.ms-1(aria-hidden="true") #{carpoolRequestedSeatsLabel}
-                  if hasCarpoolOffered
-                    span.badge.rounded-pill.text-bg-success.border.border-success(title=carpoolOfferedTitle)
-                      i.bi.bi-car-front(aria-hidden="true")
-                      span.visually-hidden #{carpoolOfferedTitle}
-                      span.ms-1(aria-hidden="true") #{carpoolSpotsN}
-              .small.text-muted.mt-2.mt-sm-0 #{invite.attending()} attending · #{invite.invitees.length} invited
-            .flex-shrink-0.small.text-muted.text-end
-              span.visually-hidden Status:&nbsp;
-              | #{d[index][0]}
-            i.bi.bi-chevron-right.text-muted(aria-hidden="true")
-      p#invite-filter-empty.small.text-muted.mt-2.mb-0.d-none(role="status" aria-live="polite") No invitations match this filter.
-    else
-      .border.rounded-3.bg-body-secondary.bg-opacity-10.p-4.p-md-5.text-center
-        i.bi.bi-inbox.display-4.text-muted.mb-3.d-block(aria-hidden="true")
-        p.fw-semibold.mb-2 No invitations yet
-        p.text-muted.small.mb-4
-          | When you add invitations, they will show up here with status and guest counts.
-        a.btn.btn-primary.d-inline-flex.align-items-center.gap-2(href="/admin/invites/new")
-          i.bi.bi-plus-lg(aria-hidden="true")
-          | Create invitation
 
 block script
   +adminScript('invites')
