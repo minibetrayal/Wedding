@@ -1,6 +1,7 @@
 extends /layout
 include /mixins/hero
 include /mixins/guestbookCard
+include /mixins/notificationBadge
 
 block title
   if listMode === 'moderation'
@@ -65,6 +66,7 @@ block content
             )
               i.bi.bi-shield-exclamation(aria-hidden="true")
               | Moderation queue
+              +notificationBadge(data-am-count=moderationEntries)
         else if isMine
           a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
             href="/guestbook"
@@ -77,6 +79,7 @@ block content
             )
               i.bi.bi-shield-exclamation(aria-hidden="true")
               | Moderation queue
+              +notificationBadge(data-am-count=moderationEntries)
         else if isModeration
           a.btn.btn-outline-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2.flex-sm-fill(
             href="/guestbook"

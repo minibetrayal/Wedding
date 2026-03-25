@@ -29,7 +29,8 @@ html(lang="en-AU")
 
         button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#main-nav" aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation")
           span.navbar-toggler-icon
-          +notificationBadge.small(data-am-count=moderationEntries)
+          if isAdmin
+            +notificationBadge.small(data-am-count=moderationEntries)
 
         #main-nav.collapse.navbar-collapse
           ul.navbar-nav.ms-auto

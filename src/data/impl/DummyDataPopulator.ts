@@ -11,6 +11,7 @@ import { ScheduledEvent, ScheduleSnapshot } from '../def/types/ScheduledEvent';
 import { Location, LocationType } from '../def/types/Location';
 import { Time, TimeType } from '../def/types/Time';
 import { MenuItem, MenuTag } from '../def/types/MenuItem';
+import { evaluateGuestbookAutomoderation, formatAutomoderationReason } from '../../util/guestbookAutomoderation';
 
 type InviteSeedJson = {
     name: string;
@@ -569,6 +570,13 @@ export class DummyDataPopulator implements DataPopulator {
             created.setDate(created.getDate() - row.daysAgo);
             entry.created = created;
             entry.updated = created;
+
+            const displayNameRaw = (typeof row.displayName === 'string' ? row.displayName : '').trim();
+            const contentRaw = (typeof row.content === 'string' ? row.content : '').trim();
+            const auto = evaluateGuestbookAutomoderation(displayNameRaw, contentRaw);
+            if (auto.shouldModerate) {
+                await db.guestbook.hide(entry.id, formatAutomoderationReason(auto.reasons), true);
+            }
         }
     }
 }

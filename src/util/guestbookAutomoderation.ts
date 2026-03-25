@@ -386,13 +386,13 @@ function escapeRegex(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function containsProfanity(text: string): boolean {
+function containsProfanity(text: string): string | null {
     const t = text.toLowerCase();
     for (const word of PROFANITY_WORDS) {
         const re = new RegExp(`\\b${escapeRegex(word)}\\b`, 'i');
-        if (re.test(t)) return true;
+        if (re.test(t)) return word;
     }
-    return false;
+    return null;
 }
 
 function containsUrl(text: string): boolean {
@@ -427,8 +427,9 @@ export function evaluateGuestbookAutomoderation(
 ): GuestbookAutomoderationResult {
     const combined = [displayName, content].filter((s) => s.length > 0).join('\n');
     const reasons: string[] = [];
-    if (containsProfanity(combined)) {
-        reasons.push('language may not be suitable for the guestbook');
+    const profanity = containsProfanity(combined);
+    if (profanity) {
+        reasons.push(`language may not be suitable for the guestbook: ${profanity}`);
     }
     if (containsUrl(combined)) {
         reasons.push('URLs are not allowed');
