@@ -1,0 +1,46 @@
+*:has(> .notification-badge) {
+    position: relative;
+}
+
+.notification-badge {
+    display: inline-block;
+    position: absolute;
+    background-color: var(--bs-danger);
+    inset: 0 auto auto 100%;
+    transform: translate(-80%, -20%);
+
+    &.small {
+        inset: 20% auto auto 90%;
+        transform: translate(-50%, -50%);
+    }
+
+    &[data-am-count="0"] {
+        display: none !important;
+    }
+
+    &:empty {
+        padding: 1rem;
+        border-radius: 50%;
+        border: var(--bs-border-width) var(--bs-border-style) rgb(var(--bs-light-rgb));
+
+        &.small {
+            padding: 0.5rem;
+        }
+    }
+
+    &:not(:empty) {
+        padding: 0.7em 1.3em;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: var(--bs-border-radius-pill);
+
+        &.small {
+            padding: 0.35em 0.65em;
+            font-size: 0.55em;
+        }
+    }
+}

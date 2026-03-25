@@ -3,11 +3,11 @@ export type FerryServiceTo = 'island' | 'mainland';
 export class FerryService {
     to: FerryServiceTo;
     platform: string;
-    time: Date;
+    time: string;
     via: string;
-    arriving: Date;
+    arriving: string;
 
-    constructor(to: FerryServiceTo, platform: string, time: Date, via: string, arriving: Date) {
+    constructor(to: FerryServiceTo, platform: string, time: string, via: string, arriving: string) {
         this.to = to;
         this.platform = platform;
         this.time = time;

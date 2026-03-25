@@ -10,6 +10,8 @@ import { FerryServiceConnection } from "./interfaces/FerryServiceConnection";
 import { NamesConnection } from "./interfaces/NamesConnection";
 import { ScheduleConnection } from "./interfaces/ScheduleConnection";
 import { LocationConnection } from "./interfaces/LocationConnection";
+import { TimesConnection } from "./interfaces/TimesConnection";
+import { MenuConnection } from "./interfaces/MenuConnection";
 
 
 export class DataConnection  {
@@ -25,7 +27,9 @@ export class DataConnection  {
     names: NamesConnection;
     schedule: ScheduleConnection;
     locations: LocationConnection;
-    
+    times: TimesConnection;
+    menu: MenuConnection;
+
     private static isInitialized: boolean = false;
     
     private constructor(connectionSupplier: ConnectionSupplier) {
@@ -39,6 +43,8 @@ export class DataConnection  {
         this.names = connectionSupplier.getNamesConnection();
         this.schedule = connectionSupplier.getScheduleConnection();
         this.locations = connectionSupplier.getLocationConnection();
+        this.times = connectionSupplier.getTimesConnection();
+        this.menu = connectionSupplier.getMenuConnection();
     }
 
     static async init(connectionSupplier: ConnectionSupplier, populator?: DataPopulator): Promise<void> {

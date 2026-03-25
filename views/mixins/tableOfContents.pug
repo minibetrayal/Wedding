@@ -1,9 +1,11 @@
 include /mixins/inclusions
 include /mixins/gemline
 
-mixin tableOfContentsStyle
+block append styles
   +style('tableOfContents')
-  +gemlineStyle
+
+block append script
+  +script('tableOfContents')
 
 mixin tableOfContents
   .card.shadow-sm.mb-3.page-toc-container
@@ -23,6 +25,3 @@ mixin tableOfContents
       .card-body.pt-0.pb-4.px-4
         +gemline
         ul.list-unstyled.small.row.row-cols-1.row-cols-sm-2.gy-1.mb-0#toc-list 
-
-mixin tableOfContentsScript
-  +script('tableOfContents')

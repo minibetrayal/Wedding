@@ -1,0 +1,76 @@
+{
+    "courses": [
+        {
+            "name": "First course",
+            "items": [
+                {
+                    "name": "Heirloom tomato caprese, basil oil, aged balsamic",
+                    "tags": ["Vegetarian", "Low Gluten Option"]
+                },
+                {
+                    "name": "Grilled peach, burrata, prosciutto, rocket",
+                    "tags": ["Low Gluten"]
+                },
+                {
+                    "name": "Chilled gazpacho, cucumber, herb oil",
+                    "tags": ["Vegan", "Low Gluten", "Vegetarian"]
+                }
+            ]
+        },
+        {
+            "name": "Main",
+            "items": [
+                {
+                    "name": "Herb-crusted lamb rack, fondant potato, red wine jus",
+                    "tags": ["Low Gluten"]
+                },
+                {
+                    "name": "Pan-seared salmon, fennel, citrus beurre blanc",
+                    "tags": ["Low Gluten"]
+                },
+                {
+                    "name": "Wild mushroom tagliatelle, truffle, parmesan",
+                    "tags": ["Vegetarian"]
+                },
+                {
+                    "name": "Stuffed bell peppers, quinoa, smoked paprika sauce",
+                    "tags": ["Vegan", "Low Gluten", "Vegetarian"]
+                }
+            ]
+        },
+        {
+            "name": "Accompaniments",
+            "items": [
+                {
+                    "name": "Seasonal leaf salad, mustard vinaigrette",
+                    "tags": ["Vegan", "Low Gluten", "Vegetarian"]
+                },
+                {
+                    "name": "Charred broccolini, almond flakes",
+                    "tags": ["Vegan", "Low Gluten", "Vegetarian"]
+                },
+                {
+                    "name": "Creamy polenta, pecorino",
+                    "tags": ["Vegetarian"]
+                }
+            ]
+        },
+        {
+            "name": "Sweet",
+            "items": [
+                {
+                    "name": "Dark chocolate fondant, raspberry coulis",
+                    "tags": ["Vegetarian"]
+                },
+                {
+                    "name": "Lemon sorbet, fresh mint",
+                    "tags": ["Vegan", "Low Gluten", "Vegetarian"]
+                },
+                {
+                    "name": "Selection of local cheeses, fig paste, crackers",
+                    "tags": ["Vegetarian"]
+                }
+            ]
+        }
+    ]
+}

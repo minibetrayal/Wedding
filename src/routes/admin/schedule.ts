@@ -1,9 +1,7 @@
 import express from 'express';
 
-import type { ScheduleSnapshot } from '../../data/def/types/ScheduledEvent';
-import type { ScheduledEvent } from '../../data/def/types/ScheduledEvent';
+import { ScheduleSnapshot, ScheduledEvent } from '../../data/def/types/ScheduledEvent';
 import { getDataConnection as dataConnection } from '../../data/def/DataConnection';
-import { normalizeTimeForTimeInput } from '../../util/scheduleDisplay';
 
 const router = express.Router();
 
@@ -28,15 +26,10 @@ function normalizeEventsRows(raw: unknown): unknown[] {
 /** Parallel array: '' | 'arrival' | 'ceremony' | 'reception' | 'endOfDay' per row. */
 function rolesFromSnapshot(snap: ScheduleSnapshot): string[] {
     const roles = snap.events.map(() => ROLE_NONE);
-    const put = (idx: number, value: string) => {
-        if (idx >= 0 && idx < roles.length) {
-            roles[idx] = value;
-        }
-    };
-    put(snap.arrival, 'arrival');
-    put(snap.ceremony, 'ceremony');
-    put(snap.reception, 'reception');
-    put(snap.endOfDay, 'endOfDay');
+    roles[snap.arrivalIndex] = 'arrival';
+    roles[snap.ceremonyIndex] = 'ceremony';
+    roles[snap.receptionIndex] = 'reception';
+    roles[snap.endOfDayIndex] = 'endOfDay';
     return roles;
 }
 
@@ -63,7 +56,7 @@ function parseScheduleFromBody(body: unknown): ScheduleSnapshot {
         }
 
         const idx = events.length;
-        events.push({ name, time });
+        events.push(new ScheduledEvent(name, time));
 
         if (roleRaw === ROLE_NONE) {
             continue;
@@ -103,17 +96,18 @@ function parseScheduleFromBody(body: unknown): ScheduleSnapshot {
         );
     }
 
-    return { events, arrival, ceremony, reception, endOfDay };
+    return new ScheduleSnapshot(events, arrival, ceremony, reception, endOfDay);
 }
 
 router.get('/', async (req, res, next) => {
     try {
-        const snap = await dataConnection().schedule.get();
+        const [snap, eventDateRaw] = await Promise.all([
+            dataConnection().schedule.get(),
+            dataConnection().schedule.getDate(),
+        ]);
         res.render('pages/admin/schedule', {
-            events: snap.events.map((e) => ({
-                name: e.name,
-                timeInput: normalizeTimeForTimeInput(e.time),
-            })),
+            eventDateRaw,
+            events: snap.events,
             eventRoles: rolesFromSnapshot(snap),
         });
     } catch (err) {
@@ -123,6 +117,11 @@ router.get('/', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
     try {
+        const date = typeof req.body.date === 'string' ? req.body.date.trim() : '';
+        if (!date) {
+            throw new Error('Event date is required.');
+        }
+        await dataConnection().schedule.setDate(date);
         const snapshot = parseScheduleFromBody(req.body);
         await dataConnection().schedule.set(snapshot);
         req.flash('success', 'Schedule updated.');

@@ -30,9 +30,7 @@ function wantsAsyncFocusSave(req: express.Request): boolean {
 router.get('/', async (req, res, next) => {
     try {
         const heroPhotos = await dataConnection().photos.getAll('hero');
-        heroPhotos.sort(
-            (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime(),
-        );
+        heroPhotos.sort((a, b) => b.created.getTime() - a.created.getTime());
         const heroPhotoRows = heroPhotos.map((photo) => {
             const y = parseHeroFocusYFromCaptionOrStyle(photo.captionOrStyle);
             return {

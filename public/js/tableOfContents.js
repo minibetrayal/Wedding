@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
     const tocLinks = document.getElementById('toc-list');
     if (!tocLinks) return;
     const nav = document.querySelector('nav');
@@ -20,4 +20,4 @@ document.addEventListener('DOMContentLoaded', function() {
         li.appendChild(a);
         tocLinks.appendChild(li);
     });
-});
+})();

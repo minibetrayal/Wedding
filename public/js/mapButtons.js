@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
     var isApple = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     var isAndroid = /Android/i.test(navigator.userAgent);
     if (!isApple && !isAndroid) return;
@@ -14,4 +14,4 @@ document.addEventListener('DOMContentLoaded', function() {
             links[i].href = 'geo:0,0' + links[i].href.substring(24);
         }
     }
-});
+})();

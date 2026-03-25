@@ -16,6 +16,8 @@ import ferryRoutes from './ferry';
 import namesRoutes from './names';
 import scheduleRoutes from './schedule';
 import locationsRoutes from './locations';
+import timesRoutes from './times';
+import menuRoutes from './menu';
 
 const router = express.Router();
 
@@ -62,5 +64,7 @@ router.use('/ferry', ferryRoutes);
 router.use('/names', namesRoutes);
 router.use('/schedule', scheduleRoutes);
 router.use('/locations', locationsRoutes);
+router.use('/times', timesRoutes);
+router.use('/menu', menuRoutes);
 
 export default router;

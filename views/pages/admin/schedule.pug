@@ -1,76 +1,48 @@
 extends /layout
 include /mixins/inclusions
-
-block title
-  | Schedule — Admin
+include /mixins/validationForm
 
 block append script
   +script('admin-schedule')
 
+block title
+  | Schedule — Admin
+
 block content
-  .container.py-4
-    nav.mb-3(aria-label="Breadcrumb")
-      ol.breadcrumb.mb-0
-        li.breadcrumb-item
-          a.link-secondary(href="/admin") Admin
-        li.breadcrumb-item.active(aria-current="page") Schedule
+  nav.mb-3(aria-label="Breadcrumb")
+    ol.breadcrumb.mb-0
+      li.breadcrumb-item
+        a.link-secondary(href="/admin") Admin
+      li.breadcrumb-item.active(aria-current="page") Schedule
 
-    .mb-4
-      h1.h3.mb-1 Schedule
-      p.text-muted.small
-        | Set the Schedule for the day.
-      p.text-muted.small.mb-0
-        | There must be exactly one scheduled event of each type in the dropdown boxes.
+  .mb-4
+    h1.h3.mb-1 Schedule
+    p.text-muted.small
+      | Set the Schedule for the day.
+    p.text-muted.small.mb-0
+      | There must be exactly one scheduled event of each type in the dropdown boxes.
 
-    form#schedule-form(method="post", action="/admin/schedule")
-      .card.border-0.shadow-sm.mb-3
-        .card-body.p-4
-          h2.h6.mb-3 Events (in order)
-          #schedule-rows.vstack.gap-3
-            each row, i in events
-              - var role = eventRoles[i] || ''
-              .schedule-row.border.rounded-3.p-3.bg-body-secondary.bg-opacity-25(data-row-index=i)
-                .d-flex.justify-content-end.mb-2
-                  button.btn.btn-outline-danger.btn-sm.remove-schedule-row(
-                    type="button",
-                    aria-label="Remove this event"
-                  )
-                    i.bi.bi-trash.me-1(aria-hidden="true")
-                    | Remove
-                .row.g-3
-                  .col-12.col-md-4
-                    label.form-label.small.mb-1 Event name
-                    input.form-control.form-control-sm(
-                      type="text",
-                      name=`events[${i}][name]`,
-                      value=row.name,
-                      required,
-                      placeholder='e.g. Drinks and Mingling'
-                    )
-                  .col-12.col-md-3
-                    label.form-label.small.mb-1(for=`schedule-time-${i}`) Time
-                    input.form-control.form-control-sm(
-                      id=`schedule-time-${i}`,
-                      type="time",
-                      name=`events[${i}][time]`,
-                      value=row.timeInput,
-                      step=60,
-                      required
-                    )
-                  .col-12.col-md-5
-                    label.form-label.small.mb-1 Role
-                    select.form-select.form-select-sm(
-                      name=`events[${i}][role]`,
-                      aria-label=`Event ${i + 1} role`
-                    )
-                      option(value="" selected=role === '')
-                      option(value="arrival" selected=role === 'arrival') Arrival
-                      option(value="ceremony" selected=role === 'ceremony') Ceremony Start
-                      option(value="reception" selected=role === 'reception') Reception Start
-                      option(value="endOfDay" selected=role === 'endOfDay') End of Day
-
-          template#schedule-row-template
-            .schedule-row.border.rounded-3.p-3.bg-body-secondary.bg-opacity-25
+  +validationForm.suppress-enter-submit#schedule-form(method="post", action="/admin/schedule")
+    .card.border-0.shadow-sm.mb-3
+      .card-body.p-4
+        h2.h6.mb-3 Event date
+        .row.g-3
+          .col-12
+            input.form-control.form-control-sm(
+              type="date",
+              name="date",
+              value=eventDateRaw || '',
+              required
+            )
+            .invalid-feedback.small
+              | Please enter a valid date.
+    .card.border-0.shadow-sm.mb-3
+      .card-body.p-4
+        h2.h6.mb-3 Events (in order)
+        #schedule-rows.vstack.gap-3
+          each row, i in events
+            - var role = eventRoles[i] || ''
+            .schedule-row.border.rounded-3.p-3.bg-body-secondary.bg-opacity-25(data-row-index=i)
               .d-flex.justify-content-end.mb-2
                 button.btn.btn-outline-danger.btn-sm.remove-schedule-row(
                   type="button",
@@ -83,45 +55,90 @@ block content
                   label.form-label.small.mb-1 Event name
                   input.form-control.form-control-sm(
                     type="text",
-                    name="events[__i__][name]",
+                    name=`events[${i}][name]`,
+                    value=row.name,
                     required,
                     placeholder='e.g. Drinks and Mingling'
                   )
+                  .invalid-feedback.small Please enter an event name.
                 .col-12.col-md-3
-                  label.form-label.small.mb-1(for="schedule-time-__i__") Time
+                  label.form-label.small.mb-1(for=`schedule-time-${i}`) Time
                   input.form-control.form-control-sm(
-                    id="schedule-time-__i__",
+                    id=`schedule-time-${i}`,
                     type="time",
-                    name="events[__i__][time]",
+                    name=`events[${i}][time]`,
+                    value=row.time,
                     step=60,
                     required
                   )
+                  .invalid-feedback.small Please enter a time.
                 .col-12.col-md-5
                   label.form-label.small.mb-1 Role
-                  select.form-select.form-select-sm(name="events[__i__][role]", aria-label="New event role")
-                    option(value="" selected)
-                    option(value="arrival") Arrival
-                    option(value="ceremony") Ceremony Start
-                    option(value="reception") Reception Start
-                    option(value="endOfDay") End of Day
+                  select.form-select.form-select-sm(
+                    name=`events[${i}][role]`,
+                    aria-label=`Event ${i + 1} role`
+                  )
+                    option(value="" selected=role === '')
+                    option(value="arrival" selected=role === 'arrival') Arrival
+                    option(value="ceremony" selected=role === 'ceremony') Ceremony Start
+                    option(value="reception" selected=role === 'reception') Reception Start
+                    option(value="endOfDay" selected=role === 'endOfDay') End of Day
 
-          .d-flex.flex-wrap.align-items-center.gap-2.mt-2
-            button.btn.btn-outline-secondary.btn-sm(
-              type="button",
-              id="add-schedule-row"
-            )
-              i.bi.bi-plus-lg.me-1(aria-hidden="true")
-              | Add event
-            button.btn.btn-outline-secondary.btn-sm(
-              type="button",
-              id="sort-schedule-rows",
-              title="Reorder rows by time (earliest first)"
-            )
-              i.bi.bi-sort-down.me-1(aria-hidden="true")
-              | Sort by time
+        template#schedule-row-template
+          .schedule-row.border.rounded-3.p-3.bg-body-secondary.bg-opacity-25
+            .d-flex.justify-content-end.mb-2
+              button.btn.btn-outline-danger.btn-sm.remove-schedule-row(
+                type="button",
+                aria-label="Remove this event"
+              )
+                i.bi.bi-trash.me-1(aria-hidden="true")
+                | Remove
+            .row.g-3
+              .col-12.col-md-4
+                label.form-label.small.mb-1 Event name
+                input.form-control.form-control-sm(
+                  type="text",
+                  name="events[__i__][name]",
+                  required,
+                  placeholder='e.g. Drinks and Mingling'
+                )
+                .invalid-feedback.small Please enter an event name.
+              .col-12.col-md-3
+                label.form-label.small.mb-1(for="schedule-time-__i__") Time
+                input.form-control.form-control-sm(
+                  id="schedule-time-__i__",
+                  type="time",
+                  name="events[__i__][time]",
+                  step=60,
+                  required
+                )
+                .invalid-feedback.small Please enter a time.
+              .col-12.col-md-5
+                label.form-label.small.mb-1 Role
+                select.form-select.form-select-sm(name="events[__i__][role]", aria-label="New event role")
+                  option(value="" selected)
+                  option(value="arrival") Arrival
+                  option(value="ceremony") Ceremony Start
+                  option(value="reception") Reception Start
+                  option(value="endOfDay") End of Day
 
-      .d-flex.flex-wrap.gap-2
-        button.btn.btn-primary(type="submit")
-          i.bi.bi-check2.me-1(aria-hidden="true")
-          | Save schedule
-        a.btn.btn-outline-secondary(href="/admin") Cancel
+        .d-flex.flex-wrap.align-items-center.gap-2.mt-2
+          button.btn.btn-outline-secondary.btn-sm(
+            type="button",
+            id="add-schedule-row"
+          )
+            i.bi.bi-plus-lg.me-1(aria-hidden="true")
+            | Add event
+          button.btn.btn-outline-secondary.btn-sm(
+            type="button",
+            id="sort-schedule-rows",
+            title="Reorder rows by time (earliest first)"
+          )
+            i.bi.bi-sort-down.me-1(aria-hidden="true")
+            | Sort by time
+
+    .d-flex.flex-wrap.gap-2
+      button.btn.btn-primary(type="submit")
+        i.bi.bi-check2.me-1(aria-hidden="true")
+        | Save schedule
+      a.btn.btn-outline-secondary(href="/admin") Cancel

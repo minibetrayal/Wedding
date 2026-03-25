@@ -1,0 +1,67 @@
+extends /layout
+include /mixins/gemline
+include /mixins/validationForm
+
+block title
+  | Travel Times — Admin
+
+block content
+  nav.mb-3(aria-label="Breadcrumb")
+    ol.breadcrumb.mb-0
+      li.breadcrumb-item
+        a.link-secondary(href="/admin") Admin
+      li.breadcrumb-item.active(aria-current="page") Travel Times
+
+  .mb-4
+    h1.h3.mb-1 Travel times
+    p.text-muted.small.mb-0
+      | Times to travel to and from various locations.
+
+  +validationForm.suppress-enter-submit(method="post", action="/admin/times")
+    .card.border-0.shadow-sm.mb-3
+      .card-body.p-4
+        each row, index in timeRows
+          if index > 0
+            +gemline(3, 3)
+          .mb-3(class=index === timeRows.length - 1 ? 'border-0 pb-0 mb-0' : '')
+            h6.mb-2 #{row.label}
+            .row.g-3
+              .col-12.col-sm-4.d-flex.flex-column.justify-content-end
+                label.form-label.small.mb-1(for=`tim-${row.type}-min`) Minimum expected time
+                input.form-control(
+                  id=`tim-${row.type}-min`,
+                  type="number",
+                  name=`types[${row.type}][min]`,
+                  value=row.min,
+                  min=0,
+                  max=120,
+                  step=1,
+                  autocomplete="off",
+                  required
+                )
+                .invalid-feedback.small
+                  | Enter a number from 0 to 120.
+              .col-1.d-none.d-sm-flex.flex-column.justify-content-center
+                .text-muted.small.text-center
+                  | to
+              .col-12.col-sm-4.d-flex.flex-column.justify-content-end
+                label.form-label.small.mb-1(for=`tim-${row.type}-max`) Maximum expected time (optional)
+                input.form-control(
+                  id=`tim-${row.type}-max`,
+                  type="number",
+                  name=`types[${row.type}][max]`,
+                  value=row.max === undefined ? '' : row.max,
+                  min=0,
+                  max=120,
+                  step=1,
+                  autocomplete="off"
+                )
+              .col-3.d-none.d-sm-flex.flex-column.justify-content-center
+                .text-muted.small
+                  | minutes
+
+    .d-flex.flex-wrap.gap-2
+      button.btn.btn-primary(type="submit")
+        i.bi.bi-check2.me-1(aria-hidden="true")
+        | Save
+      a.btn.btn-outline-secondary(href="/admin") Cancel

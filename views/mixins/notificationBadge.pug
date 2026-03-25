@@ -1,0 +1,9 @@
+include /mixins/inclusions
+
+block append styles
+  +style('notificationBadge')
+
+mixin notificationBadge
+  .notification-badge&attributes(attributes)
+    if attributes['data-am-count'] < 10
+      | #{attributes['data-am-count']}

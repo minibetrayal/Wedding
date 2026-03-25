@@ -1,8 +1,7 @@
 include /mixins/gemline
 include /mixins/inclusions
 
-mixin heroStyle 
-  +gemlineStyle
+block append styles
   +style('hero')
 
 mixin hero(imagesOrTitle)
@@ -11,13 +10,11 @@ mixin hero(imagesOrTitle)
   .hero.animate-hero.px-4.px-md-5.rounded-4(class=images ? 'py-2 pb-4' : 'py-2')&attributes(attributes)
     .d-flex.justify-content-around.flex-wrap.gap-2 
       div 
-        h1.text-center.display-5.mb-2 Alex & Martin 
+        h1.text-center.display-5.mb-2 #{coupleNames} 
         p.small.text-muted.text-center.mb-2.heading-script 
+          - const ymd = eventDateRaw.split('-');
           | #{islandName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          if eventDateParts
-            | #{eventDateParts.day} · #{eventDateParts.month} · #{eventDateParts.year}
-          else
-            | Date TBC
+          | #{ymd[2]} · #{ymd[1]} · #{ymd[0]}
 
     +gemline(0, 3)
     

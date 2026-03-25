@@ -1,8 +1,5 @@
 include /mixins/gemline
 
-mixin detailsCardStyle
-  +gemlineStyle
-
 mixin detailsCard(title, icon)
   //- Comma in .replace(/ /g, '-') must not sit in one attr list — Pug treats commas as attribute separators
   - const detailsCardId = title.toLowerCase().replace(/\s+/g, '-')

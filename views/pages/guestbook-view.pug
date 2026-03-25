@@ -3,15 +3,10 @@ include /mixins/hero
 include /mixins/guestbookCard
 include /mixins/textareaCounter
 include /mixins/gradientRule
+include /mixins/validationForm
 
 block title
   | #{coupleNamesShort} — Guestbook message
-
-block styles
-  +heroStyle
-  +guestbookCardStyle
-  +textareaCounterStyle
-  +gradientRuleStyle
 
 block content
   +hero('Guestbook')
@@ -106,7 +101,7 @@ block modal
       aria-hidden="true"
     )
       .modal-dialog.modal-dialog-centered
-        form.modal-content.border-danger(
+        +validationForm.suppress-enter-submit.modal-content.border-danger(
           method="post",
           action=`/guestbook/${entry.id}/hide`
         )
@@ -150,7 +145,10 @@ block modal
       aria-hidden="true"
     )
       .modal-dialog.modal-dialog-centered
-        form.modal-content(method="post", action=`/guestbook/${entry.id}/unhide`)
+        +validationForm.suppress-enter-submit.modal-content(
+          method="post",
+          action=`/guestbook/${entry.id}/unhide`
+        )
           .modal-header
             h5#guestbook-unhide-modal-label.modal-title Show on public guestbook?
             button.btn-close(type="button", data-bs-dismiss="modal", aria-label="Close")
@@ -160,6 +158,3 @@ block modal
           .modal-footer
             button.btn.btn-outline-secondary(type="button", data-bs-dismiss="modal") Cancel
             button.btn.btn-success(type="submit") Show on public
-
-block script
-  +textareaCounterScript

@@ -1,5 +1,7 @@
 extends /layout
 include /mixins/inclusions
+include /mixins/validationForm
+
 
 block title
   | Admin sign in
@@ -11,7 +13,7 @@ block content
   if error
     .alert.alert-danger.alert-dismissable(role='alert') #{error}
 
-  form(method='post', action='/admin/login' novalidate)
+  +validationForm(method='post', action='/admin/login')
     input.hidden(type='hidden', name='next', value=next || '/admin')
     .mb-3
       label.form-label(for='admin-password') Password
@@ -24,6 +26,3 @@ block content
       )
       .invalid-feedback.mt-s Required
     button.btn.btn-primary(type='submit') Sign in
-
-block script
-  +script('formValidate')

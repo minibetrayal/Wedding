@@ -1,0 +1,8 @@
+include /mixins/inclusions
+
+block append script 
+  +script('validationForm')
+
+mixin validationForm
+  form.validation-form(novalidate)&attributes(attributes)
+    block

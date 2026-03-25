@@ -1,6 +1,8 @@
 import { Author } from "./Author";
 import { Photo } from "./Photo";
 
+import { formatDateTime } from "../../../util/timeUtils";
+
 export class GuestbookEntry {
     id: string;
     author: Author;
@@ -26,11 +28,6 @@ export class GuestbookEntry {
         this.updated = this.created;
     }
 
-    formatCreated(): string {
-        return this.created.toLocaleString('en-AU', { timeZone: process.env.EVENT_TIMEZONE, dateStyle: 'short', timeStyle: 'short' });
-    }
-
-    formatUpdated(): string {
-        return this.updated.toLocaleString('en-AU', { timeZone: process.env.EVENT_TIMEZONE, dateStyle: 'short', timeStyle: 'short' });
-    }
+    formatCreated: () => string = () => formatDateTime(this.created);
+    formatUpdated: () => string = () => formatDateTime(this.updated);
 }

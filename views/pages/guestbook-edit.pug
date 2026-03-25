@@ -1,17 +1,17 @@
 extends /layout
 include /mixins/inclusions
+include /mixins/validationForm
 include /mixins/hero
 include /mixins/textareaCounter
+
+block append script
+  +script('guestbook-edit')
 
 block title
   if isNew
     | #{coupleNamesShort} — Write a guestbook message
   else
     | #{coupleNamesShort} — Edit guestbook message
-
-block styles
-  +heroStyle
-  +textareaCounterStyle
 
 block content
   -
@@ -20,7 +20,6 @@ block content
     const nameVal = (ent && ent.displayName ? ent.displayName : '') || displayName || ''
     const contentVal = ent && ent.content ? ent.content : ''
     const showPublic = !ent || ent.visible !== false
-    console.log(displayName, nameVal)
 
   +hero('Guestbook')
 
@@ -44,11 +43,10 @@ block content
 
       .card.border-0.shadow-sm
         .card-body.p-4.p-md-5
-          form#guestbook-edit-form(
+          +validationForm.suppress-enter-submit#guestbook-edit-form(
             method="post",
             action=formAction,
             enctype="multipart/form-data",
-            novalidate,
             data-existing-photo=entry && entry.photo ? 'true' : 'false'
           )
             .mb-4
@@ -141,7 +139,7 @@ block content
           )
             i.bi.bi-trash(aria-hidden="true")
             | Delete message
-        form#delete-guestbook-form.visually-hidden(
+        +validationForm.suppress-enter-submit#delete-guestbook-form.visually-hidden(
           method="post",
           action='/guestbook/' + ent.id + '/delete',
           aria-hidden="true",
@@ -176,8 +174,3 @@ block modal
           .modal-footer
             button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
             button#delete-guestbook-modal-confirm.btn.btn-danger(type="button") Yes, delete message
-
-block script
-  +script('formValidate')
-  +script('guestbook-edit')
-  +textareaCounterScript

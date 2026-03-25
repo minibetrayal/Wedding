@@ -1,17 +1,16 @@
 include /mixins/inclusions
 include /mixins/gradientRule
 
-mixin countdownStyle
+block append styles
   +style('countdown')
-  +gradientRuleStyle
 
-mixin countdown(time)
-  .countdown(data-countdown-target=time.toISOString(), aria-label="Time remaining until the event")
+block append script
+  +script('countdown')
+
+mixin countdown
+  .countdown(data-countdown-target=ceremonyDateTime.toISOString(), aria-label="Time remaining until the event")
     .text-center.mt-4.pt-1
       h1.h1.text-body.mb-4.vibes-script.countdown-title
       p.countdown-label
       p.countdown-container
       +gradientRule(3, 4)
-
-mixin countdownScript
-  +script('countdown')

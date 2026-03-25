@@ -11,10 +11,6 @@ const router = express.Router();
 /** Matches client-side maxlength on the photos page caption editor. */
 const PHOTO_CAPTION_MAX_LENGTH = 500;
 
-function toHttpDate(date: Date): string {
-    return new Date(date).toUTCString();
-}
-
 router.get('/', async (req, res, next) => {
     try {
         const professionalPhotos = await dataConnection().photos.getAll('professional');
@@ -114,7 +110,7 @@ router.get('/:photoId', async (req, res, next) => {
         const photo = await dataConnection().photos.get(photoId);
         const updated = new Date(photo.updated);
         const etag = `W/"${updated.getTime()}"`;
-        const lastModified = toHttpDate(updated);
+        const lastModified = updated.toUTCString();
 
         res.setHeader('Cache-Control', 'public, max-age=3600');
         res.setHeader('ETag', etag);

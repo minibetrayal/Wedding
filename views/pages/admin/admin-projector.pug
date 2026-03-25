@@ -1,9 +1,10 @@
 extends /layout
 include /mixins/inclusions
 include /mixins/textareaCounter
+include /mixins/validationForm
 
-block append styles
-  +textareaCounterStyle
+block append script
+  +adminScript('admin-projector')
 
 block title
   | Projector — Admin
@@ -116,7 +117,7 @@ block content
             span#projector-pause-label Pause rotation
         p#projector-pause-status.small.text-muted.mb-0.mt-2(role="status", aria-live="polite")
 
-    form(method="post", action="/admin/projector/message")
+    +validationForm.suppress-enter-submit(method="post", action="/admin/projector/message")
       .card.border.shadow-sm.mb-4
         .card-body
           label.form-label.fw-semibold(for="projector-message") Message text
@@ -147,6 +148,3 @@ block content
               i.bi.bi-projector(aria-hidden="true")
               | Save and Display
 
-block script
-  +textareaCounterScript
-  +adminScript('admin-projector')

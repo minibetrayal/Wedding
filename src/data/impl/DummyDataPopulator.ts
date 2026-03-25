@@ -3,12 +3,14 @@ import path from 'path';
 
 import { Invitee } from '../def/types/Invitee';
 import { Photo } from '../def/types/Photo';
-import type { FerryService, FerryServiceTo } from '../def/types/FerryService';
+import { FerryService, FerryServiceTo } from '../def/types/FerryService';
 import { heroFocusYToCaptionOrStyle } from '../../util/heroPhotoStyle';
 import { DataPopulator } from '../def/interfaces/DataPopulator';
 import { DataConnection } from '../def/DataConnection';
-import type { ScheduleSnapshot } from '../def/types/ScheduledEvent';
+import { ScheduledEvent, ScheduleSnapshot } from '../def/types/ScheduledEvent';
 import { Location, LocationType } from '../def/types/Location';
+import { Time, TimeType } from '../def/types/Time';
+import { MenuItem, MenuTag } from '../def/types/MenuItem';
 
 type InviteSeedJson = {
     name: string;
@@ -43,6 +45,20 @@ type FerryTimetableJson = {
     cost: string;
 };
 
+type MenuItemJson = {
+    name: string;
+    tags: Array<string>;
+}
+
+type MenuCourseJson = {
+    name: string;
+    items: Array<MenuItemJson>;
+}
+
+type MenuJson = {
+    courses: Array<MenuCourseJson>;
+}
+
 type NamesJson = {
     names: string;
     namesShort: string;
@@ -51,6 +67,8 @@ type NamesJson = {
 };
 
 type ScheduleJson = {
+    /** Optional `YYYY-MM-DD`; when present, seeds `schedule.setDate`. */
+    date?: string;
     arrival: number;
     ceremony: number;
     reception: number;
@@ -60,6 +78,7 @@ type ScheduleJson = {
 
 /** Each present key in JSON must include `name` (string); `address` is optional. */
 type LocationsJsonRow = { name: string; address?: string };
+type TimesJsonRow = { min: number; max?: number };
 
 function getDummyDataFileOrDir(filename: string): string {
     const filePath = path.join(process.cwd(), 'dummyData', 'identifying', filename);
@@ -81,6 +100,8 @@ export class DummyDataPopulator implements DataPopulator {
     private static readonly namesJsonPath = path.join(getDummyDataFileOrDir('names.json'));
     private static readonly scheduleJsonPath = path.join(getDummyDataFileOrDir('schedule.json'));
     private static readonly locationsJsonPath = path.join(getDummyDataFileOrDir('locations.json'));
+    private static readonly timesJsonPath = path.join(getDummyDataFileOrDir('times.json'));
+    private static readonly menuJsonPath = path.join(getDummyDataFileOrDir('menu.json'));
     private static readonly dummyPhotoFilenameRe = /\.(jpe?g|png|gif|webp)$/i;
     private static readonly professionalDummyPhotoMax = 5;
 
@@ -93,6 +114,47 @@ export class DummyDataPopulator implements DataPopulator {
         await this.loadNames(connection);
         await this.loadSchedule(connection);
         await this.loadLocations(connection);
+        await this.loadTimes(connection);
+        await this.loadMenu(connection);
+    }
+
+    async loadMenu(connection: DataConnection): Promise<void> {
+        const data = await DummyDataPopulator.readMenuJson();
+        if (!data) return;
+        for (const course of data.courses) {
+            await connection.menu.createCourse(course.name);
+            const items = course.items.map((item: MenuItemJson) => new MenuItem(item.name, item.tags as MenuTag[]));
+            await connection.menu.updateCourse(course.name, items);
+        }
+    }
+
+    async loadTimes(connection: DataConnection): Promise<void> {
+        const data = await DummyDataPopulator.readTimesJson();
+        if (!data) return;
+        const validTypes = new Set<TimeType>(Object.values(TimeType));
+        for (const key of Object.keys(data)) {
+            if (!validTypes.has(key as TimeType)) {
+                throw new Error(
+                    `Unknown time key "${key}" in ${dummyDataPathForLog(DummyDataPopulator.timesJsonPath)}`,
+                );
+            }
+        }
+        for (const type of Object.values(TimeType)) {
+            const raw = data[type];
+            let min: number = 0;
+            let max: number | undefined = undefined;
+            if (raw !== undefined) {
+                if (typeof raw !== 'object' || raw === null || typeof (raw as TimesJsonRow).min !== 'number') {
+                    throw new Error(
+                        `${dummyDataPathForLog(DummyDataPopulator.timesJsonPath)}: "${type}" must be an object with a number "min"`,
+                    );
+                }
+                const entry = raw as TimesJsonRow;
+                min = entry.min;
+                max = entry.max;
+            }
+            await connection.times.set(type, new Time(min, max));
+        }   
     }
 
     async loadNames(connection: DataConnection): Promise<void> {
@@ -138,7 +200,7 @@ export class DummyDataPopulator implements DataPopulator {
     async loadSchedule(connection: DataConnection): Promise<void> {
         const data = await DummyDataPopulator.readScheduleJson();
         if (!data) return;
-        const events = data.events.map((e) => ({ name: e.name.trim(), time: e.time.trim() }));
+        const events = data.events.map((e) => new ScheduledEvent(e.name.trim(), e.time.trim()));
         if (events.length === 0) {
             throw new Error(
                 `${dummyDataPathForLog(DummyDataPopulator.scheduleJsonPath)} must include at least one event`,
@@ -160,14 +222,39 @@ export class DummyDataPopulator implements DataPopulator {
                 `${dummyDataPathForLog(DummyDataPopulator.scheduleJsonPath)}: arrival, ceremony, reception, and endOfDay must be indices from 0 to ${max}`,
             );
         }
-        const snapshot: ScheduleSnapshot = {
-            events,
-            arrival,
-            ceremony,
-            reception,
-            endOfDay,
-        };
+        const snapshot: ScheduleSnapshot = new ScheduleSnapshot(events, arrival, ceremony, reception, endOfDay);
         await connection.schedule.set(snapshot);
+        const dateStr = typeof data.date === 'string' ? data.date.trim() : '';
+        if (dateStr) {
+            await connection.schedule.setDate(dateStr);
+        }
+    }
+
+    private static handleNotFound(err: unknown, path: string, type: string): null {
+        const code = (err as NodeJS.ErrnoException).code;
+        if (code === 'ENOENT') {
+            if (process.env.NODE_ENV === 'development') {
+                console.warn(
+                    `[DummyData] ${dummyDataPathForLog(path)} not found; skipping ${type}.`,
+                );
+            }
+            return null;
+        }
+        throw err;
+    }
+
+    private static async readMenuJson(): Promise<MenuJson | null> {
+        try {
+            const raw = await fs.promises.readFile(DummyDataPopulator.menuJsonPath, 'utf8');
+            const parsed = JSON.parse(raw) as unknown;
+            if (!parsed || typeof parsed !== 'object' || !Array.isArray((parsed as MenuJson).courses)) {
+                throw new Error(`${dummyDataPathForLog(DummyDataPopulator.menuJsonPath)} must contain a { courses: [...] } object`);
+            }
+            return parsed as MenuJson;
+        }
+        catch (err) {
+            return DummyDataPopulator.handleNotFound(err, DummyDataPopulator.menuJsonPath, 'menu');
+        }
     }
 
     private static async readScheduleJson(): Promise<ScheduleJson | null> {
@@ -191,16 +278,7 @@ export class DummyDataPopulator implements DataPopulator {
             }
             return parsed as ScheduleJson;
         } catch (err) {
-            const code = (err as NodeJS.ErrnoException).code;
-            if (code === 'ENOENT') {
-                if (process.env.NODE_ENV === 'development') {
-                    console.warn(
-                        `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.scheduleJsonPath)} not found; skipping schedule.`,
-                    );
-                }
-                return null;
-            }
-            throw err;
+            return DummyDataPopulator.handleNotFound(err, DummyDataPopulator.scheduleJsonPath, 'schedule');
         }
     }
 
@@ -213,16 +291,23 @@ export class DummyDataPopulator implements DataPopulator {
             }
             return parsed as NamesJson;
         } catch (err) {
-            const code = (err as NodeJS.ErrnoException).code;
-            if (code === 'ENOENT') {
-                if (process.env.NODE_ENV === 'development') {
-                    console.warn(
-                        `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.namesJsonPath)} not found; skipping names.`,
-                    );
-                }
-                return { names: '', namesShort: '', contactName: '', contactPhone: '' };
+            DummyDataPopulator.handleNotFound(err, DummyDataPopulator.namesJsonPath, 'names');
+            return { names: '', namesShort: '', contactName: '', contactPhone: '' };
+        }
+    }
+
+    private static async readTimesJson(): Promise<Partial<Record<TimeType, TimesJsonRow>> | null> {
+        try {
+            const raw = await fs.promises.readFile(DummyDataPopulator.timesJsonPath, 'utf8');
+            const parsed = JSON.parse(raw) as unknown;
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                throw new Error(
+                    `${dummyDataPathForLog(DummyDataPopulator.timesJsonPath)} must contain a JSON object`,
+                );
             }
-            throw err;
+            return parsed as Partial<Record<TimeType, TimesJsonRow>>;
+        } catch (err) {
+            return DummyDataPopulator.handleNotFound(err, DummyDataPopulator.timesJsonPath, 'times');
         }
     }
 
@@ -237,16 +322,7 @@ export class DummyDataPopulator implements DataPopulator {
             }
             return parsed as Partial<Record<LocationType, LocationsJsonRow>>;
         } catch (err) {
-            const code = (err as NodeJS.ErrnoException).code;
-            if (code === 'ENOENT') {
-                if (process.env.NODE_ENV === 'development') {
-                    console.warn(
-                        `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.locationsJsonPath)} not found; skipping locations.`,
-                    );
-                }
-                return null;
-            }
-            throw err;
+            return DummyDataPopulator.handleNotFound(err, DummyDataPopulator.locationsJsonPath, 'locations');
         }
     }
 
@@ -423,20 +499,17 @@ export class DummyDataPopulator implements DataPopulator {
         const data = await DummyDataPopulator.readFerryTimetableJson();
         if (!data) return;
         const services: FerryService[] = data.services.map((row) => {
-            const time = new Date(row.time);
-            const arriving = new Date(row.arriving);
-            if (Number.isNaN(time.getTime()) || Number.isNaN(arriving.getTime())) {
+            if (!row.time?.match(/^\d{2}:\d{2}$/)) {
                 throw new Error(
-                    `Invalid ferry timetable date in ${dummyDataPathForLog(DummyDataPopulator.ferryTimetableJsonPath)}`,
+                    `Invalid ferry timetable time in ${dummyDataPathForLog(DummyDataPopulator.ferryTimetableJsonPath)}`,
                 );
             }
-            return {
-                to: row.to,
-                platform: row.platform,
-                via: row.via,
-                time,
-                arriving,
-            };
+            if (!row.arriving?.match(/^\d{2}:\d{2}$/)) {
+                throw new Error(
+                    `Invalid ferry timetable arriving time in ${dummyDataPathForLog(DummyDataPopulator.ferryTimetableJsonPath)}`,
+                );
+            }
+            return new FerryService(row.to, row.platform, row.time, row.via, row.arriving);
         });
         await db.ferryServices.replaceAll(services);
         await db.ferryServices.setLink(data.link.trim());

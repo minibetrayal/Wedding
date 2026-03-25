@@ -17,8 +17,8 @@ import { broadcast } from '../util/projectorSse';
 
 const router = express.Router();
 
-const MODERATION_REASON_MAX = parseInt(process.env.MODERATION_REASON_MAX!, 10);
-const GUESTBOOK_CONTENT_MAX = parseInt(process.env.GUESTBOOK_CONTENT_MAX!, 10);
+const MODERATION_REASON_MAX = 500;
+const GUESTBOOK_CONTENT_MAX = 8000;
 
 function trimGuestbookContent(raw: string): string {
     const t = typeof raw === 'string' ? raw.trim() : '';
@@ -75,7 +75,7 @@ router.get('/new', (req, res) => {
 });
 
 router.get('/moderation', requireAdmin, async (req, res) => {
-    await get(req, res, (entry) => entry.pendingRemoderation && entry.moderated, 'moderation');
+    await get(req, res, (entry) => entry.pendingRemoderation, 'moderation');
 });
 
 router.post('/new', uploadPhoto(() => '/guestbook/new'), async (req, res, next) => {

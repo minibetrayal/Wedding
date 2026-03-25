@@ -1,5 +1,8 @@
 include /mixins/inclusions
 
+block append script
+  +script('mapButtons')
+
 mixin mapButton(location)
   .d-grid.gap-2 
     if location
@@ -14,6 +17,3 @@ mixin mapButton(location)
       .btn.btn-outline-dark.btn-sm.disabled.mt-1(disabled)
         i.bi.bi-geo-alt.me-2 
         | Map not available
-
-mixin mapButtonScript 
-  +script('mapButtons')

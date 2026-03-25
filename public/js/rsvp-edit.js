@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+(function () {
   var form = document.getElementById('rsvp-edit-form');
   if (!form) return;
   form.customValidationFunctions = form.customValidationFunctions || [];
@@ -6,12 +6,12 @@ document.addEventListener('DOMContentLoaded', function () {
     var ok = true;
     form.querySelectorAll('[data-invitee-row]').forEach(function (row) {
       var picked = row.querySelector('input.invitee-attending-radio:checked');
-      var fb = row.querySelector('.attending-invalid-feedback');
+      var grp = row.querySelector('.invitee-attending-group');
       if (!picked) {
         ok = false;
-        if (fb) fb.classList.remove('d-none');
-      } else if (fb) {
-        fb.classList.add('d-none');
+        if (grp) grp.classList.add('is-invalid');
+      } else if (grp) {
+        grp.classList.remove('is-invalid');
       }
     });
     return ok;
@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', function () {
     radio.addEventListener('change', function () {
       var row = radio.closest('[data-invitee-row]');
       if (!row) return;
-      var fb = row.querySelector('.attending-invalid-feedback');
-      if (fb) fb.classList.add('d-none');
+      var grp = row.querySelector('.invitee-attending-group');
+      if (grp) grp.classList.remove('is-invalid');
     });
   });
 
@@ -80,4 +80,4 @@ document.addEventListener('DOMContentLoaded', function () {
     e.preventDefault();
     e.returnValue = '';
   });
-});
+})();

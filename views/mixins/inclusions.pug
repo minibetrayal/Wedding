@@ -6,4 +6,4 @@ mixin script(name)
 
 mixin adminScript(name)
   if isAdmin
-    +script(name)
+    script(src=`/js/${name}.js`)

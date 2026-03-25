@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+(function () {
     var form = document.getElementById('guestbook-edit-form');
     var content = document.getElementById('guestbook-content');
     var photo = document.getElementById('guestbook-photo');
@@ -49,4 +49,4 @@ document.addEventListener('DOMContentLoaded', function () {
         deleteModalInstance.hide();
         deleteForm.submit();
     });
-});
+})();

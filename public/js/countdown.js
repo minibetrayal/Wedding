@@ -27,7 +27,7 @@
         }
 
         if (now < target) {
-            labelEl.textContent = 'Until the ceremony';
+            labelEl.innerHTML = '· &nbsp; Until the ceremony &nbsp; ·';
 
             const diff = target.getTime() - now.getTime();
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -39,11 +39,13 @@
             const m = String(minutes).padStart(2, '0');
             const s = String(seconds).padStart(2, '0');
 
+            el.dataset.countdownRemaining = `${days}d ${h}:${m}:${s}`;
+
             let text;
-            if (days >= 2) {
+            if (days >= 7) {
                 text = `${days} days`;
-            } else if (days === 1) {
-                text = `${days} day ${h}:${m}:${s}`;
+            } else if (days >= 1) {
+                text = `${days} day${days > 1 ? 's' : ''} ${h}:${m}:${s}`;
             } else {
                 text = `${h}:${m}:${s}`;
             }

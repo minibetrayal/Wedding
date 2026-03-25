@@ -1,8 +1,7 @@
-import express, { raw } from 'express';
+import express from 'express';
 
 import { getDataConnection as dataConnection } from '../../data/def/DataConnection';
-import type { FerryService, FerryServiceTo } from '../../data/def/types/FerryService';
-import { fromTimeLocalValue, toTimeLocalValue } from '../../util/ferryAdminTime';
+import { FerryService, FerryServiceTo } from '../../data/def/types/FerryService';
 
 const router = express.Router();
 
@@ -17,14 +16,7 @@ type FerryFormRow = {
 async function loadFormRows(): Promise<FerryFormRow[]> {
     const island = await dataConnection().ferryServices.getAll('island');
     const mainland = await dataConnection().ferryServices.getAll('mainland');
-    const all = [...island, ...mainland].sort((a, b) => a.time.getTime() - b.time.getTime());
-    return all.map((s) => ({
-        to: s.to,
-        platform: s.platform,
-        via: s.via,
-        time: toTimeLocalValue(s.time),
-        arriving: toTimeLocalValue(s.arriving),
-    }));
+    return [...island, ...mainland]; // types area already each sorted
 }
 
 function normalizeServicesRows(raw: unknown): unknown[] {
@@ -39,7 +31,8 @@ function normalizeServicesRows(raw: unknown): unknown[] {
     return [];
 }
 
-function parseServicesFromBody(body: unknown): FerryService[] {
+async function parseServicesFromBody(body: unknown): Promise<FerryService[]> {
+    const eventDateYmd = await dataConnection().schedule.getDate();
     const raw = body as Record<string, unknown>;
     const servicesRaw = normalizeServicesRows(raw.services);
     const out: FerryService[] = [];
@@ -48,17 +41,12 @@ function parseServicesFromBody(body: unknown): FerryService[] {
         const r = row as Record<string, unknown>;
         const platform = typeof r.platform === 'string' ? r.platform.trim() : '';
         const via = typeof r.via === 'string' ? r.via.trim() : '';
-        const timeStr = typeof r.time === 'string' ? r.time.trim() : '';
-        const arrivingStr = typeof r.arriving === 'string' ? r.arriving.trim() : '';
-        if (!platform && !timeStr && !arrivingStr && !via) continue;
+        const time = typeof r.time === 'string' ? r.time.trim() : '';
+        const arriving = typeof r.arriving === 'string' ? r.arriving.trim() : '';
+        if (!platform && !time && !arriving && !via) continue;
         const to = r.to === 'mainland' ? 'mainland' : 'island';
-        if (!timeStr || !arrivingStr) {
+        if (!time || !arriving) {
             throw new Error('Each ferry row must include departure and arrival times.');
-        }
-        const time = fromTimeLocalValue(timeStr);
-        let arriving = fromTimeLocalValue(arrivingStr);
-        if (arriving.getTime() < time.getTime()) {
-            arriving = new Date(arriving.getTime() + 24 * 60 * 60 * 1000);
         }
         if (!platform) {
             throw new Error('Each ferry row must include a platform.');
@@ -66,7 +54,7 @@ function parseServicesFromBody(body: unknown): FerryService[] {
         if (!via) {
             throw new Error('Each ferry row must include a via (route) label.');
         }
-        out.push({ to, platform, via, time, arriving });
+        out.push(new FerryService(to, platform, time, via, arriving));
     }
     return out;
 }
@@ -91,7 +79,7 @@ router.post('/', async (req, res, next) => {
     try {
         const ferryTimetableLink = typeof req.body.ferryTimetableLink === 'string' ? req.body.ferryTimetableLink.trim() : '';
         const ferryCost = typeof req.body.ferryCost === 'string' ? req.body.ferryCost.trim() : '';
-        const services = parseServicesFromBody(req.body);
+        const services = await parseServicesFromBody(req.body);
         const ferry = dataConnection().ferryServices;
         await ferry.setLink(ferryTimetableLink);
         await ferry.setCost(ferryCost);

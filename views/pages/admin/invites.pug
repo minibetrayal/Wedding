@@ -4,6 +4,9 @@ include /mixins/inclusions
 block append styles
   +style('invites')
 
+block append script
+  +adminScript('invites')
+  
 block title
   | Invitations — Admin
 
@@ -221,6 +224,3 @@ block content
       a.btn.btn-primary.d-inline-flex.align-items-center.gap-2(href="/admin/invites/new")
         i.bi.bi-plus-lg(aria-hidden="true")
         | Create invitation
-
-block script
-  +adminScript('invites')

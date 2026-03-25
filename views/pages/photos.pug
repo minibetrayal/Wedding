@@ -3,15 +3,14 @@ include /mixins/hero
 include /mixins/gradientRule
 include /mixins/textareaCounter
 include /mixins/inclusions
+include /mixins/validationForm
+
+block append styles
+  +style('photoGallery')
+
 
 block title
   | #{coupleNamesShort} — Photos
-
-block styles
-  +heroStyle
-  +gradientRuleStyle
-  +textareaCounterStyle
-  +style('photoGallery')
 
 block content
   +hero('Photo Gallery')
@@ -24,7 +23,7 @@ block content
           | Upload professional photos
         p.text-muted.small.mb-3
           | Images are stored on the server and shown below. You can select multiple files at once (up to 40 per upload, 20 MB each).
-        form(
+        +validationForm.suppress-enter-submit(
           method="post"
           action="/photos/professional"
           enctype="multipart/form-data"
@@ -38,6 +37,7 @@ block content
               multiple
               required
             )
+            .invalid-feedback Please choose one or more image files.
           button.btn.btn-primary.d-inline-flex.align-items-center.gap-2(type="submit")
             i.bi.bi-cloud-upload(aria-hidden="true")
             | Upload
@@ -73,7 +73,7 @@ block content
                   else
                     span.visually-hidden Wedding photograph
                   if isAdmin
-                    form.mt-3(method="post" action=`/photos/professional/${photo.id}/caption`)
+                    +validationForm.suppress-enter-submit.mt-3(method="post" action=`/photos/professional/${photo.id}/caption`)
                       label.form-label.small.mb-1(for=`caption-${photo.id}`) Caption
                       +textareaCounter.form-control.form-control-sm.mb-0(
                         id='caption-' + photo.id,
@@ -119,6 +119,3 @@ block content
               )
                 i.bi.bi-journal-text(aria-hidden="true")
                 | Open the guestbook
-
-block script
-  +textareaCounterScript

@@ -5,18 +5,11 @@ include /mixins/tableOfContents
 include /mixins/gemline
 include /mixins/countdown
 
-block styles
-  +tableOfContentsStyle
-  +detailsCardStyle
-  +gemlineStyle
-  +countdownStyle
-
 block title
   | #{coupleNamesShort} — Details
 
 block content
-  if ceremonyRawTime
-    +countdown(ceremonyRawTime)
+  +countdown
 
   h1.h4.mb-1.mt-4 Wedding Details 
   p.text-muted.mb-4 Everything you need to know for the day 
@@ -30,13 +23,13 @@ block content
         | The Ceremony will be held at our beautiful island property, at 
         strong #{locations.ceremony.mapLine()}
         | , starting at 
-        strong #{scheduledEvents[scheduleCeremonyIndex] ? scheduledEvents[scheduleCeremonyIndex].time : '—'}
+        strong #{schedule.ceremony().formatted(eventDateRaw)}
         | .
       .my-2 
         +mapButton(locations.ceremony.mapLine())
 
       p.small.mb-2
-        | We welcome you to arrive from #{scheduledEvents[scheduleArrivalIndex] ? scheduledEvents[scheduleArrivalIndex].time : '—'} onwards.
+        | We welcome you to arrive from #{schedule.arrival().formatted(eventDateRaw)} onwards.
 
     //- Dress Code
     +detailsCard('Dress Code', 'person-check')
@@ -55,18 +48,16 @@ block content
 
     //- Schedule
     +detailsCard('Schedule', 'calendar-event')
-      if (eventDate && eventTimezoneLabel)
-        p.small.text-muted All times are in #{eventTimezoneLabel}
+      p.small.text-muted All times are in #{eventTZLabel}
 
-      if scheduledEvents.length
+      if schedule.events.length
         ul.small.mb-2 
-          each event, index in scheduledEvents
+          each event, index in schedule.events
             li.d-flex.mb-1 
-              span.fw-semibold.d-flex.fixed-width-45rem #{event.time}
-              span — &nbsp;#{event.description}
-        if scheduledEvents[scheduleEndOfDayIndex]
-          p.small.text-muted.mb-0
-            | We expect to wrap up around #{scheduledEvents[scheduleEndOfDayIndex].time}.
+              span.fw-semibold.d-flex.fixed-width-45rem #{event.formatted(eventDateRaw)}
+              span — &nbsp;#{event.name}
+        p.small.text-muted.mb-0
+          | We expect to wrap up around #{schedule.endOfDay().formatted(eventDateRaw)}.
       else
         | Schedule TBC
 
@@ -82,12 +73,12 @@ block content
         li.mb-2
           | #{locations.mainland.name} also has a bus station with regular services throughout the day.
           | There is also a bus service to the marina from #{locations.trainStation.name}, which takes 
-          | about #{times.trainToMainland} minutes.
+          | about #{travelTimes.trainToMainland} minutes.
           +mapButton(locations.trainStation.mapLine())
         li.mb-2
           | There is parking available at #{locations.mainland.name}, but it is limited and may be subject 
           | to availability. We suggest using the overflow parking, at the nearby #{locations.carPark.name}, 
-          | from which there is about a #{times.carParkToIsland} minute walk across a footbridge to 
+          | from which there is about a #{travelTimes.carParkToIsland} minute walk across a footbridge to 
           | #{locations.island.name}.
           +mapButton(locations.carPark.mapLine())
 
@@ -95,13 +86,13 @@ block content
     +detailsCard('Ferry', 'water')
       ul.small 
         li.mb-2
-          | The ferry service between #{locations.mainland.name} and #{locations.island.name} takes #{times.mainlandToIsland} minutes,
+          | The ferry service between #{locations.mainland.name} and #{locations.island.name} takes #{travelTimes.mainlandToIsland} minutes,
           | depending on the direction of travel.
         li.mb-2
           | You are welcome to arrive any time after&nbsp;
-          strong #{scheduledEvents[scheduleArrivalIndex] ? scheduledEvents[scheduleArrivalIndex].time : '—'}
+          strong #{schedule.arrival().formatted(eventDateRaw)}
           | ,&nbsp;but the official event does not start until&nbsp;
-          strong #{scheduledEvents[scheduleCeremonyIndex] ? scheduledEvents[scheduleCeremonyIndex].time : '—'}
+          strong #{schedule.ceremony().formatted(eventDateRaw)}
           | .&nbsp;The ferry service operates daily, with regular services throughout the day.
           | Bear this in mind as you plan your journey.
         li.mb-2
@@ -111,13 +102,13 @@ block content
               li.mb-2
                 strong #{service.platform}
                 | &nbsp;@&nbsp;
-                strong #{service.timeStr}
+                strong #{service.formattedTime}
                 br
                 | via&nbsp;
                 strong #{service.via}
                 br
                 | arriving @&nbsp;
-                strong #{service.arrivingStr}
+                strong #{service.formattedArriving}
             else 
               li.mb-2 
                 strong Ferry service times will be confirmed closer to the event.
@@ -135,13 +126,13 @@ block content
               li.mb-2
                 strong #{service.platform}
                 | &nbsp;@&nbsp;
-                strong #{service.timeStr}
+                strong #{service.formattedTime}
                 br
                 | via&nbsp;
                 strong #{service.via}
                 br
                 | arriving @&nbsp;
-                strong #{service.arrivingStr}
+                strong #{service.formattedArriving}
             else 
               li.mb-2 
                 strong Ferry service times will be confirmed closer to the event.
@@ -173,7 +164,7 @@ block content
     +detailsCard('On the Island', 'person-walking')
       ul.small 
         li.mb-2
-          | When you arrive at #{locations.island.name}, there is a #{times.islandToCeremony} minute walk to 
+          | When you arrive at #{locations.island.name}, there is a #{travelTimes.islandToCeremony} minute walk to 
           | the ceremony location. If you'd like to enjoy this walk, please take this time into account.
         li.mb-2
           | If you'd prefer to avoid the walk (which includes a steep hill), let us know in your RSVP,
@@ -190,7 +181,7 @@ block content
           | We'll have some drinks and nibbles available, but please feel free to bring your own if you'd like.
         li.mb-2
           | The ceremony will commence at&nbsp;
-          strong #{scheduledEvents[scheduleCeremonyIndex] ? scheduledEvents[scheduleCeremonyIndex].time : '—'}
+          strong #{schedule.ceremony().formatted(eventDateRaw)}
           | .&nbsp;Please arrive at the ceremony location by this time.
         li.mb-2
           | After the ceremony, we'll be taking some photos, so please stick around for this.
@@ -207,14 +198,14 @@ block content
           | The reception will be held at 
           strong #{locations.reception.mapLine()}
           | , starting at 
-          strong #{scheduledEvents[scheduleReceptionIndex] ? scheduledEvents[scheduleReceptionIndex].time : '—'}
+          strong #{schedule.reception().formatted(eventDateRaw)}
           | .
           +mapButton(locations.reception.mapLine())
         li.mb-2
           | We ask that you make your own way to the reception venue from #{locations.mainland.name}.
           | If you need assistance with this, let us know in your RSVP and we can arrange carpooling.
         li.mb-2
-          | It's about a #{times.mainlandToReception} minute drive from #{locations.mainland.name} to #{locations.reception.name}.
+          | It's about a #{travelTimes.mainlandToReception} minute drive from #{locations.mainland.name} to #{locations.reception.name}.
         li.mb-2
           | There is parking available at #{locations.reception.name}, as well as roadside parking nearby.
           | If you have trouble finding parking, we suggest a nearby carpark at the nearby 
@@ -228,12 +219,23 @@ block content
 
     //- Menu
     +detailsCard('Menu', 'fork-knife')
-      each course in receptionMenu 
+      - const tagLabels = {}
+      each tag in menuTags
+        - tagLabels[tag] = tag.split(/\s+/).map(t => t.toUpperCase()).map(t => t === 'VEGAN' ? 'VE' : t.charAt(0)).join('')
+      each course in menu 
         p.mb-2 
           strong #{course.name}
         ul.small 
           each item in course.items
-            li.mb-1 #{item}
+            li.mb-1 #{item.name}
+              each tag in item.tags
+                span.badge.bg-success.ms-1.opacity-50 #{tagLabels[tag]}
+
+      p.small.text-body-tertiary.mb-2.opacity-50
+        each tag in menuTags.sort()
+          span.me-4.text-nowrap
+            span.badge.bg-success #{tagLabels[tag]}
+            | &nbsp;-&nbsp;#{tag}
 
       p.small.text-muted.mb-0
         | If you have any dietary requirements, please let us know in your RSVP.
@@ -262,8 +264,3 @@ block content
       p.small.mb-2
         | If you get delayed, lost, or have a last-minute question, contact our MC #{contactName} on 
         a.link-primary(href=`tel:${contactPhone.replace(/\s/g, '')}`) !{contactPhone.replace(/\s/g, '&nbsp;')}
-
-block script 
-  +mapButtonScript
-  +tableOfContentsScript
-  +countdownScript

@@ -8,15 +8,14 @@
 
 extends /layout
 include /mixins/inclusions
+include /mixins/validationForm
 include /mixins/hero
 
-block styles
-  +heroStyle
+block append script
+  +script('rsvp-edit')
 
 block title
   | #{coupleNamesShort} — RSVP
-
-block top
 
 block content
   -
@@ -42,10 +41,9 @@ block content
 
       #rsvp-accordion-panel.accordion-collapse.collapse(class=inv.seen ? 'show' : '', data-bs-parent="#rsvp-accordion")
         .accordion-body
-          form#rsvp-edit-form(
+          +validationForm.suppress-enter-submit#rsvp-edit-form(
             method="post",
-            action='/rsvp/' + inv.id,
-            novalidate
+            action='/rsvp/' + inv.id
           )
             .card.border.shadow-sm.mb-4
               .card-body
@@ -90,7 +88,7 @@ block content
                                 autocomplete="off"
                               )
                               label.btn.btn-outline-primary(for=`rsvp-invitee-${index}-attend-yes`) Attending
-                            .attending-invalid-feedback.small.text-danger.mt-2.d-none
+                            .attending-invalid-feedback.invalid-feedback
                               | Please choose whether this guest is attending or not.
 
                       .mt-3.pt-3.border-top
@@ -237,7 +235,3 @@ block content
               a.fw-semibold.link-primary(href="/guestbook") Guestbook
               | !
 
-
-block script
-  +script('formValidate')
-  +script('rsvp-edit')

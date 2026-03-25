@@ -1,112 +1,58 @@
 extends /layout
 include /mixins/inclusions
-
-block title
-  | Ferry timetable — Admin
+include /mixins/validationForm
 
 block append script
   +script('admin-ferry')
 
+block title
+  | Ferry timetable — Admin
+
 block content
-  .container.py-4
-    nav.mb-3(aria-label="Breadcrumb")
-      ol.breadcrumb.mb-0
-        li.breadcrumb-item
-          a.link-secondary(href="/admin") Admin
-        li.breadcrumb-item.active(aria-current="page") Ferry timetable
+  nav.mb-3(aria-label="Breadcrumb")
+    ol.breadcrumb.mb-0
+      li.breadcrumb-item
+        a.link-secondary(href="/admin") Admin
+      li.breadcrumb-item.active(aria-current="page") Ferry timetable
 
-    .mb-4
-      h1.h3.mb-1 Ferry timetable
-      p.text-muted.small.mb-0 These services appear on the public Details page.
+  .mb-4
+    h1.h3.mb-1 Ferry timetable
+    p.text-muted.small.mb-0 These services appear on the public Details page.
 
-    form#ferry-form(method="post", action="/admin/ferry")
-      .card.border-0.shadow-sm.mb-3
-        .card-body.p-4
-          h2.h6.mb-3 Details page
-          .row.g-3.mb-1
-            .col-12
-              label.form-label.small.mb-1(for="ferry-timetable-link") Ferry timetable link
-              input#ferry-timetable-link.form-control(
-                type="url",
-                name="ferryTimetableLink",
-                value=ferryTimetableLink,
-                placeholder="https://…",
-                autocomplete="off"
-              )
-              p.form-text.small.mb-0
-                | Full URL for the ferry timetable link (including https://)
-            .col-12
-              label.form-label.small.mb-1(for="ferry-cost") Ferry cost
-              input#ferry-cost.form-control(
-                type="text",
-                name="ferryCost",
-                value=ferryCost,
-                placeholder='e.g. $5',
-                autocomplete="off"
-              )
-              p.form-text.small.mb-0
-                | Cost for the ferry crossing (per person, each way)
+  +validationForm.suppress-enter-submit#ferry-form(method="post", action="/admin/ferry")
+    .card.border-0.shadow-sm.mb-3
+      .card-body.p-4
+        h2.h6.mb-3 Details page
+        .row.g-3.mb-1
+          .col-12
+            label.form-label.small.mb-1(for="ferry-timetable-link") Ferry timetable link
+            input#ferry-timetable-link.form-control(
+              type="url",
+              name="ferryTimetableLink",
+              value=ferryTimetableLink,
+              placeholder="https://…",
+              autocomplete="off"
+            )
+            p.form-text.small.mb-0
+              | Full URL for the ferry timetable link (including https://)
+          .col-12
+            label.form-label.small.mb-1(for="ferry-cost") Ferry cost
+            input#ferry-cost.form-control(
+              type="text",
+              name="ferryCost",
+              value=ferryCost,
+              placeholder='e.g. $5',
+              autocomplete="off"
+            )
+            p.form-text.small.mb-0
+              | Cost for the ferry crossing (per person, each way)
 
-      .card.border-0.shadow-sm.mb-3
-        .card-body.p-4
-          h2.h6.mb-3 Suggested services
-          #ferry-rows.vstack.gap-4
-            each row, i in ferryRows
-              .ferry-row.border.rounded-3.p-3.bg-body-secondary.bg-opacity-25(data-row-index=i)
-                .d-flex.justify-content-end.mb-2
-                  button.btn.btn-outline-danger.btn-sm.remove-ferry-row(
-                    type="button",
-                    aria-label="Remove this service"
-                  )
-                    i.bi.bi-trash.me-1(aria-hidden="true")
-                    | Remove
-                .row.g-3
-                  .col-12.col-md-6.col-lg-3
-                    label.form-label.small.mb-1 Direction
-                    select.form-select.form-select-sm(
-                      name=`services[${i}][to]`,
-                      required,
-                      aria-label=`Service ${i + 1} direction`
-                    )
-                      option(value="island", selected=row.to === 'island') To Island
-                      option(value="mainland", selected=row.to === 'mainland') To Mainland
-                  .col-12.col-md-6.col-lg-3
-                    label.form-label.small.mb-1 Platform
-                    input.form-control.form-control-sm(
-                      type="text",
-                      name=`services[${i}][platform]`,
-                      value=row.platform,
-                      required,
-                      placeholder='e.g. Platform 4'
-                    )
-                  .col-12.col-md-6.col-lg-3
-                    label.form-label.small.mb-1 Departs
-                    input.form-control.form-control-sm(
-                      type="time",
-                      name=`services[${i}][time]`,
-                      value=row.time,
-                      required
-                    )
-                  .col-12.col-md-6.col-lg-3
-                    label.form-label.small.mb-1 Arrives
-                    input.form-control.form-control-sm(
-                      type="time",
-                      name=`services[${i}][arriving]`,
-                      value=row.arriving,
-                      required
-                    )
-                  .col-12
-                    label.form-label.small.mb-1 Via (route)
-                    input.form-control.form-control-sm(
-                      type="text",
-                      name=`services[${i}][via]`,
-                      value=row.via,
-                      required,
-                      placeholder='e.g. Karragarra Island'
-                    )
-
-          template#ferry-row-template
-            .ferry-row.border.rounded-3.p-3.bg-body-secondary.bg-opacity-25
+    .card.border-0.shadow-sm.mb-3
+      .card-body.p-4
+        h2.h6.mb-3 Suggested services
+        #ferry-rows.vstack.gap-4
+          each row, i in ferryRows
+            .ferry-row.border.rounded-3.p-3.bg-body-secondary.bg-opacity-25(data-row-index=i)
               .d-flex.justify-content-end.mb-2
                 button.btn.btn-outline-danger.btn-sm.remove-ferry-row(
                   type="button",
@@ -118,52 +64,116 @@ block content
                 .col-12.col-md-6.col-lg-3
                   label.form-label.small.mb-1 Direction
                   select.form-select.form-select-sm(
-                    name="services[__i__][to]",
+                    name=`services[${i}][to]`,
                     required,
-                    aria-label="Service direction"
+                    aria-label=`Service ${i + 1} direction`
                   )
-                    option(value="island", selected) To Island
-                    option(value="mainland") To Mainland
+                    option(value="island", selected=row.to === 'island') To Island
+                    option(value="mainland", selected=row.to === 'mainland') To Mainland
+                  .invalid-feedback.small Please choose a direction.
                 .col-12.col-md-6.col-lg-3
                   label.form-label.small.mb-1 Platform
                   input.form-control.form-control-sm(
                     type="text",
-                    name="services[__i__][platform]",
+                    name=`services[${i}][platform]`,
+                    value=row.platform,
                     required,
                     placeholder='e.g. Platform 4'
                   )
+                  .invalid-feedback.small Please enter a platform.
                 .col-12.col-md-6.col-lg-3
                   label.form-label.small.mb-1 Departs
                   input.form-control.form-control-sm(
                     type="time",
-                    name="services[__i__][time]",
+                    name=`services[${i}][time]`,
+                    value=row.time,
                     required
                   )
+                  .invalid-feedback.small Please enter a departure time.
                 .col-12.col-md-6.col-lg-3
                   label.form-label.small.mb-1 Arrives
                   input.form-control.form-control-sm(
                     type="time",
-                    name="services[__i__][arriving]",
+                    name=`services[${i}][arriving]`,
+                    value=row.arriving,
                     required
                   )
+                  .invalid-feedback.small Please enter an arrival time.
                 .col-12
                   label.form-label.small.mb-1 Via (route)
                   input.form-control.form-control-sm(
                     type="text",
-                    name="services[__i__][via]",
+                    name=`services[${i}][via]`,
+                    value=row.via,
                     required,
                     placeholder='e.g. Karragarra Island'
                   )
+                  .invalid-feedback.small Please enter the route (via).
 
-          button.btn.btn-outline-secondary.btn-sm.mt-2(
-            type="button",
-            id="add-ferry-row"
-          )
-            i.bi.bi-plus-lg.me-1(aria-hidden="true")
-            | Add service
+        template#ferry-row-template
+          .ferry-row.border.rounded-3.p-3.bg-body-secondary.bg-opacity-25
+            .d-flex.justify-content-end.mb-2
+              button.btn.btn-outline-danger.btn-sm.remove-ferry-row(
+                type="button",
+                aria-label="Remove this service"
+              )
+                i.bi.bi-trash.me-1(aria-hidden="true")
+                | Remove
+            .row.g-3
+              .col-12.col-md-6.col-lg-3
+                label.form-label.small.mb-1 Direction
+                select.form-select.form-select-sm(
+                  name="services[__i__][to]",
+                  required,
+                  aria-label="Service direction"
+                )
+                  option(value="island", selected) To Island
+                  option(value="mainland") To Mainland
+                .invalid-feedback.small Please choose a direction.
+              .col-12.col-md-6.col-lg-3
+                label.form-label.small.mb-1 Platform
+                input.form-control.form-control-sm(
+                  type="text",
+                  name="services[__i__][platform]",
+                  required,
+                  placeholder='e.g. Platform 4'
+                )
+                .invalid-feedback.small Please enter a platform.
+              .col-12.col-md-6.col-lg-3
+                label.form-label.small.mb-1 Departs
+                input.form-control.form-control-sm(
+                  type="time",
+                  name="services[__i__][time]",
+                  required
+                )
+                .invalid-feedback.small Please enter a departure time.
+              .col-12.col-md-6.col-lg-3
+                label.form-label.small.mb-1 Arrives
+                input.form-control.form-control-sm(
+                  type="time",
+                  name="services[__i__][arriving]",
+                  required
+                )
+                .invalid-feedback.small Please enter an arrival time.
+              .col-12
+                label.form-label.small.mb-1 Via (route)
+                input.form-control.form-control-sm(
+                  type="text",
+                  name="services[__i__][via]",
+                  required,
+                  placeholder='e.g. Karragarra Island'
+                )
+                .invalid-feedback.small Please enter the route (via).
 
-      .d-flex.flex-wrap.gap-2
-        button.btn.btn-primary(type="submit")
-          i.bi.bi-check2.me-1(aria-hidden="true")
-          | Save timetable
-        a.btn.btn-outline-secondary(href="/admin") Cancel
+        button.btn.btn-outline-secondary.btn-sm.mt-2(
+          type="button",
+          id="add-ferry-row"
+        )
+          i.bi.bi-plus-lg.me-1(aria-hidden="true")
+          | Add service
+
+    .d-flex.flex-wrap.gap-2
+      button.btn.btn-primary(type="submit")
+        i.bi.bi-check2.me-1(aria-hidden="true")
+        | Save timetable
+      a.btn.btn-outline-secondary(href="/admin") Cancel

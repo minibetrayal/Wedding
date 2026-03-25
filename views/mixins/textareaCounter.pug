@@ -1,7 +1,10 @@
 include /mixins/inclusions
 
-mixin textareaCounterStyle
+block append styles
   +style('textareaCounter')
+
+block append script
+  +script('textareaCounter')
 
 mixin textareaCounter(warnAt=-0.5, dangerAt=-0.9)
   -
@@ -17,6 +20,3 @@ mixin textareaCounter(warnAt=-0.5, dangerAt=-0.9)
       .message-counter-hint.text-body-tertiary.opacity-25
         span.message-counter-count 0
         | /#{attributes.maxlength}
-        
-mixin textareaCounterScript
-  +script('textareaCounter')

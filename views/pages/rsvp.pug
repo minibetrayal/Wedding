@@ -1,20 +1,16 @@
 extends /layout
 include /mixins/inclusions
+include /mixins/validationForm
 include /mixins/hero
-
-block styles
-  +heroStyle
 
 block title
   | #{coupleNamesShort} — RSVP
 
-block top
-
 block content
-  +hero('We Invite you to celebrate our wedding')
+  +hero('We invite you to celebrate our wedding')
 
   .mt-4.mt-md-5.pt-1
-    form(method="post", action="/rsvp", novalidate)
+    +validationForm.suppress-enter-submit(method="post", action="/rsvp")
       .mb-3
         label.form-label(for="invite-code") Enter your Invitation code
         //- max length is actually 6 but this obfuscates that a bit
@@ -35,6 +31,3 @@ block content
         .form-text#invite-code-hint
           | Your invitation code appears on your invitation, below the QR code. Alternatively, you can use your phone's camera to scan the QR code.
       button.btn.btn-primary.btn-lg.w-100(type="submit") Continue
-
-block script
-  +script('formValidate')

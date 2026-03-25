@@ -1,28 +1,44 @@
-export type ScheduledEvent = {
+import { formatTimeStr } from "../../../util/timeUtils";
+
+export class ScheduledEvent {
     name: string;
     time: string;
-};
+
+    constructor(name: string, time: string) {
+        this.name = name;
+        this.time = time;
+    }
+
+    formatted: (date: string) => string = (date: string) => formatTimeStr(date, this.time);
+}
 
 /** In-memory schedule: ordered events plus which row is arrival / ceremony / reception / end of day. */
-export type ScheduleSnapshot = {
+export class ScheduleSnapshot {
     events: ScheduledEvent[];
-    arrival: number;
-    ceremony: number;
-    reception: number;
+    arrivalIndex: number;
+    ceremonyIndex: number;
+    receptionIndex: number;
     /** Row index for the designated “end of day” time. */
-    endOfDay: number;
+    endOfDayIndex: number;
+
+    constructor(events: ScheduledEvent[], arrival: number, ceremony: number, reception: number, endOfDay: number) {
+        this.events = events;
+        this.arrivalIndex = arrival;
+        this.ceremonyIndex = ceremony;
+        this.receptionIndex = reception;
+        this.endOfDayIndex = endOfDay;
+    }
+
+    arrival: () => ScheduledEvent = () => this.events[this.arrivalIndex];
+    ceremony: () => ScheduledEvent = () => this.events[this.ceremonyIndex];
+    reception: () => ScheduledEvent = () => this.events[this.receptionIndex];
+    endOfDay: () => ScheduledEvent = () => this.events[this.endOfDayIndex];
 };
 
 /** Used when no schedule is loaded from dummy data — ensures a valid four-role schedule. */
-export const DEFAULT_SCHEDULE_SNAPSHOT: ScheduleSnapshot = {
-    events: [
-        { name: 'Arrival', time: '00:01' },
-        { name: 'Ceremony Start', time: '00:02' },
-        { name: 'Reception Start', time: '00:03' },
-        { name: 'End of Day', time: '00:04' },
-    ],
-    arrival: 0,
-    ceremony: 1,
-    reception: 2,
-    endOfDay: 3,
-};
+export const DEFAULT_SCHEDULE_SNAPSHOT: ScheduleSnapshot = new ScheduleSnapshot([
+    new ScheduledEvent('Arrival', '00:01'),
+    new ScheduledEvent('Ceremony Start', '00:02'),
+    new ScheduledEvent('Reception Start', '00:03'),
+    new ScheduledEvent('End of Day', '00:04'),
+], 0, 1, 2, 3);

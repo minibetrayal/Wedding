@@ -9,8 +9,11 @@ import { Invitee } from "../def/types/Invitee";
 import { Projector, ProjectorMode } from "../def/types/Projector";
 import { FerryService, FerryServiceTo } from "../def/types/FerryService";
 import { Names } from "../def/types/Names";
-import { DEFAULT_SCHEDULE_SNAPSHOT, type ScheduleSnapshot } from "../def/types/ScheduledEvent";
+import { DEFAULT_SCHEDULE_SNAPSHOT, ScheduleSnapshot } from "../def/types/ScheduledEvent";
 import { Location, LocationType } from "../def/types/Location";
+import { Time, TimeType } from "../def/types/Time";
+import { MenuCourse } from "../def/types/MenuCourse";
+import { MenuItem } from "../def/types/MenuItem";
 
 import { ConnectionSupplier } from "../def/interfaces/ConnectionSupplier";
 import { AuthorConnection } from "../def/interfaces/AuthorConnection";
@@ -23,8 +26,11 @@ import { FerryServiceConnection } from "../def/interfaces/FerryServiceConnection
 import { NamesConnection } from "../def/interfaces/NamesConnection";
 import { ScheduleConnection } from "../def/interfaces/ScheduleConnection";
 import { LocationConnection } from "../def/interfaces/LocationConnection";
+import { TimesConnection } from "../def/interfaces/TimesConnection";
+import { MenuConnection } from "../def/interfaces/MenuConnection";
 
-import { DbNotFoundError } from "../dbErrors";
+import { DbNotFoundError, DbError } from "../dbErrors";
+import { formatYYYYMMDD, zonedToDate } from "../../util/timeUtils";
 
 const alpha = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const photosDir = path.join(process.cwd(), 'photos');
@@ -40,9 +46,11 @@ let ferryServiceCost: string = '';
 let projector: Projector = new Projector('home', '', 30_000, false);
 let names: Names = new Names('', '', '', '');
 
-let schedule: ScheduleSnapshot = {...DEFAULT_SCHEDULE_SNAPSHOT};
+let eventDate: string = formatYYYYMMDD(new Date());
+let schedule: ScheduleSnapshot = DEFAULT_SCHEDULE_SNAPSHOT;
 let locations: Partial<Record<LocationType, Location>> = {};
-
+let times: Partial<Record<TimeType, Time>> = {};
+let menu: MenuCourse[] = [];
 
 const created: Set<string> = new Set();
 function createSimpleId(): string {
@@ -317,9 +325,11 @@ class TempProjectorConnection implements ProjectorConnection {
 
 class TempFerryServiceConnection implements FerryServiceConnection {
     async getAll(to: FerryServiceTo): Promise<FerryService[]> {
+        const tempDate = formatYYYYMMDD(new Date());
+        const ztd = (time: string) => zonedToDate(tempDate, time).getTime();
         return [...ferryServices]
             .filter((s) => s.to === to)
-            .sort((a, b) => a.time.getTime() - b.time.getTime());
+            .sort((a, b) => ztd(a.time) - ztd(b.time));
     }
 
     async replaceAll(services: FerryService[]): Promise<void> {
@@ -369,30 +379,18 @@ class TempNamesConnection implements NamesConnection {
 
 class TempScheduleConnection implements ScheduleConnection {
     async get(): Promise<ScheduleSnapshot> {
-        return {...schedule};
+        return schedule;
     }
 
     async set(snapshot: ScheduleSnapshot): Promise<void> {
-        if (snapshot.events.length === 0) {
-            schedule = {...DEFAULT_SCHEDULE_SNAPSHOT};
-            return;
-        }
-        const max = snapshot.events.length - 1;
-        if (
-            snapshot.arrival < 0 ||
-            snapshot.arrival > max ||
-            snapshot.ceremony < 0 ||
-            snapshot.ceremony > max ||
-            snapshot.reception < 0 ||
-            snapshot.reception > max ||
-            snapshot.endOfDay < 0 ||
-            snapshot.endOfDay > max
-        ) {
-            throw new Error(
-                'Schedule arrival, ceremony, reception, and end-of-day indices must match a row in the events list.',
-            );
-        }
-        schedule = {...snapshot};
+        schedule = snapshot;
+    }
+
+    async getDate(): Promise<string> {
+        return eventDate;
+    }
+    async setDate(date: string): Promise<void> {
+        eventDate = date;
     }
 }
 
@@ -414,6 +412,45 @@ class TempLocationConnection implements LocationConnection {
     }
 }
 
+class TempTimesConnection implements TimesConnection {
+    async get(type: TimeType): Promise<Time> {
+        return times[type] ?? new Time(0);
+    }
+    async getAll(): Promise<Record<TimeType, Time>> {
+        const out = {} as Record<TimeType, Time>;
+        for (const t of Object.values(TimeType)) {
+            out[t] = await this.get(t);
+        }
+        return out;
+    }
+    async set(type: TimeType, time: Time): Promise<void> {
+        times[type] = time;
+    }
+}
+
+class TempMenuConnection implements MenuConnection {
+    async get(course: string): Promise<MenuCourse> {
+        const courseObj = menu.find(c => c.name === course);
+        if (!courseObj) throw new DbNotFoundError('Course');
+        return courseObj;
+    }
+    async getAll(): Promise<MenuCourse[]> {
+        return menu;
+    }
+    async createCourse(course: string): Promise<void> {
+        if (menu.some(c => c.name === course)) throw new DbError('Course already exists');
+        menu.push(new MenuCourse(course, []));
+    }
+    async removeCourse(course: string): Promise<void> {
+        menu = menu.filter(c => c.name !== course);
+    }
+    async updateCourse(course: string, items: MenuItem[]): Promise<void> {
+        const courseObj = menu.find(c => c.name === course);
+        if (!courseObj) throw new DbNotFoundError('Course');
+        courseObj.items = items;
+    }
+}
+
 export class TempConnectionSupplier implements ConnectionSupplier {
     async prepare(): Promise<void> {
         await fs.promises.rm(photosDir, { recursive: true, force: true });
@@ -429,6 +466,8 @@ export class TempConnectionSupplier implements ConnectionSupplier {
         names = new Names('', '', '', '');
         schedule = {...DEFAULT_SCHEDULE_SNAPSHOT};
         locations = {};
+        times = {};
+        menu = [];
         created.clear();
     }
 
@@ -461,5 +500,11 @@ export class TempConnectionSupplier implements ConnectionSupplier {
     }
     getLocationConnection(): LocationConnection {
         return new TempLocationConnection();
+    }
+    getTimesConnection(): TimesConnection {
+        return new TempTimesConnection();
+    }
+    getMenuConnection(): MenuConnection {
+        return new TempMenuConnection();
     }
 }

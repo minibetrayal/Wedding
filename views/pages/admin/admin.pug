@@ -1,12 +1,10 @@
 extends /layout
 include /mixins/cardLink
 include /mixins/gemline
+include /mixins/notificationBadge
 
 block title
   | Admin
-
-block styles
-  +gemlineStyle
 
 block content
   .row.justify-content-center
@@ -21,10 +19,12 @@ block content
           | View and edit guest invites and related settings.
         +cardLink('/admin/projector', 'projector', 'Reception projector')
           | Choose home, a custom message, or guestbook rotation and timing for the big screen.
-        +cardLink('/guestbook/moderation', 'shield-exclamation', 'Guestbook moderation')
-          | Review hidden posts the author edited after removal — confirm or show publicly.
+        div
+          +cardLink('/guestbook/moderation', 'shield-exclamation', 'Guestbook moderation')
+            | Review hidden posts the author edited after removal — confirm or show publicly.
+          +notificationBadge(data-am-count=moderationEntries)
 
-      +gemline(3, 3)
+      +gemline(5, 5)
 
       .vstack.gap-3.mb-2
         +cardLink('/admin/names', 'people', 'Names & contact')
@@ -33,6 +33,10 @@ block content
           | Event times for the day.
         +cardLink('/admin/locations', 'geo-alt', 'Locations')
           | Ceremony, reception, ferry, and other place names and addresses.
+        +cardLink('/admin/times', 'clock', 'Travel Times')
+          | Times to travel to and from various locations.
+        +cardLink('/admin/menu', 'cup-hot', 'Menu')
+          | Wedding meal courses and dishes (dietary tags).
         +cardLink('/admin/hero', 'image', 'Hero carousel')
           | Upload, edit and remove images used on the home page carousel.
         +cardLink('/admin/ferry', 'water', 'Ferry timetable')

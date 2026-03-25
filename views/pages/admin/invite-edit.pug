@@ -12,6 +12,10 @@
 
 extends /layout
 include /mixins/inclusions
+include /mixins/validationForm
+
+block append script
+  +adminScript('invite-edit')
 
 block title
   if isNew
@@ -54,12 +58,7 @@ block content
       p.text-muted.small.mb-0
         | Recipient and guest names are shown first. Expand the sections below when you need to modify phone, email, notes, RSVP state, or dietary details.
 
-  form(
-    id='invite-edit-form',
-    method="post",
-    action=actionUrl,
-    novalidate
-  )
+  +validationForm.suppress-enter-submit#invite-edit-form(method="post", action=actionUrl)
     .card.border.shadow-sm.mb-4
       .card-body
         h2.h6.text-uppercase.text-muted.mb-3 Invitation
@@ -300,7 +299,7 @@ block content
       )
         i.bi.bi-trash(aria-hidden="true")
         | Delete invitation
-    form#delete-invite-form.visually-hidden(
+    +validationForm.suppress-enter-submit#delete-invite-form.visually-hidden(
       method="post",
       action=`/admin/invites/${inv.id}/delete`,
       aria-hidden="true",
@@ -357,7 +356,3 @@ block modal
           .modal-footer
             button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
             button#delete-invite-modal-confirm.btn.btn-danger(type="button") Yes, delete invitation
-
-block script
-  +script('formValidate')
-  +adminScript('invite-edit')
