@@ -97,10 +97,11 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
 
 
 import { TempConnectionSupplier } from './data/impl/TempConnectionSupplier';
+import { SqliteConnectionSupplier } from './data/impl/KnexConnectionSupplier';
 import { DummyDataPopulator } from './data/impl/DummyDataPopulator';
 
 async function start(): Promise<void> {
-  const connectionSupplier = new TempConnectionSupplier();
+  const connectionSupplier = new SqliteConnectionSupplier(true);
   const dummyDataPopulator = new DummyDataPopulator();
 
   await DataConnection.init(connectionSupplier, dummyDataPopulator);

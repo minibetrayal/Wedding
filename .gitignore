@@ -42,3 +42,7 @@ coverage/
 # Dummy data
 dummyData/identifying/
 dummyData/identifying.zip
+
+# Local SQLite dev DB (see SQLITE_PATH / createKnexConfigFromEnv)
+database/*.sqlite
+database/*.sqlite3

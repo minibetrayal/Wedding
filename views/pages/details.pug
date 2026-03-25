@@ -230,15 +230,20 @@ block content
             li.mb-1 #{item.name}
               each tag in item.tags
                 span.badge.bg-success.ms-1.opacity-50 #{tagLabels[tag]}
+      else 
+        p.mb-2 The menu will be finalised closer to the event.
+        p.small.text-muted.mb-0
+          | Check back here later for the final menu.
 
-      p.small.text-body-tertiary.mb-2.opacity-50
-        each tag in menuTags.sort()
-          span.me-4.text-nowrap
-            span.badge.bg-success #{tagLabels[tag]}
-            | &nbsp;-&nbsp;#{tag}
+      if menu.length > 0
+        p.small.text-body-tertiary.mb-2.opacity-50
+          each tag in menuTags.sort()
+            span.me-4.text-nowrap
+              span.badge.bg-success #{tagLabels[tag]}
+              | &nbsp;-&nbsp;#{tag}
 
-      p.small.text-muted.mb-0
-        | If you have any dietary requirements, please let us know in your RSVP.
+        p.small.text-muted.mb-0
+          | If you have any dietary requirements, please let us know in your RSVP.
 
     //- Guestbook and Photos
     +detailsCard('Guestbook and Photos', 'camera')
