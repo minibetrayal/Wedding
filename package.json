@@ -11,7 +11,8 @@
     "build:css:watch": "sass --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions --load-path=node_modules --quiet-deps --watch styles:public/styles",
     "start": "node dist/index.js",
     "generate:dummy-data": "node scripts/generate-dummy-invites-guestbook.cjs",
-    "dev": "npm run build && concurrently \"npm run build:css:watch\" \"ts-node-dev --respawn --transpile-only src/index.ts\""
+    "dev": "npm run build && concurrently \"npm run build:css:watch\" \"ts-node-dev --respawn --transpile-only src/index.ts\"",
+    "heroku-postbuild": "npm run build && npm run generate:dummy-data"
   },
   "keywords": [],
   "author": "",
