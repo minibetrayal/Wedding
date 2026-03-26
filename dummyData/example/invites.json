@@ -1,17 +1,13 @@
 [
   {
-    "name": "The Murphy family",
+    "name": "Vikram & Avery Thompson",
     "guests": [
       {
-        "name": "Blake Murphy",
+        "name": "Vikram Thompson",
         "attending": true
       },
       {
-        "name": "Chioma Murphy",
-        "attending": true
-      },
-      {
-        "name": "Sofia Murphy",
+        "name": "Avery Thompson",
         "attending": true
       }
     ],
@@ -20,26 +16,13 @@
     "carpoolRequested": false
   },
   {
-    "name": "Chioma Reyes",
+    "name": "Wei & Emma Chen",
     "guests": [
       {
-        "name": "Chioma Reyes"
-      }
-    ],
-    "seen": true,
-    "responded": false
-  },
-  {
-    "name": "The Thompson family",
-    "guests": [
-      {
-        "name": "David Thompson"
+        "name": "Wei Chen"
       },
       {
-        "name": "Mina Thompson"
-      },
-      {
-        "name": "Kiran Thompson"
+        "name": "Emma Chen"
       }
     ],
     "seen": false,
@@ -47,14 +30,14 @@
     "carpoolRequested": false
   },
   {
-    "name": "Wei & Grace",
+    "name": "Noah & River",
     "guests": [
       {
-        "name": "Wei Patel",
+        "name": "Noah Patel",
         "attending": true
       },
       {
-        "name": "Grace Patel",
+        "name": "River Patel",
         "attending": true
       }
     ],
@@ -62,53 +45,34 @@
     "responded": true
   },
   {
-    "name": "The O'Connor family",
+    "name": "The Haddad family",
     "guests": [
       {
-        "name": "Vikram O'Connor"
+        "name": "Marcus Haddad",
+        "attending": false
       },
       {
-        "name": "Eleanor O'Connor"
+        "name": "Ana Haddad",
+        "attending": false
       },
       {
-        "name": "Kiran O'Connor"
-      }
-    ],
-    "seen": true,
-    "responded": false,
-    "carpoolRequested": false
-  },
-  {
-    "name": "Ruth McKenzie",
-    "guests": [
-      {
-        "name": "Ruth McKenzie",
-        "attending": true
+        "name": "Nina Haddad",
+        "attending": false
       }
     ],
     "seen": true,
     "responded": true,
-    "email": "ruth.mckenzie@example.com"
+    "notes": "So sorry — we will be overseas. Thinking of you both."
   },
   {
-    "name": "Marcus Nakamura",
+    "name": "Lucas & Mina",
     "guests": [
       {
-        "name": "Marcus Nakamura"
-      }
-    ],
-    "seen": true,
-    "responded": false
-  },
-  {
-    "name": "Tom & Ruth",
-    "guests": [
-      {
-        "name": "Tom Williams",
+        "name": "Lucas Nakamura",
         "attending": true
       },
       {
-        "name": "Ruth Williams",
+        "name": "Mina Nakamura",
         "attending": true
       }
     ],
@@ -116,130 +80,10 @@
     "responded": true
   },
   {
-    "name": "David & Eleanor Iyer",
+    "name": "Wei & Chioma Reyes",
     "guests": [
       {
-        "name": "David Iyer",
-        "attending": true
-      },
-      {
-        "name": "Eleanor Iyer",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "The Williams family",
-    "guests": [
-      {
-        "name": "Lucas Williams",
-        "attending": true
-      },
-      {
-        "name": "Avery Williams",
-        "attending": true
-      },
-      {
-        "name": "Dev Williams",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "notes": "Looking forward to it — let us know if you need anything.",
-    "carpoolRequested": false
-  },
-  {
-    "name": "Olivia Okonkwo",
-    "guests": [
-      {
-        "name": "Olivia Okonkwo",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "email": "olivia.okonkwo@example.com",
-    "notes": "Travelling from interstate — may arrive the night before."
-  },
-  {
-    "name": "Chioma O'Connor",
-    "guests": [
-      {
-        "name": "Chioma O'Connor",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "The Patel family",
-    "guests": [
-      {
-        "name": "James Patel",
-        "attending": true,
-        "dietaryRestrictions": "Vegetarian"
-      },
-      {
-        "name": "Ruth Patel",
-        "attending": true
-      },
-      {
-        "name": "Leo Patel",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "David & Grace McKenzie",
-    "guests": [
-      {
-        "name": "David McKenzie",
-        "attending": true
-      },
-      {
-        "name": "Grace McKenzie",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "Michael Kowalski",
-    "guests": [
-      {
-        "name": "Michael Kowalski"
-      }
-    ],
-    "seen": false,
-    "responded": false
-  },
-  {
-    "name": "Jamie Nguyen",
-    "guests": [
-      {
-        "name": "Jamie Nguyen",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "email": "jamie.nguyen@example.com"
-  },
-  {
-    "name": "Tom & Chioma Reyes",
-    "guests": [
-      {
-        "name": "Tom Reyes",
+        "name": "Wei Reyes",
         "attending": true
       },
       {
@@ -252,32 +96,20 @@
     "carpoolRequested": false
   },
   {
-    "name": "Ryan & Olivia Lindqvist",
+    "name": "The Nguyen family",
     "guests": [
       {
-        "name": "Ryan Lindqvist",
-        "attending": true,
-        "dietaryRestrictions": "Halal preferred"
-      },
-      {
-        "name": "Olivia Lindqvist",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "Vikram & River Chen",
-    "guests": [
-      {
-        "name": "Vikram Chen",
+        "name": "Marcus Nguyen",
         "attending": true
       },
       {
-        "name": "River Chen",
+        "name": "Sophie Nguyen",
         "attending": true
+      },
+      {
+        "name": "Sofia Nguyen",
+        "attending": false,
+        "dietaryRestrictions": "Kids meal if available"
       }
     ],
     "seen": true,
@@ -286,10 +118,10 @@
     "carpoolSpotsOffered": 0
   },
   {
-    "name": "Sam Iyer + guest",
+    "name": "Daniel Iyer + guest",
     "guests": [
       {
-        "name": "Sam Iyer",
+        "name": "Daniel Iyer",
         "attending": true
       },
       {
@@ -299,380 +131,17 @@
     "seen": true,
     "responded": true,
     "notes": "Plus-one details next week."
-  },
-  {
-    "name": "Tom & Grace",
-    "guests": [
-      {
-        "name": "Tom Chen",
-        "attending": true
-      },
-      {
-        "name": "Grace Chen",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "James & Chioma",
-    "guests": [
-      {
-        "name": "James Nakamura",
-        "attending": true
-      },
-      {
-        "name": "Chioma Nakamura",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "Daniel Park + guest",
-    "guests": [
-      {
-        "name": "Daniel Park",
-        "attending": true
-      },
-      {
-        "name": "Guest (name to follow)"
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "notes": "Plus-one details next week."
-  },
-  {
-    "name": "David & Priya",
-    "guests": [
-      {
-        "name": "David Murphy",
-        "attending": true
-      },
-      {
-        "name": "Priya Murphy",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "The Silva family",
-    "guests": [
-      {
-        "name": "Drew Silva",
-        "attending": false
-      },
-      {
-        "name": "Emma Silva",
-        "attending": false
-      },
-      {
-        "name": "Jack Silva",
-        "attending": false
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "notes": "So sorry — we will be overseas. Thinking of you both."
-  },
-  {
-    "name": "Drew & Avery",
-    "guests": [
-      {
-        "name": "Drew Thompson",
-        "attending": true
-      },
-      {
-        "name": "Avery Thompson",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "Noah & Elena Foster",
-    "guests": [
-      {
-        "name": "Noah Foster",
-        "attending": true
-      },
-      {
-        "name": "Elena Foster",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "Priya Williams",
-    "guests": [
-      {
-        "name": "Priya Williams",
-        "attending": true,
-        "dietaryRestrictions": "Coeliac — gluten free"
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "email": "priya.williams@example.com",
-    "notes": "Travelling from interstate — may arrive the night before."
-  },
-  {
-    "name": "Eleanor Silva",
-    "guests": [
-      {
-        "name": "Eleanor Silva",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "notes": "Travelling from interstate — may arrive the night before."
-  },
-  {
-    "name": "The Silva family",
-    "guests": [
-      {
-        "name": "Marcus Silva",
-        "attending": true
-      },
-      {
-        "name": "Olivia Silva",
-        "attending": true
-      },
-      {
-        "name": "Kiran Silva",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false,
-    "carpoolSpotsOffered": 2
-  },
-  {
-    "name": "David Rahman",
-    "guests": [
-      {
-        "name": "David Rahman",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "Lucas & Ruth Murphy",
-    "guests": [
-      {
-        "name": "Lucas Murphy"
-      },
-      {
-        "name": "Ruth Murphy"
-      }
-    ],
-    "seen": false,
-    "responded": false,
-    "carpoolRequested": false
-  },
-  {
-    "name": "Marcus & Grace",
-    "guests": [
-      {
-        "name": "Marcus Rahman",
-        "attending": true
-      },
-      {
-        "name": "Grace Rahman",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "Daniel Park",
-    "guests": [
-      {
-        "name": "Daniel Park",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "The Kowalski family",
-    "guests": [
-      {
-        "name": "David Kowalski",
-        "attending": false
-      },
-      {
-        "name": "Priya Kowalski",
-        "attending": false
-      },
-      {
-        "name": "Dev Kowalski",
-        "attending": false
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "notes": "So sorry — we will be overseas. Thinking of you both."
-  },
-  {
-    "name": "Drew Haddad",
-    "guests": [
-      {
-        "name": "Drew Haddad",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "Olivia Reyes",
-    "guests": [
-      {
-        "name": "Olivia Reyes",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "Sam & Olivia Patel",
-    "guests": [
-      {
-        "name": "Sam Patel",
-        "attending": true
-      },
-      {
-        "name": "Olivia Patel",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "Ryan Foster",
-    "guests": [
-      {
-        "name": "Ryan Foster",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "Michael & Chioma",
-    "guests": [
-      {
-        "name": "Michael O'Connor",
-        "attending": true
-      },
-      {
-        "name": "Chioma O'Connor",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "Noah & Olivia Haddad",
-    "guests": [
-      {
-        "name": "Noah Haddad",
-        "attending": true,
-        "dietaryRestrictions": "Halal preferred"
-      },
-      {
-        "name": "Olivia Haddad",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "notes": "Travelling from regional — will confirm carpool separately.",
-    "carpoolRequested": true,
-    "carpoolSpotsOffered": 0
-  },
-  {
-    "name": "The Haddad family",
-    "guests": [
-      {
-        "name": "Noah Haddad",
-        "attending": false
-      },
-      {
-        "name": "Mina Haddad",
-        "attending": false
-      },
-      {
-        "name": "Hugo Haddad",
-        "attending": false
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "notes": "So sorry — we will be overseas. Thinking of you both."
-  },
-  {
-    "name": "Daniel & Olivia",
-    "guests": [
-      {
-        "name": "Daniel Nguyen",
-        "attending": true
-      },
-      {
-        "name": "Olivia Nguyen",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "Omar & Mina Thompson",
-    "guests": [
-      {
-        "name": "Omar Thompson",
-        "attending": true
-      },
-      {
-        "name": "Mina Thompson",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
   },
   {
     "name": "The Rahman family",
     "guests": [
       {
-        "name": "Drew Rahman",
+        "name": "Blake Rahman",
         "attending": true,
         "dietaryRestrictions": "Vegetarian"
       },
       {
-        "name": "Avery Rahman",
+        "name": "Eleanor Rahman",
         "attending": true
       },
       {
@@ -682,27 +151,106 @@
     ],
     "seen": true,
     "responded": true,
-    "email": "drew.rahman@example.com",
+    "email": "blake.rahman@example.com",
     "carpoolRequested": false
   },
   {
-    "name": "Michael & Sarah Tanaka",
+    "name": "Lucas & Grace Patel",
     "guests": [
       {
-        "name": "Michael Tanaka"
+        "name": "Lucas Patel",
+        "attending": true
       },
       {
-        "name": "Sarah Tanaka"
+        "name": "Grace Patel",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": false
+  },
+  {
+    "name": "Blake Rahman",
+    "guests": [
+      {
+        "name": "Blake Rahman",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "Omar & Mina Okonkwo",
+    "guests": [
+      {
+        "name": "Omar Okonkwo"
+      },
+      {
+        "name": "Mina Okonkwo"
+      }
+    ],
+    "seen": false,
+    "responded": false,
+    "carpoolRequested": false
+  },
+  {
+    "name": "Ana O'Connor",
+    "guests": [
+      {
+        "name": "Ana O'Connor"
       }
     ],
     "seen": true,
     "responded": false
   },
   {
-    "name": "Marcus & Sarah Lindqvist",
+    "name": "Avery Okonkwo",
     "guests": [
       {
-        "name": "Ryan Lindqvist",
+        "name": "Avery Okonkwo"
+      }
+    ],
+    "seen": false,
+    "responded": false
+  },
+  {
+    "name": "The Patel family",
+    "guests": [
+      {
+        "name": "Omar Patel",
+        "attending": true,
+        "dietaryRestrictions": "Vegetarian"
+      },
+      {
+        "name": "Ana Patel",
+        "attending": true
+      },
+      {
+        "name": "Kiran Patel",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": false
+  },
+  {
+    "name": "Elena Silva",
+    "guests": [
+      {
+        "name": "Elena Silva"
+      }
+    ],
+    "seen": false,
+    "responded": false
+  },
+  {
+    "name": "Blake & Chioma Lindqvist",
+    "guests": [
+      {
+        "name": "Sam Lindqvist",
         "attending": true
       },
       {
@@ -718,14 +266,659 @@
     "notes": "Driving from the coast — room for three if helpful."
   },
   {
-    "name": "Daniel & Jamie",
+    "name": "Drew Foster + guest",
     "guests": [
       {
-        "name": "Daniel Singh",
+        "name": "Drew Foster",
         "attending": true
       },
       {
-        "name": "Jamie Singh",
+        "name": "Guest (name to follow)"
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "notes": "Plus-one details next week."
+  },
+  {
+    "name": "Ryan & Avery Park",
+    "guests": [
+      {
+        "name": "Ryan Park",
+        "attending": true
+      },
+      {
+        "name": "Avery Park",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": false
+  },
+  {
+    "name": "James & Ana",
+    "guests": [
+      {
+        "name": "James Rahman",
+        "attending": true
+      },
+      {
+        "name": "Ana Rahman",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "James & Ruth Singh",
+    "guests": [
+      {
+        "name": "James Singh",
+        "attending": true,
+        "dietaryRestrictions": "Halal preferred"
+      },
+      {
+        "name": "Ruth Singh",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": false
+  },
+  {
+    "name": "Priya Williams",
+    "guests": [
+      {
+        "name": "Priya Williams"
+      }
+    ],
+    "seen": true,
+    "responded": false
+  },
+  {
+    "name": "Ryan & Grace Haddad",
+    "guests": [
+      {
+        "name": "Ryan Haddad"
+      },
+      {
+        "name": "Grace Haddad"
+      }
+    ],
+    "seen": true,
+    "responded": false,
+    "carpoolRequested": false
+  },
+  {
+    "name": "The Thompson family",
+    "guests": [
+      {
+        "name": "James Thompson",
+        "attending": true,
+        "dietaryRestrictions": "Vegetarian"
+      },
+      {
+        "name": "Eleanor Thompson",
+        "attending": true
+      },
+      {
+        "name": "Dev Thompson",
+        "attending": false,
+        "dietaryRestrictions": "Kids meal if available"
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "notes": "Looking forward to it — let us know if you need anything.",
+    "phone": "+61 410 100 100",
+    "email": "james.thompson@example.com",
+    "carpoolRequested": true,
+    "carpoolSpotsOffered": 0
+  },
+  {
+    "name": "The Singh family",
+    "guests": [
+      {
+        "name": "David Singh",
+        "attending": true
+      },
+      {
+        "name": "Mina Singh",
+        "attending": true
+      },
+      {
+        "name": "Jack Singh",
+        "attending": false,
+        "dietaryRestrictions": "Kids meal if available"
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": false
+  },
+  {
+    "name": "The Silva family",
+    "guests": [
+      {
+        "name": "Vikram Silva"
+      },
+      {
+        "name": "Emma Silva"
+      },
+      {
+        "name": "Aria Silva"
+      }
+    ],
+    "seen": false,
+    "responded": false,
+    "carpoolRequested": false
+  },
+  {
+    "name": "James Tanaka",
+    "guests": [
+      {
+        "name": "James Tanaka",
+        "attending": true,
+        "dietaryRestrictions": "Coeliac — gluten free"
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "Tom Park + guest",
+    "guests": [
+      {
+        "name": "Tom Park",
+        "attending": true
+      },
+      {
+        "name": "Guest (name to follow)"
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "notes": "Plus-one details next week."
+  },
+  {
+    "name": "The Nakamura family",
+    "guests": [
+      {
+        "name": "Vikram Nakamura",
+        "attending": true
+      },
+      {
+        "name": "River Nakamura",
+        "attending": true
+      },
+      {
+        "name": "Leo Nakamura",
+        "attending": false,
+        "dietaryRestrictions": "Kids meal if available"
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": false
+  },
+  {
+    "name": "Blake Kowalski",
+    "guests": [
+      {
+        "name": "Blake Kowalski",
+        "attending": true,
+        "dietaryRestrictions": "Coeliac — gluten free"
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "The Williams family",
+    "guests": [
+      {
+        "name": "Sam Williams",
+        "attending": true
+      },
+      {
+        "name": "Priya Williams",
+        "attending": true
+      },
+      {
+        "name": "Hugo Williams",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "notes": "Looking forward to it — let us know if you need anything.",
+    "carpoolRequested": false
+  },
+  {
+    "name": "The Silva family",
+    "guests": [
+      {
+        "name": "David Silva",
+        "attending": false
+      },
+      {
+        "name": "Eleanor Silva",
+        "attending": false
+      },
+      {
+        "name": "Nina Silva",
+        "attending": false
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "notes": "So sorry — we will be overseas. Thinking of you both."
+  },
+  {
+    "name": "Marcus Nakamura",
+    "guests": [
+      {
+        "name": "Marcus Nakamura",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "The Okonkwo family",
+    "guests": [
+      {
+        "name": "Marcus Okonkwo",
+        "attending": true
+      },
+      {
+        "name": "Ruth Okonkwo",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": true,
+    "carpoolSpotsOffered": 0,
+    "notes": "Happy to meet near the station if anyone is heading that way."
+  },
+  {
+    "name": "Sam Foster",
+    "guests": [
+      {
+        "name": "Sam Foster",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "The O'Connor family",
+    "guests": [
+      {
+        "name": "Marcus O'Connor",
+        "attending": true
+      },
+      {
+        "name": "Chioma O'Connor",
+        "attending": true
+      },
+      {
+        "name": "Nina O'Connor",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "phone": "+61 417 100 177",
+    "carpoolRequested": false
+  },
+  {
+    "name": "The Kowalski family",
+    "guests": [
+      {
+        "name": "Sam Kowalski",
+        "attending": false
+      },
+      {
+        "name": "Sophie Kowalski",
+        "attending": false
+      },
+      {
+        "name": "Maya Kowalski",
+        "attending": false
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "notes": "So sorry — we will be overseas. Thinking of you both."
+  },
+  {
+    "name": "Eleanor Reyes",
+    "guests": [
+      {
+        "name": "Eleanor Reyes"
+      }
+    ],
+    "seen": false,
+    "responded": false
+  },
+  {
+    "name": "Grace Nguyen",
+    "guests": [
+      {
+        "name": "Grace Nguyen"
+      }
+    ],
+    "seen": false,
+    "responded": false
+  },
+  {
+    "name": "Michael Haddad",
+    "guests": [
+      {
+        "name": "Michael Haddad",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "Michael & Ruth Tanaka",
+    "guests": [
+      {
+        "name": "Michael Tanaka"
+      },
+      {
+        "name": "Ruth Tanaka"
+      }
+    ],
+    "seen": true,
+    "responded": false,
+    "carpoolRequested": false
+  },
+  {
+    "name": "The Chen family",
+    "guests": [
+      {
+        "name": "Sam Chen",
+        "attending": true
+      },
+      {
+        "name": "Olivia Chen",
+        "attending": true
+      },
+      {
+        "name": "Dev Chen",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": false
+  },
+  {
+    "name": "Marcus Lindqvist",
+    "guests": [
+      {
+        "name": "Marcus Lindqvist"
+      }
+    ],
+    "seen": false,
+    "responded": false
+  },
+  {
+    "name": "David & Chioma",
+    "guests": [
+      {
+        "name": "David Nguyen",
+        "attending": true
+      },
+      {
+        "name": "Chioma Nguyen",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "Omar & Eleanor Murphy",
+    "guests": [
+      {
+        "name": "Omar Murphy"
+      },
+      {
+        "name": "Eleanor Murphy"
+      }
+    ],
+    "seen": false,
+    "responded": false,
+    "carpoolRequested": false
+  },
+  {
+    "name": "The McKenzie family",
+    "guests": [
+      {
+        "name": "Ryan McKenzie",
+        "attending": false
+      },
+      {
+        "name": "Jamie McKenzie",
+        "attending": false
+      },
+      {
+        "name": "Sofia McKenzie",
+        "attending": false
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "notes": "So sorry — we will be overseas. Thinking of you both."
+  },
+  {
+    "name": "The Murphy family",
+    "guests": [
+      {
+        "name": "Marcus Murphy",
+        "attending": true
+      },
+      {
+        "name": "Emma Murphy",
+        "attending": true
+      },
+      {
+        "name": "Maya Murphy",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": false
+  },
+  {
+    "name": "Blake & Eleanor",
+    "guests": [
+      {
+        "name": "Blake Williams",
+        "attending": true
+      },
+      {
+        "name": "Eleanor Williams",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "Elena McKenzie",
+    "guests": [
+      {
+        "name": "Elena McKenzie",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "email": "elena.mckenzie@example.com"
+  },
+  {
+    "name": "Vikram & River Iyer",
+    "guests": [
+      {
+        "name": "Vikram Iyer"
+      },
+      {
+        "name": "River Iyer"
+      }
+    ],
+    "seen": false,
+    "responded": false,
+    "carpoolRequested": false
+  },
+  {
+    "name": "Marcus & Priya McKenzie",
+    "guests": [
+      {
+        "name": "Marcus McKenzie"
+      },
+      {
+        "name": "Priya McKenzie"
+      }
+    ],
+    "seen": true,
+    "responded": false,
+    "carpoolRequested": false
+  },
+  {
+    "name": "Omar & River",
+    "guests": [
+      {
+        "name": "Omar Murphy",
+        "attending": true
+      },
+      {
+        "name": "River Murphy",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "Sophie Iyer",
+    "guests": [
+      {
+        "name": "Sophie Iyer"
+      }
+    ],
+    "seen": true,
+    "responded": false
+  },
+  {
+    "name": "Noah Park",
+    "guests": [
+      {
+        "name": "Noah Park"
+      }
+    ],
+    "seen": true,
+    "responded": false
+  },
+  {
+    "name": "Sam & Eleanor",
+    "guests": [
+      {
+        "name": "Sam Thompson",
+        "attending": true
+      },
+      {
+        "name": "Eleanor Thompson",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "David & Ruth",
+    "guests": [
+      {
+        "name": "David Chen",
+        "attending": true
+      },
+      {
+        "name": "Ruth Chen",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "Omar & Sophie",
+    "guests": [
+      {
+        "name": "Omar Singh",
+        "attending": true
+      },
+      {
+        "name": "Sophie Singh",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true
+  },
+  {
+    "name": "Ryan & Olivia Foster",
+    "guests": [
+      {
+        "name": "Ryan Foster",
+        "attending": true
+      },
+      {
+        "name": "Olivia Foster",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": false
+  },
+  {
+    "name": "Blake & Ana Lindqvist",
+    "guests": [
+      {
+        "name": "Blake Lindqvist",
+        "attending": true,
+        "dietaryRestrictions": "Halal preferred"
+      },
+      {
+        "name": "Ana Lindqvist",
+        "attending": true
+      }
+    ],
+    "seen": true,
+    "responded": true,
+    "carpoolRequested": false
+  },
+  {
+    "name": "Vikram & Jamie",
+    "guests": [
+      {
+        "name": "Vikram O'Connor",
+        "attending": true
+      },
+      {
+        "name": "Jamie O'Connor",
         "attending": true
       }
     ],
@@ -740,254 +933,17 @@
         "attending": true
       },
       {
-        "name": "Chioma Kowalski",
+        "name": "Jamie Kowalski",
         "attending": true
       },
       {
-        "name": "Maya Kowalski",
+        "name": "Aria Kowalski",
         "attending": true
       }
     ],
     "seen": true,
     "responded": true,
     "notes": "Looking forward to it — let us know if you need anything.",
-    "carpoolRequested": false
-  },
-  {
-    "name": "Ryan & Mina Okonkwo",
-    "guests": [
-      {
-        "name": "Ryan Okonkwo",
-        "attending": true
-      },
-      {
-        "name": "Mina Okonkwo",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "The McKenzie family",
-    "guests": [
-      {
-        "name": "Ryan McKenzie",
-        "attending": false
-      },
-      {
-        "name": "Eleanor McKenzie",
-        "attending": false
-      },
-      {
-        "name": "Kiran McKenzie",
-        "attending": false
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "notes": "So sorry — we will be overseas. Thinking of you both."
-  },
-  {
-    "name": "Marcus & Grace Park",
-    "guests": [
-      {
-        "name": "Marcus Park",
-        "attending": true
-      },
-      {
-        "name": "Grace Park",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "Michael & Mina Singh",
-    "guests": [
-      {
-        "name": "Michael Singh",
-        "attending": true,
-        "dietaryRestrictions": "Halal preferred"
-      },
-      {
-        "name": "Mina Singh",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "The Singh family",
-    "guests": [
-      {
-        "name": "Blake Singh",
-        "attending": true
-      },
-      {
-        "name": "Emma Singh",
-        "attending": true
-      },
-      {
-        "name": "Aria Singh",
-        "attending": false,
-        "dietaryRestrictions": "Kids meal if available"
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "Wei Lindqvist",
-    "guests": [
-      {
-        "name": "Wei Lindqvist",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "Daniel Foster + guest",
-    "guests": [
-      {
-        "name": "Daniel Foster",
-        "attending": true
-      },
-      {
-        "name": "Guest (name to follow)"
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "notes": "Plus-one details next week."
-  },
-  {
-    "name": "The Nguyen family",
-    "guests": [
-      {
-        "name": "Daniel Nguyen",
-        "attending": true
-      },
-      {
-        "name": "Sarah Nguyen",
-        "attending": true
-      },
-      {
-        "name": "Leo Nguyen",
-        "attending": false,
-        "dietaryRestrictions": "Kids meal if available"
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": true,
-    "carpoolSpotsOffered": 0
-  },
-  {
-    "name": "Priya Iyer",
-    "guests": [
-      {
-        "name": "Priya Iyer",
-        "attending": true,
-        "dietaryRestrictions": "Coeliac — gluten free"
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "The Okonkwo family",
-    "guests": [
-      {
-        "name": "James Okonkwo",
-        "attending": true
-      },
-      {
-        "name": "Jamie Okonkwo",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": true,
-    "carpoolSpotsOffered": 0,
-    "notes": "Happy to meet near the station if anyone is heading that way."
-  },
-  {
-    "name": "The Nakamura family",
-    "guests": [
-      {
-        "name": "Tom Nakamura",
-        "attending": true
-      },
-      {
-        "name": "Ana Nakamura",
-        "attending": true
-      },
-      {
-        "name": "Hugo Nakamura",
-        "attending": false,
-        "dietaryRestrictions": "Kids meal if available"
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "Wei Tanaka",
-    "guests": [
-      {
-        "name": "Wei Tanaka",
-        "attending": true,
-        "dietaryRestrictions": "Coeliac — gluten free"
-      }
-    ],
-    "seen": true,
-    "responded": true
-  },
-  {
-    "name": "Michael & Ruth Tanaka",
-    "guests": [
-      {
-        "name": "Michael Tanaka",
-        "attending": true
-      },
-      {
-        "name": "Ruth Tanaka",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
-    "carpoolRequested": false
-  },
-  {
-    "name": "The Chen family",
-    "guests": [
-      {
-        "name": "Sam Chen",
-        "attending": true
-      },
-      {
-        "name": "Sarah Chen",
-        "attending": true
-      },
-      {
-        "name": "Kiran Chen",
-        "attending": true
-      }
-    ],
-    "seen": true,
-    "responded": true,
     "carpoolRequested": false
   }
 ]

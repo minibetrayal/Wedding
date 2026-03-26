@@ -2,11 +2,11 @@
     "faqs": [
         {
             "question": "How do I RSVP or change my response?",
-            "answer": "Use the RSVP page with the code from your invitation. You can return with the same link anytime to update your details before the wedding."
+            "answer": "Use the [RSVP page](/rsvp) with the code from your invitation. You can return with the same link anytime to update your details before the wedding."
         },
         {
             "question": "I lost my invitation code — what should I do?",
-            "answer": "Please contact us using the details on the wedding details page and we’ll help you out."
+            "answer": "Please contact us using the details on the [wedding details page](/details#contact-us) and we’ll help you out."
         },
         {
             "question": "Can I bring a plus-one or children?",
@@ -18,11 +18,11 @@
         },
         {
             "question": "Can I take photos during the ceremony?",
-            "answer": "Sure, please feel free to take as many photos as you like!"
+            "answer": "We have booked a professional photographer for the ceremony and group photos. We ask that you please refrain from taking your own photos during these times. At any other time, please feel free to take as many photos as you like! You can share your photos with us in our [digital guestbook](/guestbook), along with a message for us."
         },
         {
             "question": "How do I share dietary requirements?",
-            "answer": "You can note dietary needs when you RSVP. If anything changes or you need to tell us more, contact us via the details page."
+            "answer": "You can note dietary needs when you [RSVP](/rsvp). If anything changes or you need to tell us more, contact us via the [details page](/details#contact-us)."
         }
     ]
 }
