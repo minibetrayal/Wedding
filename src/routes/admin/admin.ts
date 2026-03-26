@@ -18,6 +18,7 @@ import scheduleRoutes from './schedule';
 import locationsRoutes from './locations';
 import timesRoutes from './times';
 import menuRoutes from './menu';
+import faqRoutes from './admin-faqs';
 
 const router = express.Router();
 
@@ -66,5 +67,6 @@ router.use('/schedule', scheduleRoutes);
 router.use('/locations', locationsRoutes);
 router.use('/times', timesRoutes);
 router.use('/menu', menuRoutes);
+router.use('/faq', faqRoutes);
 
 export default router;

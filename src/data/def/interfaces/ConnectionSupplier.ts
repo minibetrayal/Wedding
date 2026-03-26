@@ -10,6 +10,7 @@ import { ScheduleConnection } from "./ScheduleConnection";
 import { LocationConnection } from "./LocationConnection";
 import { TimesConnection } from "./TimesConnection";
 import { MenuConnection } from "./MenuConnection";
+import { FaqConnection } from "./FaqConnection";
 
 export interface ConnectionSupplier {
     prepare(): Promise<void>;
@@ -25,4 +26,5 @@ export interface ConnectionSupplier {
     getLocationConnection(): LocationConnection;
     getTimesConnection(): TimesConnection;
     getMenuConnection(): MenuConnection;
+    getFaqConnection(): FaqConnection;
 }

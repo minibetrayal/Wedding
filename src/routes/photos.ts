@@ -14,9 +14,6 @@ const PHOTO_CAPTION_MAX_LENGTH = 500;
 router.get('/', async (req, res, next) => {
     try {
         const professionalPhotos = await dataConnection().photos.getAll('professional');
-        professionalPhotos.sort(
-            (a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime(),
-        );
         res.render('pages/photos', {
             professionalPhotos,
             photoCaptionMaxLength: PHOTO_CAPTION_MAX_LENGTH,
@@ -101,6 +98,35 @@ router.post('/professional/:photoId/delete', requireAdmin, async (req, res, next
         if (err instanceof DbNotFoundError) {
             req.flash('error', 'Photo not found.');
             return res.redirect(302, '/photos');
+        }
+        next(err);
+    }
+});
+
+router.post('/professional/:photoId/move', requireAdmin, async (req, res, next) => {
+    const direction = req.query.d as string;
+    const photoId = req.params.photoId;
+    const wantsJson = req.get('X-Requested-With') === 'fetch';
+    if (direction !== 'up' && direction !== 'down') {
+        if (wantsJson) return res.status(400).json({ ok: false, error: 'Invalid direction.' });
+        req.flash('error', 'Invalid move.');
+        return res.redirect(302, '/photos');
+    }
+    try {
+        await dataConnection().photos.move(photoId, direction as 'up' | 'down');
+        if (wantsJson) return res.json({ ok: true });
+        req.flash('success', `Photo moved ${direction}.`);
+        res.redirect(302, '/photos');
+    } catch (err) {
+        if (wantsJson) {
+            if (err instanceof DbNotFoundError) {
+                return res.status(404).json({ ok: false, error: err.message });
+            }
+            if (err instanceof DbError) {
+                return res.status(400).json({ ok: false, error: err.message });
+            }
+            console.error(err);
+            return res.status(500).json({ ok: false, error: 'Server error.' });
         }
         next(err);
     }

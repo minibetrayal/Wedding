@@ -1,0 +1,38 @@
+extends /layout
+include /mixins/gemline
+
+block title
+  | #{coupleNamesShort} — FAQ
+
+block content
+  h1.h4.mb-1.mt-2 Frequently asked questions
+  p.text-muted.mb-4 Quick answers to common questions — see #[a.link-primary(href="/details") wedding details] for times, venues, and travel.
+
+  +gemline(0, 4)
+
+  if faqs.length === 0
+    .card.border-0.shadow-sm.my-4
+      .card-body.p-4.text-center.text-muted
+        p.mb-0 We don’t have any FAQs here yet. Please check #[a.link-primary(href="/details") wedding details] for everything you need to know.
+  else
+    #faq-accordion.accordion.my-4
+      each item in faqs
+        .accordion-item.border.rounded-3.shadow-sm.mb-2.overflow-hidden
+          h2.accordion-header(id=`faq-heading-${item.id}`)
+            button.accordion-button.rounded-3.collapsed(
+              type="button",
+              data-bs-toggle="collapse",
+              data-bs-target=`#faq-collapse-${item.id}`,
+              aria-expanded="false",
+              aria-controls=`faq-collapse-${item.id}`
+            ) #{item.question}
+          .accordion-collapse.collapse(
+            id=`faq-collapse-${item.id}`,
+            aria-labelledby=`faq-heading-${item.id}`,
+            data-bs-parent="#faq-accordion"
+          )
+            .accordion-body.small
+              p.mb-0.text-prewrap !{item.formatted}
+
+  p.small.text-muted.mb-0
+    | Something not covered? Check the #[a.link-primary(href="/details") Wedding Details] page or get in touch using the contact information there.

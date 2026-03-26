@@ -8,6 +8,9 @@ include /mixins/validationForm
 block append styles
   +style('photoGallery')
 
+block append script
+  if isAdmin && professionalPhotos && professionalPhotos.length > 1
+    +script('movement-order')
 
 block title
   | #{coupleNamesShort} — Photos
@@ -46,14 +49,14 @@ block content
     section.photo-gallery-wrap.pb-4.pb-md-5(aria-label="Professional wedding photos")
       .photo-gallery-inner
         .text-center.mb-4.mb-lg-5.px-2
-          p.vibes-script.fs-3.text-body.mb-2.pt-1 Moments from the day
+          p.vibes-script.fs-3.text-body.mb-2.pt-2 Moments from the day
           +gradientRule
           p.text-muted.small.mx-auto.mb-0
             | Each image opens full size in a new tab. Thank you to everyone who shared in our celebration.
 
         .row.row-cols-1.row-cols-md-2.row-cols-xl-3.g-4.mb-4
           each photo in professionalPhotos
-            .col
+            .col.movement-container
               figure.card.gallery-card.h-100.border-0.shadow-sm.overflow-hidden.mb-0
                 a.gallery-photo-link.d-block.bg-body-secondary(
                   href=`/photos/${photo.id}`
@@ -66,15 +69,13 @@ block content
                     loading="lazy"
                   )
                 figcaption.card-body.p-3.p-md-4
-                  if photo.captionOrStyle
+                  if !isAdmin && photo.captionOrStyle
                     p.mb-0.text-body #{photo.captionOrStyle}
-                  else if isAdmin
-                    p.mb-0.text-muted.small.fst-italic No caption yet
                   else
                     span.visually-hidden Wedding photograph
+                    
                   if isAdmin
-                    +validationForm.suppress-enter-submit.mt-3(method="post" action=`/photos/professional/${photo.id}/caption`)
-                      label.form-label.small.mb-1(for=`caption-${photo.id}`) Caption
+                    +validationForm.suppress-enter-submit(method="post" action=`/photos/professional/${photo.id}/caption`)
                       +textareaCounter.form-control.form-control-sm.mb-0(
                         id='caption-' + photo.id,
                         name="caption",
@@ -82,24 +83,47 @@ block content
                         maxlength=photoCaptionMaxLength,
                         placeholder="Optional caption"
                       ) #{photo.captionOrStyle || ''}
-                      .d-flex.flex-column.flex-md-row.gap-2.mt-2
-                        button.btn.btn-sm.btn-outline-primary.d-inline-flex.align-items-center.justify-content-center.gap-1.flex-md-fill(
-                          type="submit"
-                        )
-                          i.bi.bi-check-lg(aria-hidden="true")
-                          | Save caption
-                        button.btn.btn-sm.btn-outline-danger.d-inline-flex.align-items-center.justify-content-center.gap-1.flex-md-fill(
-                          type="submit"
-                          formaction=`/photos/professional/${photo.id}/delete`
-                          onclick="return confirm('Remove this photo from the gallery? The file will be deleted.');"
-                        )
-                          i.bi.bi-trash(aria-hidden="true")
-                          | Delete photo
+                      //- One form only: nested forms are invalid and make move buttons submit the caption action.
+                      .d-flex.flex-column.gap-2.mt-2
+                        .d-grid.flex-wrap.gap-2
+                          button.btn.btn-sm.btn-outline-primary.d-inline-flex.align-items-center.justify-content-center.gap-2(
+                            type="submit"
+                          )
+                            i.bi.bi-check-lg(aria-hidden="true")
+                            | Save caption
+                          button.btn.btn-sm.btn-outline-danger.d-inline-flex.align-items-center.justify-content-center.gap-2(
+                            type="submit"
+                            formaction=`/photos/professional/${photo.id}/delete`
+                            formmethod="post"
+                            onclick="return confirm('Remove this photo from the gallery? The file will be deleted.');"
+                          )
+                            i.bi.bi-trash(aria-hidden="true")
+                            | Delete photo
+                        if professionalPhotos.length > 1
+                          .d-grid.flex-wrap.gap-2
+                            button.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.justify-content-center.gap-2(
+                              type="button",
+                              data-move-direction="up",
+                              data-move-url=`/photos/professional/${photo.id}/move?d=up`,
+                              hidden=photo.sortKey <= 1,
+                              disabled=photo.sortKey <= 1
+                            )
+                              i.bi.bi-arrow-up(aria-hidden="true")
+                              | Move up
+                            button.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.justify-content-center.gap-2(
+                              type="button",
+                              data-move-direction="down",
+                              data-move-url=`/photos/professional/${photo.id}/move?d=down`,
+                              hidden=photo.sortKey >= professionalPhotos.length,
+                              disabled=photo.sortKey >= professionalPhotos.length
+                            )
+                              i.bi.bi-arrow-down(aria-hidden="true")
+                              | Move down
 
     if !isAdmin
       p.text-muted.small.text-center.mb-0
         | Guest snapshots are welcome in our&nbsp;
-        a(href="/guestbook") digital guestbook
+        a.link-primary(href="/guestbook") digital guestbook
         | .
 
   else

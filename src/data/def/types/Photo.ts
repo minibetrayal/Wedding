@@ -7,13 +7,15 @@ export class Photo {
     created: Date = new Date();
     updated: Date = new Date();
     type: PhotoType;
+    sortKey: number;
     captionOrStyle?: string;
 
-    constructor(id: string, name: string, mimeType: string, type: PhotoType = 'guestbook', captionOrStyle?: string) {
+    constructor(id: string, name: string, mimeType: string, type: PhotoType, sortKey: number, captionOrStyle?: string) {
         this.id = id;
         this.name = name;
         this.mimeType = mimeType;
         this.type = type;
+        this.sortKey = sortKey;
         this.captionOrStyle = captionOrStyle;
     }
 

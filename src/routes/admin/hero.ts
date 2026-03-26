@@ -1,7 +1,7 @@
 import express from 'express';
 
 import { getDataConnection as dataConnection } from '../../data/def/DataConnection';
-import { DbNotFoundError } from '../../data/dbErrors';
+import { DbError, DbNotFoundError } from '../../data/dbErrors';
 import { MAX_FILE_SIZE_MB, MAX_FILES, Upload } from '../../middleware/uploadPhotos';
 import {
     heroFocusYToCaptionOrStyle,
@@ -30,7 +30,6 @@ function wantsAsyncFocusSave(req: express.Request): boolean {
 router.get('/', async (req, res, next) => {
     try {
         const heroPhotos = await dataConnection().photos.getAll('hero');
-        heroPhotos.sort((a, b) => b.created.getTime() - a.created.getTime());
         const heroPhotoRows = heroPhotos.map((photo) => {
             const y = parseHeroFocusYFromCaptionOrStyle(photo.captionOrStyle);
             return {
@@ -111,6 +110,46 @@ router.post('/:photoId/focus', async (req, res, next) => {
             }
             req.flash('error', 'Photo not found.');
             return res.redirect(302, '/admin/hero');
+        }
+        next(err);
+    }
+});
+
+router.post('/:photoId/move', async (req, res, next) => {
+    const direction = req.query.d as string;
+    const { photoId } = req.params;
+    const wantsJson = req.get('X-Requested-With') === 'fetch';
+    if (direction !== 'up' && direction !== 'down') {
+        if (wantsJson) return res.status(400).json({ ok: false, error: 'Invalid direction.' });
+        req.flash('error', 'Invalid move.');
+        return res.redirect(302, '/admin/hero');
+    }
+    try {
+        const photo = await dataConnection().photos.get(photoId);
+        if (photo.type !== 'hero') {
+            if (wantsJson) {
+                return res.status(400).json({
+                    ok: false,
+                    error: 'That image is not a hero carousel photo.',
+                });
+            }
+            req.flash('error', 'That image is not a hero carousel photo.');
+            return res.redirect(302, '/admin/hero');
+        }
+        await dataConnection().photos.move(photoId, direction as 'up' | 'down');
+        if (wantsJson) return res.json({ ok: true });
+        req.flash('success', `Image moved ${direction}.`);
+        res.redirect(302, '/admin/hero');
+    } catch (err) {
+        if (wantsJson) {
+            if (err instanceof DbNotFoundError) {
+                return res.status(404).json({ ok: false, error: err.message });
+            }
+            if (err instanceof DbError) {
+                return res.status(400).json({ ok: false, error: err.message });
+            }
+            console.error(err);
+            return res.status(500).json({ ok: false, error: 'Server error.' });
         }
         next(err);
     }

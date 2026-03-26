@@ -30,6 +30,8 @@ import { DEFAULT_SCHEDULE_SNAPSHOT, ScheduleSnapshot, ScheduledEvent } from '../
 import { Time, TimeType } from '../def/types/Time';
 import { DbError, DbNotFoundError } from '../dbErrors';
 import { formatYYYYMMDD } from '../../util/timeUtils';
+import { Faq } from '../def/types/Faq';
+import { FaqConnection } from '../def/interfaces/FaqConnection';
 
 const SINGLETON_ID = '1';
 const PHOTOS_DIR = path.join(process.cwd(), 'photos');
@@ -56,6 +58,7 @@ function mapPhotoRow(row: Record<string, unknown>): Photo {
         String(row.name),
         String(row.mime_type),
         row.type as PhotoType,
+        Number(row.sort_key),
         row.caption_or_style != null ? String(row.caption_or_style) : undefined,
     );
     p.created = parseDate(row.created);
@@ -352,7 +355,7 @@ class KnexPhotoConnection implements PhotoConnection {
     }
 
     async getAll(type: PhotoType): Promise<Photo[]> {
-        const rows = await this.knex('photos').where('type', type).orderBy('created', 'desc');
+        const rows = await this.knex('photos').where('type', type).orderBy('sort_key', 'asc');
         return rows.map((r) => mapPhotoRow(r as Record<string, unknown>));
     }
 
@@ -369,16 +372,23 @@ class KnexPhotoConnection implements PhotoConnection {
         type: PhotoType = 'guestbook',
         captionOrStyle?: string,
     ): Promise<Photo> {
+        
+        const agg = await this.knex('photos').where('type', type).max('sort_key').first();
+        const maxSort = maxSortKeyFromAggregateRow(agg as Record<string, unknown> | undefined);
+        const sortKey = maxSort + 1;
+
         const id = crypto.randomUUID();
-        const photo = new Photo(id, name, mimeType, type, captionOrStyle);
+        const photo = new Photo(id, name, mimeType, type, sortKey, captionOrStyle);
         await fs.promises.mkdir(PHOTOS_DIR, { recursive: true });
         const filePath = path.join(PHOTOS_DIR, photo.filename());
         await fs.promises.writeFile(filePath, data);
+
         await this.knex('photos').insert({
             id,
             name,
             mime_type: mimeType,
             type,
+            sort_key: sortKey,
             caption_or_style: captionOrStyle ?? null,
         });
         return this.get(id);
@@ -398,6 +408,17 @@ class KnexPhotoConnection implements PhotoConnection {
             .where('id', photoId)
             .update({ caption_or_style: captionOrStyle ?? null, updated: this.knex.fn.now() });
         if (n === 0) throw new DbNotFoundError('Photo');
+    }
+
+    async move(id: string, direction: 'up' | 'down'): Promise<void> {
+        const photo = await this.get(id);
+        const previous = await this.knex('photos')
+            .where('type', photo.type)
+            .andWhere('sort_key', photo.sortKey - (direction === 'up' ? 1 : -1))
+            .first();
+        if (!previous) throw new DbNotFoundError('Photo');
+        await this.knex('photos').where('id', id).update({ sort_key: previous.sort_key });
+        await this.knex('photos').where('id', previous.id).update({ sort_key: photo.sortKey });
     }
 }
 
@@ -729,6 +750,15 @@ class KnexNamesConnection implements NamesConnection {
     async setContactPhone(contactPhone: string): Promise<void> {
         await this.knex('names').where('id', SINGLETON_ID).update({ contact_phone: contactPhone });
     }
+
+    async getContactEmail(): Promise<string> {
+        const row = await this.knex('names').where('id', SINGLETON_ID).first();
+        return row ? String(row.contact_email ?? '') : '';
+    }
+
+    async setContactEmail(contactEmail: string): Promise<void> {
+        await this.knex('names').where('id', SINGLETON_ID).update({ contact_email: contactEmail });
+    }
 }
 
 class KnexScheduleConnection implements ScheduleConnection {
@@ -776,6 +806,60 @@ class KnexScheduleConnection implements ScheduleConnection {
 
     async setDate(date: string): Promise<void> {
         await this.knex('schedule').where('id', SINGLETON_ID).update({ event_date: date });
+    }
+}
+
+function maxSortKeyFromAggregateRow(row: Record<string, unknown> | undefined): number {
+    if (!row || typeof row !== 'object') return 0;
+    const v = Object.values(row)[0];
+    if (v == null || v === '') return 0;
+    const n = typeof v === 'number' ? v : Number(v);
+    return Number.isFinite(n) ? n : 0;
+}
+
+class KnexFaqConnection implements FaqConnection {
+    constructor(private readonly knex: Knex) {}
+
+    async getAll(): Promise<Faq[]> {
+        const rows = await this.knex('faq').orderBy('sort_key');
+        return rows.map((r) => new Faq(String(r.id), String(r.question), String(r.answer), Number(r.sort_key)));
+    }
+
+    async get(id: string): Promise<Faq> {
+        const row = await this.knex('faq').where('id', id).first();
+        if (!row) throw new DbNotFoundError('FAQ');
+        return new Faq(String(row.id), String(row.question), String(row.answer), Number(row.sort_key));
+    }
+
+    async create(question: string, answer: string): Promise<Faq> {
+        const id = crypto.randomUUID();
+        // Knex + SQLite often aliases MAX(sort_key) as e.g. `max(`sort_key`)`, not `.max` — read first column.
+        const agg = await this.knex('faq').max('sort_key').first();
+        const maxSort = maxSortKeyFromAggregateRow(agg as Record<string, unknown> | undefined);
+        await this.knex('faq').insert({ id, question, answer, sort_key: maxSort + 1 });
+        return this.get(id);
+    }
+
+    async update(id: string, question: string, answer: string): Promise<void> {
+        const n = await this.knex('faq').where('id', id).update({ question, answer });
+        if (n === 0) throw new DbNotFoundError('FAQ');
+    }
+
+    async delete(id: string): Promise<void> {
+
+        const existing = await this.get(id);
+        if (!existing) throw new DbNotFoundError('FAQ');
+
+        await this.knex('faq').where('sort_key', '>', existing.sortKey).update({ sort_key: this.knex.raw('sort_key - 1') });
+        await this.knex('faq').where('id', id).delete();
+    }
+    
+    async move(id: string, direction: 'up' | 'down'): Promise<void> {
+        const faq = await this.get(id);
+        const previous = await this.knex('faq').where('sort_key', faq.sortKey - (direction === 'up' ? 1 : -1)).first();
+        if (!previous) throw new DbNotFoundError('FAQ');
+        await this.knex('faq').where('id', id).update({ sort_key: previous.sort_key });
+        await this.knex('faq').where('id', previous.id).update({ sort_key: faq.sortKey });
     }
 }
 
@@ -840,6 +924,10 @@ export class KnexConnectionSupplier implements ConnectionSupplier {
     getMenuConnection(): MenuConnection {
         return new KnexMenuConnection(this.knex);
     }
+
+    getFaqConnection(): FaqConnection {
+        return new KnexFaqConnection(this.knex);
+    }
 }
 
 export class PgConnectionSupplier extends KnexConnectionSupplier {
@@ -892,6 +980,35 @@ async function ensureTable(
     await knex.schema.createTable(tableName, build);
 }
 
+async function sqliteTableColumns(knex: Knex, table: string): Promise<{ name: string; type: string }[]> {
+    const r = await knex.raw(`PRAGMA table_info(${table})`);
+    if (Array.isArray(r)) return r as { name: string; type: string }[];
+    if (r && typeof r === 'object' && 'rows' in r && Array.isArray((r as { rows: unknown }).rows)) {
+        return (r as { rows: { name: string; type: string }[] }).rows;
+    }
+    return [];
+}
+
+async function faqTableUsesIntegerId(knex: Knex): Promise<boolean> {
+    const client = knex.client.config.client;
+    if (client === 'better-sqlite3' || client === 'sqlite3') {
+        const cols = await sqliteTableColumns(knex, 'faq');
+        const idCol = cols.find((c) => c.name === 'id');
+        if (!idCol) return false;
+        return /INT/i.test(idCol.type);
+    }
+    if (client === 'pg') {
+        const row = await knex('information_schema.columns')
+            .select('data_type')
+            .where({ table_schema: 'public', table_name: 'faq', column_name: 'id' })
+            .first();
+        if (!row) return false;
+        const t = String((row as { data_type: string }).data_type).toLowerCase();
+        return t === 'integer' || t === 'bigint' || t === 'smallint';
+    }
+    return false;
+}
+
 async function ensureKnexSchema(knex: Knex): Promise<void> {
     const c = knex.client.config.client;
     const isSqlite = c === 'better-sqlite3' || c === 'sqlite3';
@@ -933,6 +1050,7 @@ async function ensureKnexSchema(knex: Knex): Promise<void> {
         t.string('mime_type').notNullable();
         t.timestamp('created').notNullable().defaultTo(knex.fn.now());
         t.timestamp('updated').notNullable().defaultTo(knex.fn.now());
+        t.integer('sort_key').notNullable().defaultTo(0);
         t.string('type', 32).notNullable();
         t.text('caption_or_style');
     });
@@ -984,6 +1102,7 @@ async function ensureKnexSchema(knex: Knex): Promise<void> {
         t.text('names_short').notNullable().defaultTo('');
         t.text('contact_name').notNullable().defaultTo('');
         t.text('contact_phone').notNullable().defaultTo('');
+        t.text('contact_email').notNullable().defaultTo('');
     });
 
     await ensureTable(knex, 'schedule', (t) => {
@@ -1031,6 +1150,13 @@ async function ensureKnexSchema(knex: Knex): Promise<void> {
             .onDelete('CASCADE');
         t.string('tag', 64).notNullable();
         t.primary(['menu_item_id', 'tag']);
+    });
+
+    await knex.schema.createTable('faq', (t) => {
+        t.string('id', 36).primary();
+        t.string('question').notNullable();
+        t.text('answer').notNullable();
+        t.integer('sort_key').notNullable().defaultTo(0);
     });
 }
 

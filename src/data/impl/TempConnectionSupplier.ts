@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
@@ -31,6 +32,8 @@ import { MenuConnection } from "../def/interfaces/MenuConnection";
 
 import { DbNotFoundError, DbError } from "../dbErrors";
 import { formatYYYYMMDD, zonedToDate } from "../../util/timeUtils";
+import { Faq } from "../def/types/Faq";
+import { FaqConnection } from "../def/interfaces/FaqConnection";
 
 const alpha = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const photosDir = path.join(process.cwd(), 'photos');
@@ -44,13 +47,14 @@ let ferryServices: FerryService[] = [];
 let ferryServiceLink: string = '';
 let ferryServiceCost: string = '';
 let projector: Projector = new Projector('home', '', 30_000, false);
-let names: Names = new Names('', '', '', '');
+let names: Names = new Names('', '', '', '', '');
 
 let eventDate: string = formatYYYYMMDD(new Date());
 let schedule: ScheduleSnapshot = DEFAULT_SCHEDULE_SNAPSHOT;
 let locations: Partial<Record<LocationType, Location>> = {};
 let times: Partial<Record<TimeType, Time>> = {};
 let menu: MenuCourse[] = [];
+let faqs: Faq[] = [];
 
 const created: Set<string> = new Set();
 function createSimpleId(): string {
@@ -235,7 +239,7 @@ class TempPhotoConnection implements PhotoConnection {
     }
 
     async getAll(type: PhotoType = 'guestbook'): Promise<Photo[]> {
-        return photos.filter(p => p.type === type);
+        return photos.filter(p => p.type === type).sort((a, b) => a.sortKey - b.sortKey);
     }
 
     async getPhoto(photoId: string): Promise<Buffer> {
@@ -246,7 +250,8 @@ class TempPhotoConnection implements PhotoConnection {
     }
 
     async create(name: string, mimeType: string, data: Buffer, type: PhotoType = 'guestbook', captionOrStyle?: string): Promise<Photo> {
-        const photo = new Photo(crypto.randomUUID(), name, mimeType, type, captionOrStyle);
+        const sortKey = photos.filter(p => p.type === type).length;
+        const photo = new Photo(crypto.randomUUID(), name, mimeType, type, sortKey, captionOrStyle);
         photos.push(photo);
 
         await fs.promises.mkdir(photosDir, { recursive: true });
@@ -269,6 +274,18 @@ class TempPhotoConnection implements PhotoConnection {
         if (!photo) throw new DbNotFoundError('Photo');
         photo.captionOrStyle = captionOrStyle;
         photo.updated = new Date();
+    }
+
+    async move(id: string, direction: 'up' | 'down'): Promise<void> {
+        const photo = photos.find((x) => x.id === id);
+        if (!photo) throw new DbNotFoundError('Photo');
+        const index = photos.indexOf(photo);
+        const swapPhoto = photos.find((x) => x.sortKey === photo.sortKey + (direction === 'up' ? -1 : 1));
+        if (!swapPhoto) throw new DbNotFoundError('Photo');
+        const newIndex = photos.indexOf(swapPhoto)
+        if (newIndex < 0 || newIndex >= photos.length) throw new DbNotFoundError('Photo');
+        photos[index] = swapPhoto;
+        photos[newIndex] = photo;
     }
 }
 
@@ -379,6 +396,13 @@ class TempNamesConnection implements NamesConnection {
     async setContactPhone(contactPhone: string): Promise<void> {
         names.contactPhone = contactPhone;
     }
+
+    async getContactEmail(): Promise<string> {
+        return names.contactEmail;
+    }
+    async setContactEmail(contactEmail: string): Promise<void> {
+        names.contactEmail = contactEmail;
+    }
 }
 
 class TempScheduleConnection implements ScheduleConnection {
@@ -455,6 +479,52 @@ class TempMenuConnection implements MenuConnection {
     }
 }
 
+class TempFaqConnection implements FaqConnection {
+    async getAll(): Promise<Faq[]> {
+        faqs.sort((a, b) => a.sortKey - b.sortKey);
+        return faqs;
+    }
+
+    async get(id: string): Promise<Faq> {
+        const f = faqs.find((x) => x.id === id);
+        if (!f) throw new DbNotFoundError('FAQ');
+        return f;
+    }
+
+    async create(question: string, answer: string): Promise<Faq> {
+        const f = new Faq(crypto.randomUUID(), question, answer, faqs.length);
+        faqs.push(f);
+        return f;
+    }
+
+    async update(id: string, question: string, answer: string): Promise<void> {
+        const f = faqs.find((x) => x.id === id);
+        if (!f) throw new DbNotFoundError('FAQ');
+        f.question = question;
+        f.answer = answer;
+    }
+
+    async delete(id: string): Promise<void> {
+        const before = faqs.length;
+        const existing = faqs.find((x) => x.id === id);
+        if (!existing) throw new DbNotFoundError('FAQ');
+        faqs = faqs
+            .filter((x) => x.id !== id)
+            .map((x) => new Faq(x.id, x.question, x.answer, x.sortKey > existing.sortKey ? x.sortKey - 1 : x.sortKey));
+        if (faqs.length === before) throw new DbNotFoundError('FAQ');
+    }
+
+    async move(id: string, direction: 'up' | 'down'): Promise<void> {
+        const faq = faqs.find((x) => x.id === id);
+        if (!faq) throw new DbNotFoundError('FAQ');
+        const index = faqs.indexOf(faq);
+        const newIndex = index + (direction === 'up' ? -1 : 1);
+        if (newIndex < 0 || newIndex >= faqs.length) throw new DbNotFoundError('FAQ');
+        faqs[index] = faqs[newIndex];
+        faqs[newIndex] = faq;
+    }
+}
+
 export class TempConnectionSupplier implements ConnectionSupplier {
     async prepare(): Promise<void> {
         await fs.promises.rm(photosDir, { recursive: true, force: true });
@@ -467,11 +537,12 @@ export class TempConnectionSupplier implements ConnectionSupplier {
         ferryServiceLink = '';
         ferryServiceCost = '';
         projector = new Projector('home', '', 30_000, false);
-        names = new Names('', '', '', '');
+        names = new Names('', '', '', '', '');
         schedule = {...DEFAULT_SCHEDULE_SNAPSHOT};
         locations = {};
         times = {};
         menu = [];
+        faqs = [];
         created.clear();
     }
 
@@ -510,5 +581,8 @@ export class TempConnectionSupplier implements ConnectionSupplier {
     }
     getMenuConnection(): MenuConnection {
         return new TempMenuConnection();
+    }
+    getFaqConnection(): FaqConnection {
+        return new TempFaqConnection();
     }
 }

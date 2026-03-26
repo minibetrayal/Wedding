@@ -1,0 +1,65 @@
+extends /layout
+include /mixins/inclusions
+include /mixins/validationForm
+
+block append script
+  if faqs.length > 1
+    +script('movement-order')
+
+block title
+  | FAQ — Admin
+
+block content
+  nav.mb-3(aria-label="Breadcrumb")
+    ol.breadcrumb.mb-0
+      li.breadcrumb-item
+        a.link-secondary(href="/admin") Admin
+      li.breadcrumb-item.active(aria-current="page") FAQ
+
+  .d-flex.flex-column.flex-sm-row.align-items-stretch.align-items-sm-center.justify-content-between.gap-3.mb-4
+    div
+      h1.h3.mb-1 Frequently asked questions
+      p.text-muted.small.mb-0 Edit entries shown on the public FAQ page.
+    a.btn.btn-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2(href="/admin/faq/new")
+      i.bi.bi-plus-lg(aria-hidden="true")
+      | Add FAQ
+
+  if faqs.length === 0
+    .card.border-0.shadow-sm
+      .card-body.p-4.text-center.text-muted
+        p.mb-3 No FAQs yet. Add one to show content on #[a.link-primary(href="/faq") the FAQ page].
+        a.btn.btn-primary(href="/admin/faq/new") Add your first FAQ
+  else
+    .vstack.gap-3
+      each item in faqs
+        .card.border-0.shadow-sm.movement-container
+          .card-body.p-4
+            .d-flex.flex-column.flex-md-row.align-items-start.justify-content-between.gap-3
+              .min-w-0.flex-grow-1
+                h2.h6.mb-2.text-body #{item.question}
+                p.small.text-muted.mb-0.text-prewrap !{item.formatted}
+              .d-grid.flex-wrap.gap-2.flex-shrink-0
+                a.btn.btn-outline-primary.btn-sm.d-inline-flex.align-items-center.gap-1(
+                  href=`/admin/faq/${item.id}/edit`
+                )
+                  i.bi.bi-pencil(aria-hidden="true")
+                  | Edit or Delete
+                if faqs.length > 1
+                  button.btn.btn-outline-secondary.btn-sm.d-inline-flex.align-items-center.gap-1(
+                    type="button",
+                    data-move-direction="up",
+                    data-move-url=`/admin/faq/${item.id}/move?d=up`,
+                    hidden=item.sortKey <= 1,
+                    disabled=item.sortKey <= 1
+                  )
+                    i.bi.bi-arrow-up(aria-hidden="true")
+                    | Move up
+                  button.btn.btn-outline-secondary.btn-sm.d-inline-flex.align-items-center.gap-1(
+                    type="button",
+                    data-move-direction="down",
+                    data-move-url=`/admin/faq/${item.id}/move?d=down`,
+                    hidden=item.sortKey >= faqs.length,
+                    disabled=item.sortKey >= faqs.length
+                  )
+                    i.bi.bi-arrow-down(aria-hidden="true")
+                    | Move down

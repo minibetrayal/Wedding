@@ -12,6 +12,7 @@ import sessionMiddleware from './middleware/sessionMiddleware';
 
 import adminRoutes from './routes/admin/admin';
 import detailsRoutes from './routes/details';
+import faqRoutes from './routes/faq';
 import guestbookRoutes from './routes/guestbook';
 import photosRoutes from './routes/photos';
 import projectorRoutes from './routes/projector';
@@ -42,6 +43,7 @@ app.use(locals);
 // Routes
 app.use('/admin', adminRoutes);
 app.use('/details', detailsRoutes);
+app.use('/faq', faqRoutes);
 app.use('/guestbook', guestbookRoutes);
 app.use('/photos', photosRoutes);
 app.use('/projector', projectorRoutes);

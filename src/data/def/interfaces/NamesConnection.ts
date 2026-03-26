@@ -7,4 +7,6 @@ export interface NamesConnection {
     setContactName(contactName: string): Promise<void>;
     getContactPhone(): Promise<string>;
     setContactPhone(contactPhone: string): Promise<void>;
+    getContactEmail(): Promise<string>;
+    setContactEmail(contactEmail: string): Promise<void>;
 }

@@ -1,0 +1,124 @@
+extends /layout
+include /mixins/inclusions
+include /mixins/validationForm
+include /mixins/textareaCounter
+
+block append styles
+  +style('textareaCounter')
+
+block append script
+  +script('textareaCounter')
+  +adminScript('admin-faq-edit')
+
+block title
+  if isNew
+    | New FAQ — Admin
+  else
+    | Edit FAQ — Admin
+
+block content
+  -
+    const f = typeof faq !== 'undefined' && faq ? faq : {}
+    const defaultAction = isNew ? '/admin/faq/new' : '/admin/faq/' + (f.id || '') + '/edit'
+
+  nav.mb-3(aria-label="Breadcrumb")
+    ol.breadcrumb.mb-0
+      li.breadcrumb-item
+        a.link-secondary(href="/admin") Admin
+      li.breadcrumb-item
+        a.link-secondary(href="/admin/faq") FAQ
+      if isNew
+        li.breadcrumb-item.active(aria-current="page") New
+      else
+        li.breadcrumb-item.active(aria-current="page") Edit
+
+  .mb-4
+    if isNew
+      h1.h3.mb-1 New FAQ
+      p.text-muted.small.mb-0 Add a question and answer for the public FAQ page.
+    else
+      h1.h3.mb-1 Edit FAQ
+      p.text-muted.small.mb-0 Update the question or answer.
+
+  +validationForm.suppress-enter-submit(method="post", action=defaultAction)
+    .card.border-0.shadow-sm.mb-3
+      .card-body.p-4
+        .row.g-3
+          .col-12
+            label.form-label.fw-semibold(for="faq-question") Question
+            input#faq-question.form-control(
+              type="text",
+              name="question",
+              value=f.question || '',
+              maxlength="500",
+              autocomplete="off",
+              required,
+              placeholder="e.g. How do I RSVP?"
+            )
+          .col-12
+            label.form-label.fw-semibold(for="faq-answer") Answer
+            +textareaCounter#faq-answer.form-control(
+              name="answer",
+              rows="8",
+              maxlength="8000",
+              required,
+              placeholder="Full answer for guests…"
+            )= f.answer || ''
+            p.form-text.small.mb-0 
+              | Use markdown notation like 
+              code [link text](https://link-destination.com)
+              |  or 
+              code (https://link-destination.com)
+              |  to add links.
+            
+    .d-flex.flex-wrap.gap-2.align-items-center
+      button.btn.btn-primary(type="submit")
+        i.bi.bi-check2.me-1(aria-hidden="true")
+        if isNew
+          | Create FAQ
+        else
+          | Save changes 
+
+      if !isNew && f.id
+        button#delete-faq-open.btn.btn-outline-danger.d-inline-flex.align-items-center.gap-2(
+          type="button",
+          data-bs-toggle="modal",
+          data-bs-target="#delete-faq-modal"
+        )
+          i.bi.bi-trash(aria-hidden="true")
+          | Delete FAQ
+
+  if !isNew && f.id
+    +validationForm.suppress-enter-submit#delete-faq-form.visually-hidden(
+      method="post",
+      action=`/admin/faq/${f.id}/delete`,
+      aria-hidden="true",
+      tabindex="-1"
+    )
+
+block modal
+  if !isNew && f.id
+    #delete-faq-modal.modal.fade(
+      tabindex="-1",
+      aria-labelledby="delete-faq-modal-label",
+      aria-describedby="delete-faq-modal-body",
+      aria-hidden="true"
+    )
+      .modal-dialog.modal-dialog-centered
+        .modal-content.border-danger
+          .modal-header
+            h5#delete-faq-modal-label.modal-title.text-danger Delete this FAQ?
+            button.btn-close(
+              type="button",
+              data-bs-dismiss="modal",
+              aria-label="Close"
+            )
+          #delete-faq-modal-body.modal-body
+            p.fw-semibold.mb-2
+              | You are about to delete:
+            p.mb-2.border.rounded.p-2.bg-body-secondary.small #{f.question || '—'}
+            p.small.text-muted.mb-0
+              | Guests will no longer see this entry on the FAQ page. This cannot be undone.
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button#delete-faq-modal-confirm.btn.btn-danger(type="button") Yes, delete FAQ

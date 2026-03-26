@@ -48,7 +48,6 @@ block content
                 autocomplete="name",
                 placeholder='On-the-day contact name'
               )
-              p.form-text.small.mb-0 Shown on the Details page under “Contact on the day”.
             .col-12
               label.form-label.fw-semibold(for="contact-phone") Contact phone
               input#contact-phone.form-control(
@@ -58,8 +57,17 @@ block content
                 autocomplete="tel",
                 placeholder='e.g. 0400 000 000'
               )
-              p.form-text.small.mb-0 Shown as a tel: link next to the contact name.
-
+              p.form-text.small.mb-0 MC Contact phone for the event day.
+            .col-12
+              label.form-label.fw-semibold(for="contact-email") Contact email
+              input#contact-email.form-control(
+                type="email",
+                name="contactEmail",
+                value=contactEmail,
+                autocomplete="email",
+                placeholder='john@example.com'
+              )
+              p.form-text.small.mb-0 Contact email for prior to the event day.
       .d-flex.flex-wrap.gap-2
         button.btn.btn-primary(type="submit")
           i.bi.bi-check2.me-1(aria-hidden="true")

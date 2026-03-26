@@ -1,0 +1,28 @@
+{
+    "faqs": [
+        {
+            "question": "How do I RSVP or change my response?",
+            "answer": "Use the RSVP page with the code from your invitation. You can return with the same link anytime to update your details before the wedding."
+        },
+        {
+            "question": "I lost my invitation code — what should I do?",
+            "answer": "Please contact us using the details on the wedding details page and we’ll help you out."
+        },
+        {
+            "question": "Can I bring a plus-one or children?",
+            "answer": "Your invitation lists who is invited. If you’re unsure, please reach out — we’d love to clarify."
+        },
+        {
+            "question": "Do you have a gift registry?",
+            "answer": "You can contribute to our future together by making a cash donation towards our home."
+        },
+        {
+            "question": "Can I take photos during the ceremony?",
+            "answer": "Sure, please feel free to take as many photos as you like!"
+        },
+        {
+            "question": "How do I share dietary requirements?",
+            "answer": "You can note dietary needs when you RSVP. If anything changes or you need to tell us more, contact us via the details page."
+        }
+    ]
+}

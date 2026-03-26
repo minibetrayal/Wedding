@@ -1,17 +1,20 @@
 import fs from 'fs';
 import path from 'path';
 
+import { DataPopulator } from '../def/interfaces/DataPopulator';
+import { DataConnection } from '../def/DataConnection';
+
 import { Invitee } from '../def/types/Invitee';
 import { Photo } from '../def/types/Photo';
 import { FerryService, FerryServiceTo } from '../def/types/FerryService';
-import { heroFocusYToCaptionOrStyle } from '../../util/heroPhotoStyle';
-import { DataPopulator } from '../def/interfaces/DataPopulator';
-import { DataConnection } from '../def/DataConnection';
 import { ScheduledEvent, ScheduleSnapshot } from '../def/types/ScheduledEvent';
 import { Location, LocationType } from '../def/types/Location';
 import { Time, TimeType } from '../def/types/Time';
 import { MenuItem, MenuTag } from '../def/types/MenuItem';
+
+import { heroFocusYToCaptionOrStyle } from '../../util/heroPhotoStyle';
 import { evaluateGuestbookAutomoderation, formatAutomoderationReason } from '../../util/guestbookAutomoderation';
+import { Faq } from '../def/types/Faq';
 
 type InviteSeedJson = {
     name: string;
@@ -81,11 +84,16 @@ type MenuJson = {
     courses: Array<MenuCourseJson>;
 }
 
+type FaqJson = {
+    faqs: Array<{ question: string; answer: string }>;
+}
+
 type NamesJson = {
     names: string;
     namesShort: string;
     contactName: string;
     contactPhone: string;
+    contactEmail: string;
 };
 
 type ScheduleJson = {
@@ -124,6 +132,7 @@ export class DummyDataPopulator implements DataPopulator {
     private static readonly locationsJsonPath = path.join(getDummyDataFileOrDir('locations.json'));
     private static readonly timesJsonPath = path.join(getDummyDataFileOrDir('times.json'));
     private static readonly menuJsonPath = path.join(getDummyDataFileOrDir('menu.json'));
+    private static readonly faqJsonPath = path.join(getDummyDataFileOrDir('faq.json'));
     private static readonly dummyPhotoFilenameRe = /\.(jpe?g|png|gif|webp)$/i;
     private static readonly professionalDummyPhotoMax = 5;
 
@@ -138,6 +147,16 @@ export class DummyDataPopulator implements DataPopulator {
         await this.loadLocations(connection);
         await this.loadTimes(connection);
         await this.loadMenu(connection);
+        await this.loadFaq(connection);
+    }
+
+    async loadFaq(connection: DataConnection): Promise<void> {
+        const data = await DummyDataPopulator.readFaqJson();
+        if (!data) return;
+        
+        for (const f of data.faqs) {
+            await connection.faq.create(f.question, f.answer);
+        }
     }
 
     async loadMenu(connection: DataConnection): Promise<void> {
@@ -185,6 +204,7 @@ export class DummyDataPopulator implements DataPopulator {
         await connection.names.setNamesShort(names.namesShort);
         await connection.names.setContactName(names.contactName);
         await connection.names.setContactPhone(names.contactPhone);
+        await connection.names.setContactEmail(names.contactEmail);
     }
 
     async loadLocations(connection: DataConnection): Promise<void> {
@@ -265,6 +285,19 @@ export class DummyDataPopulator implements DataPopulator {
         throw err;
     }
 
+    private static async readFaqJson(): Promise<FaqJson | null> {
+        try {
+            const raw = await fs.promises.readFile(DummyDataPopulator.faqJsonPath, 'utf8');
+            const parsed = JSON.parse(raw) as unknown;
+            if (!parsed || typeof parsed !== 'object' || !Array.isArray((parsed as FaqJson).faqs)) {
+                throw new Error(`${dummyDataPathForLog(DummyDataPopulator.faqJsonPath)} must contain a { faqs: [...] } object`);
+            }
+            return parsed as FaqJson;
+        } catch (err) {
+            return DummyDataPopulator.handleNotFound(err, DummyDataPopulator.faqJsonPath, 'faq');
+        }
+    }
+
     private static async readMenuJson(): Promise<MenuJson | null> {
         try {
             const raw = await fs.promises.readFile(DummyDataPopulator.menuJsonPath, 'utf8');
@@ -314,7 +347,7 @@ export class DummyDataPopulator implements DataPopulator {
             return parsed as NamesJson;
         } catch (err) {
             DummyDataPopulator.handleNotFound(err, DummyDataPopulator.namesJsonPath, 'names');
-            return { names: '', namesShort: '', contactName: '', contactPhone: '' };
+            return { names: '', namesShort: '', contactName: '', contactPhone: '', contactEmail: '' };
         }
     }
 

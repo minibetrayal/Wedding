@@ -12,6 +12,7 @@ import { ScheduleConnection } from "./interfaces/ScheduleConnection";
 import { LocationConnection } from "./interfaces/LocationConnection";
 import { TimesConnection } from "./interfaces/TimesConnection";
 import { MenuConnection } from "./interfaces/MenuConnection";
+import { FaqConnection } from "./interfaces/FaqConnection";
 
 
 export class DataConnection  {
@@ -29,6 +30,7 @@ export class DataConnection  {
     locations: LocationConnection;
     times: TimesConnection;
     menu: MenuConnection;
+    faq: FaqConnection;
 
     private static isInitialized: boolean = false;
     
@@ -45,6 +47,7 @@ export class DataConnection  {
         this.locations = connectionSupplier.getLocationConnection();
         this.times = connectionSupplier.getTimesConnection();
         this.menu = connectionSupplier.getMenuConnection();
+        this.faq = connectionSupplier.getFaqConnection();
     }
 
     static async init(connectionSupplier: ConnectionSupplier, populator?: DataPopulator): Promise<void> {

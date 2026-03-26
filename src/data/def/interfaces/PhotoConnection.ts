@@ -7,4 +7,5 @@ export interface PhotoConnection {
     create(name: string, mimeType: string, data: Buffer, type?: PhotoType, captionOrStyle?: string): Promise<Photo>;
     delete(photoId: string): Promise<void>;
     updateCaptionOrStyle(photoId: string, captionOrStyle?: string): Promise<void>;
+    move(id: string, direction: 'up' | 'down'): Promise<void>;
 }

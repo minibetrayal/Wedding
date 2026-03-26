@@ -66,13 +66,13 @@ block content
         dt.col-sm-3.text-muted.small Phone
         dd.col-sm-9.mb-3
           if phoneDisplay
-            a(href=`tel:${phoneDisplay}`) #{phoneDisplay}
+            a.link-primary(href=`tel:${phoneDisplay}`) #{phoneDisplay}
           else
             span.text-muted Not provided
         dt.col-sm-3.text-muted.small Email
         dd.col-sm-9.mb-3
           if emailDisplay
-            a(href=`mailto:${emailDisplay}`) #{emailDisplay}
+            a.link-primary(href=`mailto:${emailDisplay}`) #{emailDisplay}
           else
             span.text-muted Not provided
         dt.col-sm-3.text-muted.small Notes from guest
