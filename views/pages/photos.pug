@@ -22,7 +22,7 @@ block content
           i.bi.bi-images.text-primary(aria-hidden="true")
           | Upload professional photos
         p.text-muted.small.mb-3
-          | Images are stored on the server and shown below. You can select multiple files at once (up to 40 per upload, 20 MB each).
+          | Images are stored on the server and shown below. You can select multiple files at once (up to #{maxNumFiles} per upload, #{maxFileSizeMB} MB each).
         +validationForm.suppress-enter-submit(
           method="post"
           action="/photos/professional"

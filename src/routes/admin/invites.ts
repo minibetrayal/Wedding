@@ -199,4 +199,16 @@ router.post('/:inviteId/edit', async (req, res, next) => {
     }
 });
 
+// router.get('/export', async (req, res, next) => {
+//     try {
+//         const invites = await dataConnection().invites.getAll();
+//         const invitees = invites.invitees;
+//         res.setHeader('Content-Type', 'text/csv');
+//         res.setHeader('Content-Disposition', 'attachment; filename="invites.csv"');
+//         res.send(invites);
+//     } catch (err) {
+//         next(err);
+//     }
+// });
+
 export default router;

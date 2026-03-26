@@ -2,7 +2,7 @@ import express from 'express';
 
 import { getDataConnection as dataConnection } from '../../data/def/DataConnection';
 import { DbNotFoundError } from '../../data/dbErrors';
-import { uploadPhotos } from '../../middleware/uploadPhotos';
+import { MAX_FILE_SIZE_MB, MAX_FILES, Upload } from '../../middleware/uploadPhotos';
 import {
     heroFocusYToCaptionOrStyle,
     parseHeroFocusYFromCaptionOrStyle,
@@ -38,7 +38,7 @@ router.get('/', async (req, res, next) => {
                 focusY: y ?? 0.5,
             };
         });
-        res.render('pages/admin/hero', { heroPhotoRows });
+        res.render('pages/admin/hero', { heroPhotoRows, maxNumFiles: MAX_FILES, maxFileSizeMB: MAX_FILE_SIZE_MB });
     } catch (err) {
         next(err);
     }
@@ -46,7 +46,7 @@ router.get('/', async (req, res, next) => {
 
 router.post(
     '/',
-    uploadPhotos(() => '/admin/hero'),
+    Upload.multiple('photos', '/admin/hero'),
     async (req, res, next) => {
         const files = req.files;
         if (!Array.isArray(files) || files.length === 0) {

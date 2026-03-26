@@ -153,6 +153,10 @@ class TempGuestbookConnection implements GuestbookConnection {
         return guestbook;
     }
 
+    async getRemoderationCount(): Promise<number> {
+        return guestbook.filter(e => e.pendingRemoderation).length;
+    }
+
     async count(): Promise<number> {
         return guestbook.length;
     }

@@ -5,6 +5,7 @@ import { Photo } from "../types/Photo";
 export interface GuestbookConnection {
     get(entryId: string): Promise<GuestbookEntry>;
     getAll(): Promise<GuestbookEntry[]>;
+    getRemoderationCount(): Promise<number>;
     create(author: Author, visible: boolean, content?: string, displayName?: string, photo?: Photo): Promise<GuestbookEntry>;
     delete(entryId: string): Promise<void>;
     update(entryId: string, visible: boolean, content?: string, displayName?: string, photo?: Photo): Promise<void>;

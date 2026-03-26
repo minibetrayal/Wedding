@@ -63,15 +63,14 @@ function mapPhotoRow(row: Record<string, unknown>): Photo {
     return p;
 }
 
-async function createUniqueInviteId(knex: Knex): Promise<string> {
+async function createUniqueInviteId(knex: Knex, length: number = 6): Promise<string> {
     const chars = INVITE_ID_CHARS.split('');
-    const length = 6;
     for (let attempt = 0; attempt < 100; attempt++) {
         const id = Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
         const exists = await knex('invites').where('id', id).first();
         if (!exists) return id;
     }
-    throw new Error('Could not allocate a unique invite id');
+    return await createUniqueInviteId(knex, length + 1);
 }
 
 function insertReturningId(result: unknown): number {
@@ -262,6 +261,11 @@ class KnexGuestbookConnection implements GuestbookConnection {
         }
         out.sort((a, b) => b.created.getTime() - a.created.getTime());
         return out;
+    }
+
+    async getRemoderationCount(): Promise<number> {
+        const count = await this.knex('guestbook_entries').where('pending_remoderation', true).count('*');
+        return Number(count[0].count);
     }
 
     async create(

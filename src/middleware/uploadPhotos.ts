@@ -1,10 +1,17 @@
 import express from 'express';
 import multer from 'multer';
 
-import { GuestbookUploadUserError } from './guestbookUpload';
+export const MAX_FILES = 40;
+export const MAX_FILE_SIZE_MB = 20;
 
-const MAX_FILES = 40;
-const MAX_FILE_BYTES = 20 * 1024 * 1024;
+const MAX_FILE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+class ImageError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'ImageError';
+    }
+}
 
 const photosUpload = multer({
     storage: multer.memoryStorage(),
@@ -13,38 +20,52 @@ const photosUpload = multer({
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
         } else {
-            cb(new GuestbookUploadUserError('Please choose image files only (e.g. JPEG or PNG).'));
+            cb(new ImageError('Please choose image files only (e.g. JPEG or PNG).'));
         }
     },
 });
 
-/**
- * Memory upload for professional gallery images (field name `photos`, multiple files).
- */
-export function uploadPhotos(redirectOnFailure: (req: express.Request) => string) {
+function handler(err: unknown, isMultiple: boolean, redirectOnFailure: RedirectOnFailure) {
     return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        photosUpload.array('photos', MAX_FILES)(req, res, (err: unknown) => {
-            if (err instanceof multer.MulterError) {
-                if (err.code === 'LIMIT_FILE_SIZE') {
-                    req.flash('error', 'One or more images are too large (max 20 MB each).');
-                } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-                    req.flash('error', `You can upload at most ${MAX_FILES} images at once.`);
-                } else {
-                    req.flash('error', 'Upload failed.');
-                }
+        function errorRedirect(msg: string) {
+            req.flash('error', msg);
+            if (typeof redirectOnFailure === 'function') {
                 return res.redirect(302, redirectOnFailure(req));
+            } else {
+                return res.redirect(302, redirectOnFailure);
             }
-            if (err instanceof GuestbookUploadUserError) {
-                req.flash('error', err.message);
-                return res.redirect(302, redirectOnFailure(req));
+        }
+        if (err instanceof multer.MulterError) {
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                if (isMultiple) return errorRedirect(`One or more images are too large (max ${MAX_FILE_SIZE_MB} MB each).`);
+                else return errorRedirect(`Image is too large (max ${MAX_FILE_SIZE_MB} MB).`);
             }
-            if (err instanceof Error) {
-                return next(err);
+            if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+                if (isMultiple) return errorRedirect(`You can upload at most ${MAX_FILES} images at once.`);
+                else return errorRedirect('You can upload at most one image.');
             }
-            if (err) {
-                return next(new Error(String(err)));
-            }
-            next();
-        });
-    };
+            return errorRedirect('Upload failed.');
+        }
+        if (err instanceof ImageError) return errorRedirect(err.message);
+        if (err instanceof Error) return next(err);
+        if (err) return next(new Error(String(err)));
+        next();
+    }
+}
+
+type RedirectOnFailure = string | ((req: express.Request) => string);
+
+export class Upload {
+
+    static multiple(field: string, redirectOnFailure: RedirectOnFailure) {
+        return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+            photosUpload.array(field, MAX_FILES)(req, res, (err: unknown) => handler(err, true, redirectOnFailure)(req, res, next));
+        };
+    }
+
+    static single(field: string, redirectOnFailure: RedirectOnFailure) {
+        return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+            photosUpload.single(field)(req, res, (err: unknown) => handler(err, false, redirectOnFailure)(req, res, next));
+        };
+    }
 }

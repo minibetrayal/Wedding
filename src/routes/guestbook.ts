@@ -1,12 +1,11 @@
 import express from 'express';
-import multer from 'multer';
 
 import { getDataConnection as dataConnection } from '../data/def/DataConnection';
 import { DbNotFoundError } from '../data/dbErrors';
 import { getAuthorCookie, getDisplayNameCookie, isViewerAuthor, setAuthorCookie, setDisplayNameCookie } from '../middleware/authorCookie';
-import { uploadPhoto } from '../middleware/guestbookUpload';
-import { Author } from '../data/def/types/Author';
+import { MAX_FILE_SIZE_MB, Upload } from '../middleware/uploadPhotos';
 import { hasValidAdminCookie, requireAdmin } from '../middleware/adminAuth';
+import { Author } from '../data/def/types/Author';
 import { GuestbookEntry } from '../data/def/types/GuestbookEntry';
 import {
     evaluateGuestbookAutomoderation,
@@ -71,6 +70,7 @@ router.get('/new', (req, res) => {
         isNew: true,
         entry: null,
         guestbookContentMax: GUESTBOOK_CONTENT_MAX,
+        maxFileSizeMB: MAX_FILE_SIZE_MB,
     });
 });
 
@@ -78,7 +78,7 @@ router.get('/moderation', requireAdmin, async (req, res) => {
     await get(req, res, (entry) => entry.pendingRemoderation, 'moderation');
 });
 
-router.post('/new', uploadPhoto(() => '/guestbook/new'), async (req, res, next) => {
+router.post('/new', Upload.single('photo', '/guestbook/new'), async (req, res, next) => {
     try {
         const displayNameRaw = typeof req.body.displayName === 'string' ? req.body.displayName.trim() : '';
         const contentRaw = trimGuestbookContent(typeof req.body.content === 'string' ? req.body.content : '');
@@ -156,7 +156,7 @@ router.get('/:entryId', async (req, res, next) => {
             entry,
             isAuthor,
             isAutomoderated: isGuestbookAutomaticModerationReason(entry.moderationReason),
-            moderationReasonMax: MODERATION_REASON_MAX,
+            moderationReasonMax: MODERATION_REASON_MAX
         });
     } catch (err) {
         if (err instanceof DbNotFoundError) {
@@ -178,6 +178,7 @@ router.get('/:entryId/edit', async (req, res, next) => {
             isNew: false,
             entry,
             guestbookContentMax: GUESTBOOK_CONTENT_MAX,
+            maxFileSizeMB: MAX_FILE_SIZE_MB,
         });
     } catch (err) {
         if (err instanceof DbNotFoundError) {
@@ -189,7 +190,7 @@ router.get('/:entryId/edit', async (req, res, next) => {
 });
 
 router.post('/:entryId/edit', 
-    uploadPhoto((req: express.Request) => `/guestbook/${encodeURIComponent(req.params.entryId)}/edit`),
+    Upload.single('photo', (req: express.Request) => `/guestbook/${encodeURIComponent(req.params.entryId)}/edit`),
     async (req, res, next) => {
     try {
         const entryId = req.params.entryId;

@@ -31,7 +31,7 @@ block content
         i.bi.bi-image.text-primary(aria-hidden="true")
         | Upload hero images
       p.text-muted.small.mb-3
-        | Choose one or more images (up to 40 per upload, 20 MB each).
+        | Choose one or more images (up to #{maxNumFiles} per upload, #{maxFileSizeMB} MB each).
       +validationForm.suppress-enter-submit(
         method="post",
         action="/admin/hero",

@@ -90,8 +90,11 @@ block content
             else
               span.text-muted Not requested.
           p.small.mb-0
-            span.text-muted Seats offered for that trip:&nbsp;
-            strong #{inv.carpoolSpotsOffered != null ? inv.carpoolSpotsOffered : 0}
+            if inv.carpoolSpotsOffered
+              span.text-muted Seats offered for that trip:&nbsp;
+              strong #{inv.carpoolSpotsOffered}
+            else
+              span.text-muted Not offered.
 
   .card.border.shadow-sm.mb-4
     .card-body

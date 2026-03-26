@@ -10,7 +10,8 @@
     "build:css": "sass --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions --load-path=node_modules --quiet-deps styles:public/styles",
     "build:css:watch": "sass --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions --load-path=node_modules --quiet-deps --watch styles:public/styles",
     "start": "node dist/index.js",
-    "dev": "npm run build && concurrently \"npm run build:css:watch\" \"ts-node-dev --respawn --transpile-only src/index.ts\""
+    "generate:dummy-data": "node scripts/generate-dummy-invites-guestbook.cjs",
+    "dev": "npm run generate:dummy-data && npm run build && concurrently \"npm run build:css:watch\" \"ts-node-dev --respawn --transpile-only src/index.ts\""
   },
   "keywords": [],
   "author": "",

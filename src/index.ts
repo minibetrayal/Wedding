@@ -6,8 +6,6 @@ import path from 'path';
 import { HttpError } from './types/HttpError';
 import { STATUS_CODES } from 'http';
 
-import { DataConnection } from './data/def/DataConnection';
-
 import locals from './middleware/locals';
 import flashMiddleware from './middleware/flashMiddleware';
 import sessionMiddleware from './middleware/sessionMiddleware';
@@ -96,13 +94,25 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
 });
 
 
+import { DataConnection } from './data/def/DataConnection';
 import { TempConnectionSupplier } from './data/impl/TempConnectionSupplier';
-import { SqliteConnectionSupplier } from './data/impl/KnexConnectionSupplier';
+import { PgConnectionSupplier, SqliteConnectionSupplier } from './data/impl/KnexConnectionSupplier';
 import { DummyDataPopulator } from './data/impl/DummyDataPopulator';
+import { ConnectionSupplier } from './data/def/interfaces/ConnectionSupplier';
 
 async function start(): Promise<void> {
-  const connectionSupplier = new SqliteConnectionSupplier(true);
-  const dummyDataPopulator = new DummyDataPopulator();
+
+  const env = process.env.NODE_ENV;
+
+  let connectionSupplier: ConnectionSupplier;
+  let dummyDataPopulator: DummyDataPopulator | undefined;
+  
+  if (env !== 'production') {
+    dummyDataPopulator = new DummyDataPopulator();
+    connectionSupplier = new SqliteConnectionSupplier(env === 'development');
+  } else {
+    connectionSupplier = new PgConnectionSupplier();
+  }
 
   await DataConnection.init(connectionSupplier, dummyDataPopulator);
 

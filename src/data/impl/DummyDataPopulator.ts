@@ -25,6 +25,27 @@ type InviteSeedJson = {
     carpoolSpotsOffered?: number;
 };
 
+/** Keeps seen/responded aligned with guest rows: any boolean `attending` ⇒ responded (and seen). Strips notes if not responded. */
+function normalizeInviteSeedRow(row: InviteSeedJson): void {
+    const guests = row.guests;
+    if (!Array.isArray(guests) || guests.length === 0) {
+        if (row.responded) {
+            row.seen = true;
+        }
+    } else {
+        const anyAttending = guests.some((g) => typeof g.attending === 'boolean');
+        if (anyAttending) {
+            row.seen = true;
+            row.responded = true;
+        } else if (row.responded) {
+            row.seen = true;
+        }
+    }
+    if (!row.responded) {
+        row.notes = undefined;
+    }
+}
+
 type GuestbookSeedJson = {
     displayName?: string;
     content?: string;
@@ -234,7 +255,7 @@ export class DummyDataPopulator implements DataPopulator {
     private static handleNotFound(err: unknown, path: string, type: string): null {
         const code = (err as NodeJS.ErrnoException).code;
         if (code === 'ENOENT') {
-            if (process.env.NODE_ENV === 'development') {
+            if (process.env.NODE_ENV != 'production') {
                 console.warn(
                     `[DummyData] ${dummyDataPathForLog(path)} not found; skipping ${type}.`,
                 );
@@ -435,7 +456,7 @@ export class DummyDataPopulator implements DataPopulator {
         } catch (err) {
             const code = (err as NodeJS.ErrnoException).code;
             if (code === 'ENOENT') {
-                if (process.env.NODE_ENV === 'development') {
+                if (process.env.NODE_ENV != 'production') {
                     console.warn(
                         `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.invitesJsonPath)} not found; skipping invite seeds.`,
                     );
@@ -457,7 +478,7 @@ export class DummyDataPopulator implements DataPopulator {
         } catch (err) {
             const code = (err as NodeJS.ErrnoException).code;
             if (code === 'ENOENT') {
-                if (process.env.NODE_ENV === 'development') {
+                if (process.env.NODE_ENV != 'production') {
                     console.warn(
                         `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.guestbookJsonPath)} not found; skipping guestbook seeds.`,
                     );
@@ -485,7 +506,7 @@ export class DummyDataPopulator implements DataPopulator {
         } catch (err) {
             const code = (err as NodeJS.ErrnoException).code;
             if (code === 'ENOENT') {
-                if (process.env.NODE_ENV === 'development') {
+                if (process.env.NODE_ENV != 'production') {
                     console.warn(
                         `[DummyData] ${dummyDataPathForLog(DummyDataPopulator.ferryTimetableJsonPath)} not found; skipping ferry timetable.`,
                     );
@@ -520,6 +541,7 @@ export class DummyDataPopulator implements DataPopulator {
     async createInvites(db: DataConnection): Promise<void> {
         const inviteSeeds = await DummyDataPopulator.readInviteSeeds();
         for (const row of inviteSeeds) {
+            normalizeInviteSeedRow(row);
             const invitees: Invitee[] = [];
             for (const g of row.guests) {
                 invitees.push(

@@ -22,9 +22,15 @@ block content
     div
       h1.h3.mb-1 Manage invitations
       p.text-muted.small.mb-0 Summary and per-invite status
-    a.btn.btn-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2(href="/admin/invites/new")
-      i.bi.bi-plus-lg(aria-hidden="true")
-      | Create invitation
+    .d-flex.flex-column.flex-sm-row.gap-2.align-items-stretch.align-items-sm-center
+      a.btn.btn-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2(href="/admin/invites/new")
+        i.bi.bi-plus-lg(aria-hidden="true")
+        | Create invitation
+      //- button#admin-invites-export-csv.btn.btn-outline-secondary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2(
+      //-   type="button"
+      //- )
+      //-   i.bi.bi-file-earmark-spreadsheet(aria-hidden="true")
+      //-   | Export to CSV
 
   //- Stats
   .row.row-cols-2.row-cols-md-3.row-cols-lg-6.g-3.mb-4

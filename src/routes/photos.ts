@@ -3,7 +3,7 @@ import express from 'express';
 import { getDataConnection as dataConnection } from '../data/def/DataConnection';
 import { DbError, DbNotFoundError } from '../data/dbErrors';
 import { requireAdmin } from '../middleware/adminAuth';
-import { uploadPhotos } from '../middleware/uploadPhotos';
+import { MAX_FILE_SIZE_MB, MAX_FILES, Upload } from '../middleware/uploadPhotos';
 import { HttpError } from '../types/HttpError';
 
 const router = express.Router();
@@ -20,6 +20,8 @@ router.get('/', async (req, res, next) => {
         res.render('pages/photos', {
             professionalPhotos,
             photoCaptionMaxLength: PHOTO_CAPTION_MAX_LENGTH,
+            maxNumFiles: MAX_FILES,
+            maxFileSizeMB: MAX_FILE_SIZE_MB,
         });
     } catch (err) {
         next(err);
@@ -29,7 +31,7 @@ router.get('/', async (req, res, next) => {
 router.post(
     '/professional',
     requireAdmin,
-    uploadPhotos(() => '/photos'),
+    Upload.multiple('photos', '/photos'),
     async (req, res, next) => {
         const files = req.files;
         if (!Array.isArray(files) || files.length === 0) {
