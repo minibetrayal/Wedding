@@ -26,11 +26,25 @@ block content
       a.btn.btn-primary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2(href="/admin/invites/new")
         i.bi.bi-plus-lg(aria-hidden="true")
         | Create invitation
-      //- button#admin-invites-export-csv.btn.btn-outline-secondary.btn-lg.d-inline-flex.align-items-center.justify-content-center.gap-2(
-      //-   type="button"
-      //- )
-      //-   i.bi.bi-file-earmark-spreadsheet(aria-hidden="true")
-      //-   | Export to CSV
+      .btn-group
+        button#admin-invites-export-dropdown.btn.btn-outline-secondary.btn-lg.dropdown-toggle.d-inline-flex.align-items-center.justify-content-center.gap-2(
+          type="button",
+          data-bs-toggle="dropdown",
+          aria-expanded="false",
+          aria-haspopup="true",
+          aria-label="Export data as CSV"
+        )
+          i.bi.bi-file-earmark-spreadsheet(aria-hidden="true")
+          | Export
+        ul.dropdown-menu.dropdown-menu-end.shadow(aria-labelledby="admin-invites-export-dropdown")
+          li
+            a.dropdown-item.d-flex.align-items-center.gap-2(href="/admin/invites/export")
+              i.bi.bi-envelope-open(aria-hidden="true")
+              | Export invitations
+          li
+            a.dropdown-item.d-flex.align-items-center.gap-2(href="/admin/invites/export/invitees")
+              i.bi.bi-people(aria-hidden="true")
+              | Export invitees
 
   //- Stats
   .row.row-cols-2.row-cols-md-3.row-cols-lg-6.g-3.mb-4

@@ -3,6 +3,7 @@ import express from 'express';
 import { getDataConnection as dataConnection } from '../../data/def/DataConnection';
 import { DbNotFoundError } from '../../data/dbErrors';
 import { parseCarpoolSpotsOffered } from '../../util/inviteCarpool';
+import { stringify } from 'csv-stringify/sync';
 
 const router = express.Router();
 
@@ -24,6 +25,43 @@ router.get('/new', (_req, res) => {
             invitees: [],
         },
     });
+});
+
+router.get('/export/invitees', async (req, res, next) => {
+    try {
+        const rows = [['invite id', 'name', 'seen', 'responded', 'attending', 'dietary restrictions']];
+        const invites = await dataConnection().invites.getAll();
+        for (let invite of invites) {
+            const invitees = invite.invitees;
+            for (let invitee of invitees) {
+                const row = [invite.id, invitee.name, invite.seen ? 'yes' : 'no', invite.responded ? 'yes' : 'no', invitee.attending ? 'yes' : 'no', invitee.dietaryRestrictions ?? ''];
+                rows.push(row);
+            }
+        }
+        const csv = stringify(rows);
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="invitees.csv"');
+        res.send(csv);
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.get('/export', async (req, res, next) => {
+    try {
+        const rows = [['invite id', 'recipient', 'seen', 'responded', 'attending', 'phone', 'email', 'carpool requested', 'carpool offered', 'notes']];
+        const invites = await dataConnection().invites.getAll();
+        for (let invite of invites) {
+            const row = [invite.id, invite.name, invite.seen ? 'yes' : 'no', invite.responded ? 'yes' : 'no', `${invite.attending()}`, invite.phone ?? '', invite.email ?? '', invite.carpoolRequested ? `${invite.attending()}` : '0', `${invite.carpoolSpotsOffered}`, invite.notes ?? ''];
+            rows.push(row);
+        }
+        const csv = stringify(rows);
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="invites.csv"');
+        res.send(csv);
+    } catch (err) {
+        next(err);
+    }
 });
 
 router.get('/:inviteId/edit', async (req, res, next) => {
@@ -198,17 +236,5 @@ router.post('/:inviteId/edit', async (req, res, next) => {
         next(err);
     }
 });
-
-// router.get('/export', async (req, res, next) => {
-//     try {
-//         const invites = await dataConnection().invites.getAll();
-//         const invitees = invites.invitees;
-//         res.setHeader('Content-Type', 'text/csv');
-//         res.setHeader('Content-Disposition', 'attachment; filename="invites.csv"');
-//         res.send(invites);
-//     } catch (err) {
-//         next(err);
-//     }
-// });
 
 export default router;
