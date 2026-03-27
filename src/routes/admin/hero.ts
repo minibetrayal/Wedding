@@ -34,7 +34,7 @@ router.get('/', async (req, res, next) => {
             const y = parseHeroFocusYFromCaptionOrStyle(photo.captionOrStyle);
             return {
                 photo,
-                focusY: y ?? 0.5,
+                focusY: y ?? 0,
             };
         });
         res.render('pages/admin/hero', { heroPhotoRows, maxNumFiles: MAX_FILES, maxFileSizeMB: MAX_FILE_SIZE_MB });

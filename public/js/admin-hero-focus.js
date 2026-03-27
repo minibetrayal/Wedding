@@ -35,21 +35,41 @@
         return clamp01(py);
     }
 
-    function positionFrame(wrap, img, frame) {
-        var fy = parseFloat(img.getAttribute('data-focus-y') || '0.5', 10);
-        if (!Number.isFinite(fy)) fy = 0.5;
-        fy = clamp01(fy);
+    /**
+     * data-focus-y is the top of the 16×9 frame as a fraction of the drawn image
+     * height (0 = top of image, 1 = bottom — clamped so the frame stays inside).
+     */
+    function clampFocusTop(focusTop, dh, fh) {
+        if (fh >= dh) return 0;
+        var maxTop = (dh - fh) / dh;
+        if (focusTop < 0) return 0;
+        if (focusTop > maxTop) return maxTop;
+        return focusTop;
+    }
 
+    function defaultFocusTop(dh, fh) {
+        if (fh >= dh) return 0;
+        return (dh - fh) / (2 * dh);
+    }
+
+    function positionFrame(wrap, img, frame) {
         var L = containLayout(img);
         var fh = L.dw / HERO_ASPECT;
-        var frameCenterY = L.oy + fy * L.dh;
-        var frameTop = frameCenterY - fh / 2;
-        if (fh <= L.dh) {
-            var minTop = L.oy;
-            var maxTop = L.oy + L.dh - fh;
-            if (frameTop < minTop) frameTop = minTop;
-            if (frameTop > maxTop) frameTop = maxTop;
+        var raw = img.getAttribute('data-focus-y');
+        var focusTop;
+        if (raw === null || raw === '') {
+            focusTop = defaultFocusTop(L.dh, fh);
         } else {
+            focusTop = parseFloat(raw, 10);
+            if (!Number.isFinite(focusTop)) {
+                focusTop = defaultFocusTop(L.dh, fh);
+            } else {
+                focusTop = clampFocusTop(focusTop, L.dh, fh);
+            }
+        }
+
+        var frameTop = L.oy + focusTop * L.dh;
+        if (fh > L.dh) {
             frameTop = L.oy + (L.dh - fh) / 2;
         }
 
@@ -94,13 +114,26 @@
             e.preventDefault();
             if (busy) return;
 
-            var fy = clickToNormalizedY(img, e.clientY);
-            img.setAttribute('data-focus-y', String(fy));
+            var py = clickToNormalizedY(img, e.clientY);
+            var L = containLayout(img);
+            var fh = L.dw / HERO_ASPECT;
+            var frameCenterY = L.oy + py * L.dh;
+            var frameTop = frameCenterY - fh / 2;
+            var minTop = L.oy;
+            var maxTop = L.oy + L.dh - fh;
+            if (fh <= L.dh) {
+                if (frameTop < minTop) frameTop = minTop;
+                if (frameTop > maxTop) frameTop = maxTop;
+            } else {
+                frameTop = L.oy + (L.dh - fh) / 2;
+            }
+            var focusTop = (frameTop - L.oy) / L.dh;
+            img.setAttribute('data-focus-y', String(focusTop));
             positionFrame(wrap, img, frame);
 
             busy = true;
             var body = new URLSearchParams();
-            body.set('focusY', String(fy));
+            body.set('focusY', String(focusTop));
 
             fetch(url, {
                 method: 'POST',

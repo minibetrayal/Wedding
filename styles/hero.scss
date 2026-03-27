@@ -11,10 +11,16 @@
   border: 1px solid rgba(0, 0, 0, 0.06);
 
   img {    
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
+    // aspect-ratio: 16 / 9;
+    // object-fit: cover;
+    // border-radius: 1rem;
+    // border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .carousel-item {
+    overflow: hidden;
     border-radius: 1rem;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    aspect-ratio: 16 / 9;
   }
 
   @media (prefers-reduced-motion: no-preference) {

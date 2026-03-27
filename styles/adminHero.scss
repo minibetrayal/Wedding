@@ -27,9 +27,22 @@
   box-sizing: border-box;
   z-index: 2;
   border: 2px solid $primary;
-  border-radius: 3px;
+  border-radius: 1rem;
   box-shadow:
     0 0 0 1px rgba($body-bg, 0.95),
     0 0 0 4px rgba($primary, 0.35);
   pointer-events: none;
+
+  &::after {
+    content: '\f4fe';
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--bs-light);
+    pointer-events: none;
+    
+    opacity: 0.7;
+  }
 }

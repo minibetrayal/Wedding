@@ -6,11 +6,11 @@
 
 /** Matches object-position with a vertical percentage (second value). */
 const HERO_OBJECT_POSITION_Y_RE =
-    /object-position:\s*(?:50%|[\d.]+(?:\.\d+)?%|center)\s+([\d.]+)%/i;
+    /transform:\s*translateY\s*\(\s*([\d.]+(?:\.\d+)?%)\s*\)/i;
 
 export function heroFocusYToCaptionOrStyle(fy: number): string {
     const yPct = Math.round(clamp01(fy) * 100);
-    return `object-position: 50% ${yPct}%`;
+    return `transform: translateY(${-yPct}%)`;
 }
 
 export function parseHeroFocusYFromCaptionOrStyle(captionOrStyle?: string): number | null {
@@ -19,7 +19,7 @@ export function parseHeroFocusYFromCaptionOrStyle(captionOrStyle?: string): numb
     if (!m) return null;
     const y = Number(m[1]) / 100;
     if (!Number.isFinite(y)) return null;
-    return clamp01(y);
+    return clamp01(-y);
 }
 
 function clamp01(n: number): number {
