@@ -932,9 +932,15 @@ export class KnexConnectionSupplier implements ConnectionSupplier {
 
 export class PgConnectionSupplier extends KnexConnectionSupplier {
     constructor(dbUrl: string) {
+        const url = dbUrl.trim();
+        const lower = url.toLowerCase();
+        const isLocal = lower.includes('localhost') || lower.includes('127.0.0.1') || lower.startsWith('./') || lower.startsWith('.\\');
         super({
             client: 'pg',
-            connection: dbUrl,
+            connection: {
+                connectionString: url,
+                ssl: isLocal ? false : { rejectUnauthorized: false },
+            },
             pool: { min: 0, max: 10 },
         });
     }
