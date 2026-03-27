@@ -50,6 +50,23 @@ export function safeAdminRedirectPath(next: unknown): string {
     return '/admin';
 }
 
+export function safeRedirectPath(next: unknown): string {
+    if (Array.isArray(next)) next = next[0];
+
+    if (typeof next !== 'string') return '/';
+
+    // Reject CRLF injection
+    if (/[\r\n]/.test(next)) return '/';
+
+    // Must start with a single slash
+    if (!next.startsWith('/')) return '/';
+
+    // Reject protocol-relative URLs like //evil.com
+    if (next.startsWith('//')) return '/';
+
+    return next;
+}
+
 /**
  * Check if the admin cookie is valid.
  */

@@ -19,6 +19,7 @@ import locationsRoutes from './locations';
 import timesRoutes from './times';
 import menuRoutes from './menu';
 import faqRoutes from './admin-faqs';
+import settingsRoutes from './settings';
 
 const router = express.Router();
 
@@ -68,5 +69,6 @@ router.use('/locations', locationsRoutes);
 router.use('/times', timesRoutes);
 router.use('/menu', menuRoutes);
 router.use('/faq', faqRoutes);
+router.use('/settings', settingsRoutes);
 
 export default router;

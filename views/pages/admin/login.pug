@@ -13,7 +13,7 @@ block content
   if error
     .alert.alert-danger.alert-dismissable(role='alert') #{error}
 
-  +validationForm(method='post', action='/admin/login')
+  +validationForm(method='post', action=formAction ||'/admin/login')
     input.hidden(type='hidden', name='next', value=next || '/admin')
     .mb-3
       label.form-label(for='admin-password') Password

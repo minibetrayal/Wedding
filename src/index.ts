@@ -9,6 +9,7 @@ import { STATUS_CODES } from 'http';
 import locals from './middleware/locals';
 import flashMiddleware from './middleware/flashMiddleware';
 import sessionMiddleware from './middleware/sessionMiddleware';
+import { requireLocked } from './middleware/lockedCookie';
 
 import adminRoutes from './routes/admin/admin';
 import detailsRoutes from './routes/details';
@@ -17,6 +18,7 @@ import guestbookRoutes from './routes/guestbook';
 import photosRoutes from './routes/photos';
 import projectorRoutes from './routes/projector';
 import rsvpRoutes from './routes/rsvp';
+import lockRouter from './routes/locked';
 
 const app = express();
 const PORT = parseInt(process.env.PORT!, 10);
@@ -40,7 +42,11 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use(locals);
 
+
 // Routes
+app.use('/locked', lockRouter);
+
+app.use(requireLocked);
 app.use('/admin', adminRoutes);
 app.use('/details', detailsRoutes);
 app.use('/faq', faqRoutes);

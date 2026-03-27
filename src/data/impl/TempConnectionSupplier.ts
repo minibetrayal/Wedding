@@ -15,6 +15,7 @@ import { Location, LocationType } from "../def/types/Location";
 import { Time, TimeType } from "../def/types/Time";
 import { MenuCourse } from "../def/types/MenuCourse";
 import { MenuItem } from "../def/types/MenuItem";
+import { DEFAULT_SETTINGS, Settings } from "../def/types/Settings";
 
 import { ConnectionSupplier } from "../def/interfaces/ConnectionSupplier";
 import { AuthorConnection } from "../def/interfaces/AuthorConnection";
@@ -29,6 +30,7 @@ import { ScheduleConnection } from "../def/interfaces/ScheduleConnection";
 import { LocationConnection } from "../def/interfaces/LocationConnection";
 import { TimesConnection } from "../def/interfaces/TimesConnection";
 import { MenuConnection } from "../def/interfaces/MenuConnection";
+import { SettingsConnection } from "../def/interfaces/SettingsConnection";
 
 import { DbNotFoundError, DbError } from "../dbErrors";
 import { formatYYYYMMDD, zonedToDate } from "../../util/timeUtils";
@@ -52,11 +54,12 @@ let projector: Projector = new Projector('home', '', 30_000, false);
 let names: Names = new Names('', '', '', '', '');
 
 let eventDate: string = formatYYYYMMDD(new Date());
-let schedule: ScheduleSnapshot = DEFAULT_SCHEDULE_SNAPSHOT;
+let schedule: ScheduleSnapshot = {...DEFAULT_SCHEDULE_SNAPSHOT};
 let locations: Partial<Record<LocationType, Location>> = {};
 let times: Partial<Record<TimeType, Time>> = {};
 let menu: MenuCourse[] = [];
 let faqs: Faq[] = [];
+let settings: Settings = {...DEFAULT_SETTINGS};
 
 const created: Set<string> = new Set();
 function createSimpleId(): string {
@@ -525,6 +528,15 @@ class TempFaqConnection implements FaqConnection {
     }
 }
 
+class TempSettingsConnection implements SettingsConnection {
+    async get<K extends keyof Settings>(key: K): Promise<Settings[K]> {
+        return settings[key];
+    }
+    async set<K extends keyof Settings>(key: K, value: Settings[K]): Promise<void> {
+        settings[key] = value;
+    }
+}
+
 export class TempConnectionSupplier implements ConnectionSupplier {
     async prepare(): Promise<void> {
         await fs.promises.rm(photosDir, { recursive: true, force: true });
@@ -543,6 +555,7 @@ export class TempConnectionSupplier implements ConnectionSupplier {
         times = {};
         menu = [];
         faqs = [];
+        settings = {...DEFAULT_SETTINGS};
         created.clear();
     }
 
@@ -584,5 +597,8 @@ export class TempConnectionSupplier implements ConnectionSupplier {
     }
     getFaqConnection(): FaqConnection {
         return new TempFaqConnection();
+    }
+    getSettingsConnection(): SettingsConnection {
+        return new TempSettingsConnection();
     }
 }

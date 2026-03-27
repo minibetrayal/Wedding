@@ -32,7 +32,6 @@ router.get('/', async (req, res, next) => {
         const heroPhotos = await dataConnection().photos.getAll('hero');
         const heroPhotoRows = heroPhotos.map((photo) => {
             const y = parseHeroFocusYFromCaptionOrStyle(photo.captionOrStyle);
-            console.log(photo.captionOrStyle, y);
             return {
                 photo,
                 focusY: y ?? 0,

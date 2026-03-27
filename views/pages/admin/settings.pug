@@ -1,0 +1,30 @@
+extends /layout
+include /mixins/inclusions
+include /mixins/validationForm
+
+block append script
+  +script('admin-ferry')
+
+block title
+  | Site settings — Admin
+
+block content
+  nav.mb-3(aria-label="Breadcrumb")
+    ol.breadcrumb.mb-0
+      li.breadcrumb-item
+        a.link-secondary(href="/admin") Admin
+      li.breadcrumb-item.active(aria-current="page") Site settings
+
+  .mb-4
+    h1.h3.mb-1 Site settings
+
+  +validationForm.suppress-enter-submit#settings-form(method="post", action="/admin/settings")
+  .card.border-0.shadow-sm.mb-3
+    .card-body.p-4
+      h2.h6.mb-3 Site Lock Status
+      .row.g-3.mb-1
+        .col-12.g-grid
+          if settings.siteLocked
+            a.btn.btn-lg.btn-success(href="/admin/settings/unlock") Launch site
+          else
+            a.btn.btn-lg.btn-danger(href="/admin/settings/lock") Lock site

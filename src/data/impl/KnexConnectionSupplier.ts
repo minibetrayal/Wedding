@@ -17,6 +17,9 @@ import type { PhotoConnection } from '../def/interfaces/PhotoConnection';
 import type { ProjectorConnection } from '../def/interfaces/ProjectorConnection';
 import type { ScheduleConnection } from '../def/interfaces/ScheduleConnection';
 import type { TimesConnection } from '../def/interfaces/TimesConnection';
+import { FaqConnection } from '../def/interfaces/FaqConnection';
+import { PhotoStorageConnection } from '../def/interfaces/PhotoStorageConnection';
+
 import { Author } from '../def/types/Author';
 import { FerryService, type FerryServiceTo } from '../def/types/FerryService';
 import { GuestbookEntry } from '../def/types/GuestbookEntry';
@@ -29,13 +32,14 @@ import { Photo, type PhotoType } from '../def/types/Photo';
 import { Projector, type ProjectorMode } from '../def/types/Projector';
 import { DEFAULT_SCHEDULE_SNAPSHOT, ScheduleSnapshot, ScheduledEvent } from '../def/types/ScheduledEvent';
 import { Time, TimeType } from '../def/types/Time';
+import { Faq } from '../def/types/Faq';
+import { DEFAULT_SETTINGS, Settings } from '../def/types/Settings';
+
 import { DbError, DbNotFoundError } from '../dbErrors';
 import { formatYYYYMMDD } from '../../util/timeUtils';
-import { Faq } from '../def/types/Faq';
-import { FaqConnection } from '../def/interfaces/FaqConnection';
-import { PhotoStorageConnection } from '../def/interfaces/PhotoStorageConnection';
 import { S3PhotoStorageConnection } from './S3PhotoStorageConnection';
 import { LocalPhotoStorageConnection } from './LocalPhotoStorageConnection';
+import { SettingsConnection } from '../def/interfaces/SettingsConnection';
 
 const SINGLETON_ID = '1';
 const INVITE_ID_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -863,6 +867,19 @@ class KnexFaqConnection implements FaqConnection {
     }
 }
 
+class KnexSettingsConnection implements SettingsConnection {
+    constructor(private readonly knex: Knex) {}
+
+    async get<K extends keyof Settings>(key: K): Promise<Settings[K]> {
+        const row = await this.knex('settings').where('key', key).first();
+        return row ? JSON.parse(String(row.value)) : DEFAULT_SETTINGS[key];
+    }
+
+    async set<K extends keyof Settings>(key: K, value: Settings[K]): Promise<void> {
+        await this.knex('settings').where('key', key).update({ value: JSON.stringify(value) });
+    }
+}
+
 export class KnexConnectionSupplier implements ConnectionSupplier {
     protected knex: Knex;
     protected readonly initialConfig: Knex.Config;
@@ -929,6 +946,10 @@ export class KnexConnectionSupplier implements ConnectionSupplier {
 
     getFaqConnection(): FaqConnection {
         return new KnexFaqConnection(this.knex);
+    }
+
+    getSettingsConnection(): SettingsConnection {
+        return new KnexSettingsConnection(this.knex);
     }
 }
 
@@ -1152,6 +1173,21 @@ async function ensureKnexSchema(knex: Knex): Promise<void> {
         t.text('answer').notNullable();
         t.integer('sort_key').notNullable().defaultTo(0);
     });
+
+    await ensureTable(knex, 'settings', (t) => {
+        t.string('key', 64).primary();
+        t.text('value').notNullable();
+    });
+
+    for (const key of Object.keys(DEFAULT_SETTINGS)) {
+        await knex('settings')
+            .insert({
+                key: key,
+                value: JSON.stringify(DEFAULT_SETTINGS[key as keyof Settings]),
+            })
+            .onConflict('key')
+            .ignore();
+    }
 }
 
 async function ensureSingletonDefaults(knex: Knex): Promise<void> {
