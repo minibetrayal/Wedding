@@ -39,7 +39,7 @@ router.post('/new', async (req, res, next) => {
         }
         const created = await dataConnection().faq.create(question, answer);
         req.flash('success', 'FAQ created.');
-        res.redirect(302, `/admin/faq/${created.id}/edit`);
+        res.redirect(302, `/admin/faq`);
     } catch (err) {
         next(err);
     }
@@ -74,7 +74,7 @@ router.post('/:faqId/edit', async (req, res, next) => {
         }
         await dataConnection().faq.update(id, question, answer);
         req.flash('success', 'FAQ updated.');
-        res.redirect(302, `/admin/faq/${id}/edit`);
+        res.redirect(302, `/admin/faq`);
     } catch (err) {
         if (err instanceof DbNotFoundError) {
             req.flash('error', 'FAQ not found.');

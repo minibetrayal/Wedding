@@ -34,6 +34,8 @@ import { DbNotFoundError, DbError } from "../dbErrors";
 import { formatYYYYMMDD, zonedToDate } from "../../util/timeUtils";
 import { Faq } from "../def/types/Faq";
 import { FaqConnection } from "../def/interfaces/FaqConnection";
+import { PhotoStorageConnection } from "../def/interfaces/PhotoStorageConnection";
+import { LocalPhotoStorageConnection } from "./LocalPhotoStorageConnection";
 
 const alpha = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const photosDir = path.join(process.cwd(), 'photos');
@@ -232,6 +234,8 @@ class TempGuestbookConnection implements GuestbookConnection {
 }
 
 class TempPhotoConnection implements PhotoConnection {
+    private readonly photoStorage: PhotoStorageConnection = new LocalPhotoStorageConnection();
+
     async get(photoId: string): Promise<Photo> {
         const photo = photos.find(p => p.id === photoId);
         if (!photo) throw new DbNotFoundError('Photo');
@@ -245,8 +249,7 @@ class TempPhotoConnection implements PhotoConnection {
     async getPhoto(photoId: string): Promise<Buffer> {
         const photo = photos.find(p => p.id === photoId);
         if (!photo) throw new DbNotFoundError('Photo');
-        const filePath = path.join(photosDir, photo.filename());
-        return await fs.promises.readFile(filePath);
+        return await this.photoStorage.get(photo);
     }
 
     async create(name: string, mimeType: string, data: Buffer, type: PhotoType = 'guestbook', captionOrStyle?: string): Promise<Photo> {
@@ -254,9 +257,7 @@ class TempPhotoConnection implements PhotoConnection {
         const photo = new Photo(crypto.randomUUID(), name, mimeType, type, sortKey, captionOrStyle);
         photos.push(photo);
 
-        await fs.promises.mkdir(photosDir, { recursive: true });
-        const filePath = path.join(photosDir, photo.filename());
-        await fs.promises.writeFile(filePath, data);
+        await this.photoStorage.save(photo, data);
         return photo;
     }
 
@@ -264,8 +265,7 @@ class TempPhotoConnection implements PhotoConnection {
         const photo = photos.find(p => p.id === photoId);
         photos = photos.filter(p => p.id !== photoId);
         if (photo) {
-            const filePath = path.join(photosDir, photo.filename());
-            await fs.promises.unlink(filePath).catch(() => { /* ignore if file missing */ });
+            await this.photoStorage.delete(photo);
         }
     }
 

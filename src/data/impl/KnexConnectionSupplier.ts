@@ -2,6 +2,7 @@ import knex, { type Knex } from 'knex';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import AWS from 'aws-sdk';
 
 import { ConnectionSupplier } from '../def/interfaces/ConnectionSupplier';
 import type { AuthorConnection } from '../def/interfaces/AuthorConnection';
@@ -32,9 +33,11 @@ import { DbError, DbNotFoundError } from '../dbErrors';
 import { formatYYYYMMDD } from '../../util/timeUtils';
 import { Faq } from '../def/types/Faq';
 import { FaqConnection } from '../def/interfaces/FaqConnection';
+import { PhotoStorageConnection } from '../def/interfaces/PhotoStorageConnection';
+import { S3PhotoStorageConnection } from './S3PhotoStorageConnection';
+import { LocalPhotoStorageConnection } from './LocalPhotoStorageConnection';
 
 const SINGLETON_ID = '1';
-const PHOTOS_DIR = path.join(process.cwd(), 'photos');
 const INVITE_ID_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
 function toBool(v: unknown): boolean {
@@ -346,7 +349,7 @@ class KnexGuestbookConnection implements GuestbookConnection {
 }
 
 class KnexPhotoConnection implements PhotoConnection {
-    constructor(private readonly knex: Knex) {}
+    constructor(private readonly knex: Knex, private readonly photoStorage: PhotoStorageConnection) {}
 
     async get(photoId: string): Promise<Photo> {
         const row = await this.knex('photos').where('id', photoId).first();
@@ -360,9 +363,8 @@ class KnexPhotoConnection implements PhotoConnection {
     }
 
     async getPhoto(photoId: string): Promise<Buffer> {
-        const photo = await this.get(photoId);
-        const filePath = path.join(PHOTOS_DIR, photo.filename());
-        return fs.promises.readFile(filePath);
+        const photo = await this.get(photoId); // ensures exists, throws if not
+        return this.photoStorage.get(photo);
     }
 
     async create(
@@ -379,9 +381,8 @@ class KnexPhotoConnection implements PhotoConnection {
 
         const id = crypto.randomUUID();
         const photo = new Photo(id, name, mimeType, type, sortKey, captionOrStyle);
-        await fs.promises.mkdir(PHOTOS_DIR, { recursive: true });
-        const filePath = path.join(PHOTOS_DIR, photo.filename());
-        await fs.promises.writeFile(filePath, data);
+
+        await this.photoStorage.save(photo, data);
 
         await this.knex('photos').insert({
             id,
@@ -398,9 +399,8 @@ class KnexPhotoConnection implements PhotoConnection {
         const photo = await this.knex('photos').where('id', photoId).first();
         if (!photo) return;
         const p = mapPhotoRow(photo as Record<string, unknown>);
+        await this.photoStorage.delete(p);
         await this.knex('photos').where('id', photoId).delete();
-        const filePath = path.join(PHOTOS_DIR, p.filename());
-        await fs.promises.unlink(filePath).catch(() => {});
     }
 
     async updateCaptionOrStyle(photoId: string, captionOrStyle?: string): Promise<void> {
@@ -866,10 +866,12 @@ class KnexFaqConnection implements FaqConnection {
 export class KnexConnectionSupplier implements ConnectionSupplier {
     protected knex: Knex;
     protected readonly initialConfig: Knex.Config;
-
-    constructor(config: Knex.Config) {
+    protected readonly photoStorage: PhotoStorageConnection;
+    
+    constructor(config: Knex.Config, photoStorage: PhotoStorageConnection) {
         this.initialConfig = config;
         this.knex = knex(config);
+        this.photoStorage = photoStorage;
     }
 
     async prepare(): Promise<void> {
@@ -890,7 +892,7 @@ export class KnexConnectionSupplier implements ConnectionSupplier {
     }
 
     getPhotoConnection(): PhotoConnection {
-        return new KnexPhotoConnection(this.knex);
+        return new KnexPhotoConnection(this.knex, this.photoStorage);
     }
 
     getInviteeConnection(): InviteeConnection {
@@ -935,14 +937,17 @@ export class PgConnectionSupplier extends KnexConnectionSupplier {
         const url = dbUrl.trim();
         const lower = url.toLowerCase();
         const isLocal = lower.includes('localhost') || lower.includes('127.0.0.1') || lower.startsWith('./') || lower.startsWith('.\\');
-        super({
-            client: 'pg',
-            connection: {
-                connectionString: url,
-                ssl: isLocal ? false : { rejectUnauthorized: false },
+        super(
+            {
+                client: 'pg',
+                connection: {
+                    connectionString: url,
+                    ssl: isLocal ? false : { rejectUnauthorized: false },
+                },
+                pool: { min: 0, max: 10 }
             },
-            pool: { min: 0, max: 10 },
-        });
+            new S3PhotoStorageConnection()
+        );
     }
 }
 
@@ -956,11 +961,14 @@ export class SqliteConnectionSupplier extends KnexConnectionSupplier {
             dbUrl,
         );
         fs.mkdirSync(path.dirname(filename), { recursive: true });
-        super({
-            client: 'better-sqlite3',
-            connection: { filename },
-            useNullAsDefault: true,
-        });
+        super(
+            {
+                client: 'better-sqlite3',
+                connection: { filename },
+                useNullAsDefault: true,
+            },
+            new LocalPhotoStorageConnection()
+        );
         this.sqliteFilename = filename;
         this.clear = clear ?? false;
     }
@@ -993,26 +1001,6 @@ async function sqliteTableColumns(knex: Knex, table: string): Promise<{ name: st
         return (r as { rows: { name: string; type: string }[] }).rows;
     }
     return [];
-}
-
-async function faqTableUsesIntegerId(knex: Knex): Promise<boolean> {
-    const client = knex.client.config.client;
-    if (client === 'better-sqlite3' || client === 'sqlite3') {
-        const cols = await sqliteTableColumns(knex, 'faq');
-        const idCol = cols.find((c) => c.name === 'id');
-        if (!idCol) return false;
-        return /INT/i.test(idCol.type);
-    }
-    if (client === 'pg') {
-        const row = await knex('information_schema.columns')
-            .select('data_type')
-            .where({ table_schema: 'public', table_name: 'faq', column_name: 'id' })
-            .first();
-        if (!row) return false;
-        const t = String((row as { data_type: string }).data_type).toLowerCase();
-        return t === 'integer' || t === 'bigint' || t === 'smallint';
-    }
-    return false;
 }
 
 async function ensureKnexSchema(knex: Knex): Promise<void> {
@@ -1158,7 +1146,7 @@ async function ensureKnexSchema(knex: Knex): Promise<void> {
         t.primary(['menu_item_id', 'tag']);
     });
 
-    await knex.schema.createTable('faq', (t) => {
+    await ensureTable(knex, 'faq', (t) => {
         t.string('id', 36).primary();
         t.string('question').notNullable();
         t.text('answer').notNullable();
