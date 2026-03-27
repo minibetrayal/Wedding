@@ -40,7 +40,13 @@ block content
           strong.ms-auto.h1 RSVP
 
       #rsvp-accordion-panel.accordion-collapse.collapse(class=inv.seen ? 'show' : '', data-bs-parent="#rsvp-accordion")
-        .accordion-body
+        .accordion-body        
+          if inv.id
+            p.small.text-muted.text-center.mb-0.mt-3
+              | Your invitation code is 
+              code.user-select-all #{inv.id}
+              | . Keep it handy if you need to return to this page on another device.
+
           +validationForm.suppress-enter-submit#rsvp-edit-form(
             method="post",
             action='/rsvp/' + inv.id

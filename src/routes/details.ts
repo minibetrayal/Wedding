@@ -3,10 +3,21 @@ import express from 'express';
 import { getDataConnection as dataConnection } from '../data/def/DataConnection';
 import { formatTimeStr } from '../util/timeUtils';
 import { MenuTag } from '../data/def/types/MenuItem';
+import { hasValidAdminCookie } from '../middleware/adminAuth';
+import { getRsvpCookie } from '../middleware/rsvpCookie';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
+    const isAdmin = hasValidAdminCookie(req);
+    const hasRsvp = getRsvpCookie(req);
+
+    
+
+    if (!isAdmin && !hasRsvp) {
+        return res.render('pages/details-locked');
+    }
+
     const db = dataConnection();
     const [
         eventDate, toIsland, toMainland, cost, link, contactName, 

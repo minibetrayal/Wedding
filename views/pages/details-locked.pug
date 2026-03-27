@@ -1,0 +1,16 @@
+extends /layout
+
+block title
+  | #{coupleNamesShort} — Details
+
+block content
+  .row.justify-content-center
+    .col-md-8.col-lg-6
+      .card.shadow-sm.border-0
+        .card-body.py-4.px-3.px-md-4
+          h1.card-title.h4.mb-3 Wedding Details
+          p.mb-3
+            | To keep timing, and venue information private for our guests, this page is only available after you have scanned your invitation code.
+          p.text-muted.small.mb-4
+            | If you have received an invitation, please visit our RSVP page and enter your invitation code. You will then be able to view the full details here.
+          a.btn.btn-primary(href="/rsvp") Go to RSVP

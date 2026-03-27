@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { getDataConnection } from '../data/def/DataConnection';
 
-/** Signed cookie: guestbook `Author.id` for this browser. */
 const LOCKED_COOKIE_NAME = 'locked';
 
 const lockedCookieOptions = {

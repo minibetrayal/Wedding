@@ -34,10 +34,4 @@ router.post('/login', (req, res) => {
     res.redirect(302, next);
 });
 
-router.get('/lock', async (req, res) => {
-    await getDataConnection().settings.set('siteLocked', true);
-    req.flash('success', 'Site Locked');
-    res.redirect(302, '/');
-});
-
 export default router;
