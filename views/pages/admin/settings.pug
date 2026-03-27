@@ -23,8 +23,9 @@ block content
     .card-body.p-4
       h2.h6.mb-3 Site Lock Status
       .row.g-3.mb-1
-        .col-12.d-grid
+        .col-12.d-grid.gap-2
           if settings.siteLocked
             a.btn.btn-lg.btn-success(href="/admin/settings/unlock") Launch site
+            a.btn.btn-lg.btn-warning(href="/locked/logout") View as guest
           else
             a.btn.btn-lg.btn-danger(href="/admin/settings/lock") Lock site

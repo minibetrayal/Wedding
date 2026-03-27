@@ -7,7 +7,9 @@ const lockedCookieOptions = {
     signed: true,
     httpOnly: true,
     sameSite: 'lax' as const,
+    path: '/',
     secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
 };
 
 export function setLockedCookie(res: Response): void {
@@ -23,9 +25,15 @@ export function hasLockedCookie(req: Request): boolean {
     return typeof v === 'string' ? v === 'true': false;
 }
 
+export async function isSiteLocked(): Promise<boolean> {
+    return await getDataConnection().settings.get('siteLocked');
+}
+
 export async function requireLocked(req: Request, res: Response, next: NextFunction): Promise<void> {
-    const isLocked = await getDataConnection().settings.get('siteLocked');
-    const hasCookie = hasLockedCookie(req);
-    if (isLocked && !hasCookie) return res.render('locked');
-    next();
+    const nextParam = req.originalUrl || '/';
+    console.log('requireLocked', hasLockedCookie(req), await isSiteLocked(), nextParam);
+    if (hasLockedCookie(req) || !(await isSiteLocked())) return next();
+    if (nextParam === '/') return res.redirect(302, '/locked');
+    const q = new URLSearchParams({ next: nextParam });
+    return res.redirect(302, `/locked/login?${q.toString()}`);
 }

@@ -1,6 +1,7 @@
 import express from 'express';
 import { getDataConnection } from '../../data/def/DataConnection';
 import { DEFAULT_SETTINGS,Settings } from '../../data/def/types/Settings';
+import { setLockedCookie } from '../../middleware/lockedCookie';
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.get('/', async (req, res) => {
 
 router.get('/lock', async (req, res) => {
     await getDataConnection().settings.set('siteLocked', true);
+    setLockedCookie(res);
     req.flash('success', 'Site Locked');
     res.redirect(302, '/admin/settings');
 });

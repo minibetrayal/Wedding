@@ -45,8 +45,8 @@ app.use(locals);
 
 // Routes
 app.use('/locked', lockRouter);
-
 app.use(requireLocked);
+
 app.use('/admin', adminRoutes);
 app.use('/details', detailsRoutes);
 app.use('/faq', faqRoutes);

@@ -25,10 +25,7 @@ const router = express.Router();
 
 router.get('/login', (req, res) => {
     const next = safeAdminRedirectPath(req.query.next);
-    if (hasValidAdminCookie(req)) {
-        res.redirect(302, next);
-        return;
-    }
+    if (hasValidAdminCookie(req)) return res.redirect(302, next);
     res.render('pages/admin/login', { next });
 });
 

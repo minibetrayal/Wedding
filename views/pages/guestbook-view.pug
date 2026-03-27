@@ -80,7 +80,9 @@ block content
                 span(aria-hidden="true") ·
                 time(datetime=entry.updated.toISOString())
                   | Updated #{entry.formatUpdated()}
-
+            if isAdmin
+              .small.text-body-secondary
+                | Author ID: #{entry.author.id}
           .guestbook-entry-body.fs-5.text-break
             if entry.content && entry.content.length > 0
               .mb-0.text-prewrap #{entry.content}

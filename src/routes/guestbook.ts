@@ -78,6 +78,13 @@ router.get('/moderation', requireAdmin, async (req, res) => {
     await get(req, res, (entry) => entry.pendingRemoderation, 'moderation');
 });
 
+router.get('/set-author/:authorId', async (req, res) => {
+    const authorId = req.params.authorId;
+    setAuthorCookie(res, authorId);
+    req.flash('success', 'You are now signed in as ' + authorId);
+    res.redirect(302, '/guestbook/mine');
+});
+
 router.post('/new', Upload.single('photo', '/guestbook/new'), async (req, res, next) => {
     try {
         const displayNameRaw = typeof req.body.displayName === 'string' ? req.body.displayName.trim() : '';

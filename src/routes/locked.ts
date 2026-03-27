@@ -1,5 +1,5 @@
 import express from 'express';
-import { hasLockedCookie, setLockedCookie } from '../middleware/lockedCookie';
+import { clearLockedCookie, hasLockedCookie, isSiteLocked, setLockedCookie } from '../middleware/lockedCookie';
 import { safeRedirectPath, verifyAdminPassword } from '../middleware/adminAuth';
 import { getDataConnection } from '../data/def/DataConnection';
 
@@ -7,16 +7,8 @@ const router = express.Router();
 
 router.get('/login', async (req, res) => {
     const next = safeRedirectPath(req.query.next);
-    if (hasLockedCookie(req)) {
-        res.redirect(302, next);
-        return;
-    }
-    const isLocked = await getDataConnection().settings.get('siteLocked');
-    if (!isLocked) {
-        res.redirect(302, next);
-        return;
-    }
-    res.render('pages/admin/login', { next, formAction: '/locked/login' });
+    if (hasLockedCookie(req) || !(await isSiteLocked())) return res.redirect(302, next);
+    res.render('pages/locked-login', { next });
 });
 
 router.post('/login', (req, res) => {
@@ -32,6 +24,16 @@ router.post('/login', (req, res) => {
     setLockedCookie(res);
     req.flash('success', 'Site Unlocked');
     res.redirect(302, next);
+});
+
+router.get('/logout', (req, res) => {
+    clearLockedCookie(res);
+    req.flash('success', 'Site Locked');
+    res.redirect(302, '/');
+});
+
+router.get('/', (req, res) => {
+    res.render('pages/locked');
 });
 
 export default router;

@@ -2,9 +2,11 @@ extends /layout
 include /mixins/inclusions
 include /mixins/validationForm
 
+block nav
+  //- no menu here
 
 block title
-  | Admin sign in
+  | Unlock the site
 
 block content
   h1.h4.mb-3 Admin
@@ -13,16 +15,18 @@ block content
   if error
     .alert.alert-danger.alert-dismissable(role='alert') #{error}
 
-  +validationForm(method='post', action='/admin/login')
-    input.hidden(type='hidden', name='next', value=next || '/admin')
+  +validationForm(method='post', action='/locked/login')
+    input.hidden(type='hidden', name='next', value=next || '/')
     .mb-3
       label.form-label(for='admin-password') Password
       input#admin-password.form-control(
         type='password',
         name='password',
         required,
-        autocomplete='current-password',
         autofocus
       )
       .invalid-feedback.mt-s Required
     button.btn.btn-primary(type='submit') Sign in
+
+block footer 
+  //- nothing down here either

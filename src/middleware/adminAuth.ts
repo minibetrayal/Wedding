@@ -34,37 +34,40 @@ const ALLOWED_POST_LOGIN_REDIRECTS: PostLoginRedirectRule[] = [
     { isPrefix: true, path: '/photos' },
 ];
 
-/**
- * Sanitize `next` after admin login (avoid open redirects). Only paths matching
- * {@link ALLOWED_POST_LOGIN_REDIRECTS} are returned; otherwise `/admin`.
- */
-export function safeAdminRedirectPath(next: unknown): string {
-    if (Array.isArray(next)) next = next[0];
-    if (typeof next !== 'string' || /[\r\n]/.test(next)) return '/admin';
-    if (next.startsWith('//')) return '/admin';
+function normalizeRedirectPath(next: unknown): string | null {
+    if (!next) return null;
+    const n: string = (Array.isArray(next)) ? next[0] : next;
+    if (typeof n !== 'string') return null;
+    return n;
+}
+
+function isSafeRedirectPath(next: string | null): boolean {
+    if (!next) return false;
+    if (/[\r\n]/.test(next)) return false;
+    if (!next.startsWith('/')) return false;
+    if (next.startsWith('//')) return false;
+    return true;
+}
+
+function isSafeAdminRedirectPath(next: string | null): boolean {
+    if (!isSafeRedirectPath(next)) return false;
     for (const rule of ALLOWED_POST_LOGIN_REDIRECTS) {
-        const typeOneResult = next === rule.path || next.startsWith(`${rule.path}?`);
-        if (typeOneResult) return next;
-        if (rule.isPrefix && next.startsWith(`${rule.path}/`)) return next;
+        if (next === rule.path || next!.startsWith(`${rule.path}?`)) return true;
+        if (rule.isPrefix && next!.startsWith(`${rule.path}/`)) return true;
     }
-    return '/admin';
+    return false;
+}
+
+export function safeAdminRedirectPath(next: unknown): string {
+    const n = normalizeRedirectPath(next);
+    if (!isSafeAdminRedirectPath(n)) return '/admin';
+    return n!;
 }
 
 export function safeRedirectPath(next: unknown): string {
-    if (Array.isArray(next)) next = next[0];
-
-    if (typeof next !== 'string') return '/';
-
-    // Reject CRLF injection
-    if (/[\r\n]/.test(next)) return '/';
-
-    // Must start with a single slash
-    if (!next.startsWith('/')) return '/';
-
-    // Reject protocol-relative URLs like //evil.com
-    if (next.startsWith('//')) return '/';
-
-    return next;
+    const n = normalizeRedirectPath(next);
+    if (!isSafeRedirectPath(n)) return '/';
+    return n!;
 }
 
 /**
@@ -76,10 +79,7 @@ export function hasValidAdminCookie(req: Request): boolean {
 
 /** Use after mounting GET/POST /login. Blocks all other /admin routes without a valid signed cookie. */
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-    if (hasValidAdminCookie(req)) {
-        next();
-        return;
-    }
+    if (hasValidAdminCookie(req)) return next();
     const nextParam = req.originalUrl || '/admin';
     const q = new URLSearchParams({ next: nextParam });
     res.redirect(302, `/admin/login?${q.toString()}`);

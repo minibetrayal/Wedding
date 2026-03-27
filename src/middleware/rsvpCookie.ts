@@ -9,6 +9,7 @@ const rsvpCookieOptions = {
     sameSite: 'lax' as const,
     path: '/rsvp',
     secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
 };
 
 export function setRsvpCookie(res: Response, inviteId: string): void {
