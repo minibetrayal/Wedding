@@ -6,7 +6,7 @@
 
 /** Matches object-position with a vertical percentage (second value). */
 const HERO_OBJECT_POSITION_Y_RE =
-    /transform:\s*translateY\s*\(\s*([\d.]+(?:\.\d+)?%)\s*\)/i;
+    /transform:\s*translateY\s*\(\s*(-?[\d.]+\.?\d*)%\s*\)/i;
 
 export function heroFocusYToCaptionOrStyle(fy: number): string {
     const yPct = Math.round(clamp01(fy) * 100);
