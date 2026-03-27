@@ -105,15 +105,16 @@ import { ConnectionSupplier } from './data/def/interfaces/ConnectionSupplier';
 async function start(): Promise<void> {
 
   const env = process.env.NODE_ENV;
+  const dbUrl = process.env.DATABASE_URL || process.env.HEROKU_POSTGRESQL_SILVER_URL!;
 
   let connectionSupplier: ConnectionSupplier;
   let dummyDataPopulator: DummyDataPopulator | undefined;
   
   if (env !== 'production') {
     dummyDataPopulator = new DummyDataPopulator();
-    connectionSupplier = new SqliteConnectionSupplier(env === 'development');
+    connectionSupplier = new SqliteConnectionSupplier(dbUrl, env === 'development');
   } else {
-    connectionSupplier = new PgConnectionSupplier();
+    connectionSupplier = new PgConnectionSupplier(dbUrl);
   }
 
   await DataConnection.init(connectionSupplier, dummyDataPopulator);

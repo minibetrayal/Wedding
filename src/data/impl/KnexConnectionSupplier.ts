@@ -931,10 +931,10 @@ export class KnexConnectionSupplier implements ConnectionSupplier {
 }
 
 export class PgConnectionSupplier extends KnexConnectionSupplier {
-    constructor() {
+    constructor(dbUrl: string) {
         super({
             client: 'pg',
-            connection: process.env.DATABASE_URL!,
+            connection: dbUrl,
             pool: { min: 0, max: 10 },
         });
     }
@@ -944,10 +944,10 @@ export class SqliteConnectionSupplier extends KnexConnectionSupplier {
     clear: boolean = false;
     private readonly sqliteFilename: string;
 
-    constructor(clear?: boolean) {
+    constructor(dbUrl: string, clear?: boolean) {
         const filename = path.resolve(
             process.cwd(),
-            process.env.DATABASE_URL ?? './database/db.sqlite3',
+            dbUrl,
         );
         fs.mkdirSync(path.dirname(filename), { recursive: true });
         super({

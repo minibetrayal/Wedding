@@ -12,7 +12,7 @@
     "start": "node dist/index.js",
     "generate:dummy-data": "node scripts/generate-dummy-invites-guestbook.cjs",
     "dev": "npm run build && concurrently \"npm run build:css:watch\" \"ts-node-dev --respawn --transpile-only src/index.ts\"",
-    "heroku-postbuild": "npm run build && npm run generate:dummy-data"
+    "heroku-postbuild": "npm run build"
   },
   "keywords": [],
   "author": "",
