@@ -1,9 +1,17 @@
 import express from 'express';
 import { clearLockedCookie, hasLockedCookie, isSiteLocked, setLockedCookie } from '../middleware/lockedCookie';
-import { safeRedirectPath, verifyAdminPassword } from '../middleware/adminAuth';
-import { getDataConnection } from '../data/def/DataConnection';
+import { safeRedirectPath } from '../middleware/adminAuth';
+import { createHash, timingSafeEqual } from 'crypto';
 
 const router = express.Router();
+
+const verifyUnlockPassword = (input: string): boolean => {
+    const expected = process.env.UNLOCK_PASSWORD;
+    if (expected === undefined || expected.length === 0) return false;
+    const a = createHash('sha256').update(input, 'utf8').digest();
+    const b = createHash('sha256').update(expected, 'utf8').digest();
+    return timingSafeEqual(a, b);
+}
 
 router.get('/login', async (req, res) => {
     const next = safeRedirectPath(req.query.next);
@@ -15,7 +23,7 @@ router.post('/login', (req, res) => {
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
     const next = safeRedirectPath(req.body?.next);
 
-    if (!verifyAdminPassword(password)) {
+    if (!verifyUnlockPassword(password)) {
         req.flash('error', 'Invalid password.');
         const q = new URLSearchParams({ next });
         return res.redirect(302, `/locked/login?${q.toString()}`);
