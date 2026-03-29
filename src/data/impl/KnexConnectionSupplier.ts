@@ -1015,8 +1015,8 @@ async function ensureKnexSchema(knex: Knex): Promise<void> {
         t.integer('carpool_spots_offered').notNullable().defaultTo(0);
         t.boolean('island_lift_requested').notNullable().defaultTo(false);
     });
-    await ensureColumn(knex, 'invites', 'islandLiftRequested', (t) => {
-        t.boolean('island_lift_requested').notNullable().defaultTo(false).alter();
+    await ensureColumn(knex, 'invites', 'island_lift_requested', (t) => {
+        t.boolean('island_lift_requested').notNullable().defaultTo(false);
     })
 
     await ensureTable(knex, 'invitees', (t) => {

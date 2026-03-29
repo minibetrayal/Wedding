@@ -28,15 +28,18 @@ export default async function locals(req: express.Request, res: express.Response
     res.locals.contactEmail = contactEmail;
 
     res.locals.eventDateRaw = eventDate;
-    res.locals.eventDateFormatted = formatDateStr(eventDate);
     res.locals.eventTZ = process.env.EVENT_TIMEZONE;
     res.locals.eventTZLabel = process.env.EVENT_TIMEZONE_LABEL;
     res.locals.islandName = island.name;
 
-    res.locals.ceremonyDateTime = zonedToDate(eventDate, scheduleSnapshot.ceremony().time);
 
     res.locals.rsvpCloseDateRaw = rsvpCloseDate;
-    res.locals.rsvpCloseDateFormatted = formatDateStr(rsvpCloseDate);
+
+    try {
+        res.locals.eventDateFormatted = formatDateStr(eventDate);
+        res.locals.ceremonyDateTime = zonedToDate(eventDate, scheduleSnapshot.ceremony().time);
+        res.locals.rsvpCloseDateFormatted = formatDateStr(rsvpCloseDate || eventDate);
+    } catch (err) {}
 
     res.locals.websiteUrl = process.env.WEBSITE_URL;
 
