@@ -18,8 +18,7 @@ block content
   .mb-4
     h1.h3.mb-1 Site settings
 
-  +validationForm.suppress-enter-submit#settings-form(method="post", action="/admin/settings")
-  .card.border-0.shadow-sm.mb-3
+  .card.border-0.shadow-sm.mb-5
     .card-body.p-4
       h2.h6.mb-3 Site Lock Status
       .row.g-3.mb-1
@@ -29,3 +28,68 @@ block content
             a.btn.btn-lg.btn-warning(href="/locked/logout") View as guest
           else
             a.btn.btn-lg.btn-danger(href="/admin/settings/lock") Lock site
+
+  
+
+  .mb-4
+    h1.h3.mb-1 Names & Contact Information
+
+  +validationForm.suppress-enter-submit(method="post", action="/admin/settings")
+    .card.border-0.shadow-sm.mb-3
+      .card-body.p-4
+        .row.g-3
+          .col-12
+            label.form-label.fw-semibold(for="names") Full names
+            input#names.form-control(
+              type="text",
+              name="names",
+              value=settings.names,
+              autocomplete="organization",
+              placeholder='e.g. John & Jane'
+            )
+            p.form-text.small.mb-0 Used in page titles, footer, copy, etc.
+          .col-12
+            label.form-label.fw-semibold(for="names-short") Short names
+            input#names-short.form-control(
+              type="text",
+              name="namesShort",
+              value=settings.namesShort,
+              autocomplete="off",
+              placeholder='e.g. J&J'
+            )
+            p.form-text.small.mb-0 Navbar brand and short titles.
+          .col-12
+            label.form-label.fw-semibold(for="contact-name") MC / contact name
+            input#contact-name.form-control(
+              type="text",
+              name="contactName",
+              value=settings.contactName,
+              autocomplete="name",
+              placeholder='On-the-day contact name'
+            )
+          .col-12
+            label.form-label.fw-semibold(for="contact-phone") Contact phone
+            input#contact-phone.form-control(
+              type="tel",
+              name="contactPhone",
+              value=settings.contactPhone,
+              autocomplete="tel",
+              placeholder='e.g. 0400 000 000'
+            )
+            p.form-text.small.mb-0 MC Contact phone for the event day.
+          .col-12
+            label.form-label.fw-semibold(for="contact-email") Contact email
+            input#contact-email.form-control(
+              type="email",
+              name="contactEmail",
+              value=settings.contactEmail,
+              autocomplete="email",
+              placeholder='john@example.com'
+            )
+            p.form-text.small.mb-0 Contact email for prior to the event day.
+    .d-flex.flex-wrap.gap-2
+      button.btn.btn-primary(type="submit")
+        i.bi.bi-check2.me-1(aria-hidden="true")
+        | Save
+      a.btn.btn-outline-secondary(href="/admin") Cancel
+

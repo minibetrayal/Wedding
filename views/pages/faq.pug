@@ -6,14 +6,14 @@ block title
 
 block content
   h1.h4.mb-1.mt-2 Frequently asked questions
-  p.text-muted.mb-4 Quick answers to common questions — see #[a.link-primary(href="/details") wedding details] for times, venues, and travel.
+  p.text-muted.mb-4 Quick answers to common questions.
 
   +gemline(0, 4)
 
   if faqs.length === 0
     .card.border-0.shadow-sm.my-4
       .card-body.p-4.text-center.text-muted
-        p.mb-0 We don’t have any FAQs here yet. Please check #[a.link-primary(href="/details") wedding details] for everything you need to know.
+        p.mb-0 We don’t have any FAQs here yet.
   else
     #faq-accordion.accordion.my-4
       each item in faqs
@@ -35,4 +35,5 @@ block content
               p.mb-0.text-prewrap !{item.formatted}
 
   p.small.text-muted.mb-0
-    | Something not covered? Check the #[a.link-primary(href="/details") Wedding Details] page or get in touch using the contact information there.
+    | Something not covered? Get in touch at 
+    a.link-primary(href=`mailto:${contactEmail}`) #{contactEmail}

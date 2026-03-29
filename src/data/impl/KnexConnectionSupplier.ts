@@ -12,7 +12,6 @@ import type { InviteConnection } from '../def/interfaces/InviteConnection';
 import type { InviteeConnection } from '../def/interfaces/InviteeConnection';
 import type { LocationConnection } from '../def/interfaces/LocationConnection';
 import type { MenuConnection } from '../def/interfaces/MenuConnection';
-import type { NamesConnection } from '../def/interfaces/NamesConnection';
 import type { PhotoConnection } from '../def/interfaces/PhotoConnection';
 import type { ProjectorConnection } from '../def/interfaces/ProjectorConnection';
 import type { ScheduleConnection } from '../def/interfaces/ScheduleConnection';
@@ -119,6 +118,7 @@ class KnexInviteConnection implements InviteConnection {
         inv.seen = toBool(row.seen);
         inv.carpoolRequested = toBool(row.carpool_requested);
         inv.carpoolSpotsOffered = Number(row.carpool_spots_offered ?? 0);
+        inv.islandLiftRequested = toBool(row.island_lift_requested);
         return inv;
     }
 
@@ -168,6 +168,7 @@ class KnexInviteConnection implements InviteConnection {
         notes?: string,
         carpoolRequested?: boolean,
         carpoolSpotsOffered?: number,
+        islandLiftRequested?: boolean,
     ): Promise<void> {
         const row: Record<string, unknown> = {};
         if (phone !== undefined) row.phone = phone;
@@ -175,6 +176,7 @@ class KnexInviteConnection implements InviteConnection {
         if (notes !== undefined) row.notes = notes;
         if (carpoolRequested !== undefined) row.carpool_requested = carpoolRequested;
         if (carpoolSpotsOffered !== undefined) row.carpool_spots_offered = carpoolSpotsOffered;
+        if (islandLiftRequested !== undefined) row.island_lift_requested = islandLiftRequested;
         if (Object.keys(row).length === 0) return;
         const n = await this.knex('invites').where('id', inviteId).update(row);
         if (n === 0) throw new DbNotFoundError('Invite');
@@ -716,55 +718,6 @@ class KnexFerryServiceConnection implements FerryServiceConnection {
     }
 }
 
-class KnexNamesConnection implements NamesConnection {
-    constructor(private readonly knex: Knex) {}
-
-    async getNames(): Promise<string> {
-        const row = await this.knex('names').where('id', SINGLETON_ID).first();
-        return row ? String(row.names ?? '') : '';
-    }
-
-    async setNames(names: string): Promise<void> {
-        await this.knex('names').where('id', SINGLETON_ID).update({ names });
-    }
-
-    async getNamesShort(): Promise<string> {
-        const row = await this.knex('names').where('id', SINGLETON_ID).first();
-        return row ? String(row.names_short ?? '') : '';
-    }
-
-    async setNamesShort(namesShort: string): Promise<void> {
-        await this.knex('names').where('id', SINGLETON_ID).update({ names_short: namesShort });
-    }
-
-    async getContactName(): Promise<string> {
-        const row = await this.knex('names').where('id', SINGLETON_ID).first();
-        return row ? String(row.contact_name ?? '') : '';
-    }
-
-    async setContactName(contactName: string): Promise<void> {
-        await this.knex('names').where('id', SINGLETON_ID).update({ contact_name: contactName });
-    }
-
-    async getContactPhone(): Promise<string> {
-        const row = await this.knex('names').where('id', SINGLETON_ID).first();
-        return row ? String(row.contact_phone ?? '') : '';
-    }
-
-    async setContactPhone(contactPhone: string): Promise<void> {
-        await this.knex('names').where('id', SINGLETON_ID).update({ contact_phone: contactPhone });
-    }
-
-    async getContactEmail(): Promise<string> {
-        const row = await this.knex('names').where('id', SINGLETON_ID).first();
-        return row ? String(row.contact_email ?? '') : '';
-    }
-
-    async setContactEmail(contactEmail: string): Promise<void> {
-        await this.knex('names').where('id', SINGLETON_ID).update({ contact_email: contactEmail });
-    }
-}
-
 class KnexScheduleConnection implements ScheduleConnection {
     constructor(private readonly knex: Knex) {}
 
@@ -924,10 +877,6 @@ export class KnexConnectionSupplier implements ConnectionSupplier {
         return new KnexFerryServiceConnection(this.knex);
     }
 
-    getNamesConnection(): NamesConnection {
-        return new KnexNamesConnection(this.knex);
-    }
-
     getScheduleConnection(): ScheduleConnection {
         return new KnexScheduleConnection(this.knex);
     }
@@ -1015,6 +964,25 @@ async function ensureTable(
     await knex.schema.createTable(tableName, build);
 }
 
+async function ensureNotTable(
+    knex: Knex,
+    tableName: string,
+): Promise<void> {
+    if (await knex.schema.hasTable(tableName)) {
+        await knex.schema.dropTable(tableName);
+    }
+}
+
+async function ensureColumn(
+    knex: Knex,
+    tableName: string,
+    columnName: string,
+    build: (t: Knex.CreateTableBuilder) => void,
+): Promise<void> {
+    if (await knex.schema.hasColumn(tableName, columnName)) return;
+    await knex.schema.alterTable(tableName, build);
+}
+
 async function sqliteTableColumns(knex: Knex, table: string): Promise<{ name: string; type: string }[]> {
     const r = await knex.raw(`PRAGMA table_info(${table})`);
     if (Array.isArray(r)) return r as { name: string; type: string }[];
@@ -1045,7 +1013,11 @@ async function ensureKnexSchema(knex: Knex): Promise<void> {
         t.boolean('seen').notNullable().defaultTo(false);
         t.boolean('carpool_requested').notNullable().defaultTo(false);
         t.integer('carpool_spots_offered').notNullable().defaultTo(0);
+        t.boolean('island_lift_requested').notNullable().defaultTo(false);
     });
+    await ensureColumn(knex, 'invites', 'islandLiftRequested', (t) => {
+        t.boolean('island_lift_requested').notNullable().defaultTo(false).alter();
+    })
 
     await ensureTable(knex, 'invitees', (t) => {
         t.string('id', 36).primary();
@@ -1111,14 +1083,7 @@ async function ensureKnexSchema(knex: Knex): Promise<void> {
         t.string('arriving').notNullable();
     });
 
-    await ensureTable(knex, 'names', (t) => {
-        t.string('id', 8).primary();
-        t.text('names').notNullable().defaultTo('');
-        t.text('names_short').notNullable().defaultTo('');
-        t.text('contact_name').notNullable().defaultTo('');
-        t.text('contact_phone').notNullable().defaultTo('');
-        t.text('contact_email').notNullable().defaultTo('');
-    });
+    await ensureNotTable(knex, 'names');
 
     await ensureTable(knex, 'schedule', (t) => {
         t.string('id', 8).primary();
@@ -1211,16 +1176,6 @@ async function ensureSingletonDefaults(knex: Knex): Promise<void> {
         .ignore();
     await knex('ferry_meta')
         .insert({ id: SINGLETON_ID, link: '', cost: '' })
-        .onConflict('id')
-        .ignore();
-    await knex('names')
-        .insert({
-            id: SINGLETON_ID,
-            names: '',
-            names_short: '',
-            contact_name: '',
-            contact_phone: '',
-        })
         .onConflict('id')
         .ignore();
     await knex('schedule')

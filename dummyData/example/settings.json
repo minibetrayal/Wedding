@@ -3,5 +3,7 @@
     "namesShort": "J&J",
     "contactName": "James",
     "contactPhone": "0412 345 678",
-    "contactEmail": "james@example.com"
+    "contactEmail": "james@example.com",
+    "rsvpCloseDate": "2026-04-01",
+    "siteLocked": false
 }

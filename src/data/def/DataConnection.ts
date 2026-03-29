@@ -7,7 +7,6 @@ import { ProjectorConnection } from "./interfaces/ProjectorConnection";
 import { ConnectionSupplier } from "./interfaces/ConnectionSupplier";
 import { DataPopulator } from "./interfaces/DataPopulator";
 import { FerryServiceConnection } from "./interfaces/FerryServiceConnection";
-import { NamesConnection } from "./interfaces/NamesConnection";
 import { ScheduleConnection } from "./interfaces/ScheduleConnection";
 import { LocationConnection } from "./interfaces/LocationConnection";
 import { TimesConnection } from "./interfaces/TimesConnection";
@@ -26,7 +25,6 @@ export class DataConnection  {
     invitees: InviteeConnection;
     projector: ProjectorConnection;
     ferryServices: FerryServiceConnection;
-    names: NamesConnection;
     schedule: ScheduleConnection;
     locations: LocationConnection;
     times: TimesConnection;
@@ -44,7 +42,6 @@ export class DataConnection  {
         this.invitees = connectionSupplier.getInviteeConnection();
         this.projector = connectionSupplier.getProjectorConnection();
         this.ferryServices = connectionSupplier.getFerryServiceConnection();
-        this.names = connectionSupplier.getNamesConnection();
         this.schedule = connectionSupplier.getScheduleConnection();
         this.locations = connectionSupplier.getLocationConnection();
         this.times = connectionSupplier.getTimesConnection();

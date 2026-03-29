@@ -49,10 +49,33 @@ router.get('/export/invitees', async (req, res, next) => {
 
 router.get('/export', async (req, res, next) => {
     try {
-        const rows = [['invite id', 'recipient', 'seen', 'responded', 'attending', 'phone', 'email', 'carpool requested', 'carpool offered', 'notes']];
+        const rows = [[
+            'invite id', 
+            'recipient', 
+            'seen', 
+            'responded', 
+            'attending', 
+            'phone', 
+            'email', 
+            'carpool requested', 
+            'carpool offered', 
+            'island lift requested', 
+            'notes'
+        ]];
         const invites = await dataConnection().invites.getAll();
         for (let invite of invites) {
-            const row = [invite.id, invite.name, invite.seen ? 'yes' : 'no', invite.responded ? 'yes' : 'no', `${invite.attending()}`, invite.phone ?? '', invite.email ?? '', invite.carpoolRequested ? `${invite.attending()}` : '0', `${invite.carpoolSpotsOffered}`, invite.notes ?? ''];
+            const row = [
+                invite.id, 
+                invite.name, invite.seen ? 'yes' : 'no', 
+                invite.responded ? 'yes' : 'no', 
+                `${invite.attending()}`, 
+                invite.phone ?? '', 
+                invite.email ?? '', 
+                invite.carpoolRequested ? `${invite.attending()}` : '0', 
+                `${invite.carpoolSpotsOffered}`, 
+                invite.islandLiftRequested ? 'yes' : 'no', 
+                invite.notes ?? ''
+            ];
             rows.push(row);
         }
         const csv = stringify(rows);
@@ -221,13 +244,15 @@ router.post('/:inviteId/edit', async (req, res, next) => {
         const carpoolSpotsOffered = carpoolRequested
             ? 0
             : parseCarpoolSpotsOffered(req.body.carpoolSpotsOffered);
+        const islandLiftRequested = req.body.islandLiftRequested === '1' || req.body.islandLiftRequested === 'on';
         await dataConnection().invites.update(
             invite.id,
             typeof phone === 'string' && phone.trim() ? phone.trim() : undefined,
             typeof email === 'string' && email.trim() ? email.trim() : undefined,
             typeof notes === 'string' && notes.trim() ? notes.trim() : undefined,
             carpoolRequested,
-            carpoolSpotsOffered
+            carpoolSpotsOffered,
+            islandLiftRequested
         );
         await dataConnection().invites.updateStatus(inviteId, req.body.seen === '1', req.body.responded === '1');
         req.flash('success', 'Invitation updated successfully');

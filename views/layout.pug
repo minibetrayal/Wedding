@@ -40,8 +40,9 @@ html(lang="en-AU")
                 li.nav-item
                   a.nav-link(href="/admin") Admin
                   +notificationBadge.small.d-none.d-lg-inline-block(data-am-count=moderationEntries)
-              li.nav-item
-                a.nav-link(href="/details") Details
+              if isAdmin || isRSVP
+                li.nav-item
+                  a.nav-link(href="/details") Details
               li.nav-item
                 a.nav-link(href="/faq") FAQ
               li.nav-item

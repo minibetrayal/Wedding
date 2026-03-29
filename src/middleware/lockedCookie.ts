@@ -31,7 +31,6 @@ export async function isSiteLocked(): Promise<boolean> {
 
 export async function requireLocked(req: Request, res: Response, next: NextFunction): Promise<void> {
     const nextParam = req.originalUrl || '/';
-    console.log('requireLocked', hasLockedCookie(req), await isSiteLocked(), nextParam);
     if (hasLockedCookie(req) || !(await isSiteLocked())) return next();
     if (nextParam === '/') return res.redirect(302, '/locked');
     const q = new URLSearchParams({ next: nextParam });

@@ -51,6 +51,14 @@ button {
     min-height: 100dvh;
 }
 
+.w-unset {
+    width: unset;
+}
+
+.min-w-50 {
+    min-width: 50%;
+}
+
 .cursor-default {
     cursor: default;
 }

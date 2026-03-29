@@ -214,6 +214,7 @@ function buildInvites() {
             carpoolRequested: state === 'responded' && i % 9 === 0,
             carpoolSpotsOffered:
                 state !== 'responded' ? undefined : i % 9 === 0 ? 0 : i % 11 === 0 ? 2 : undefined,
+            islandLiftRequested: state === 'responded' && Math.random() < 0.5,
         });
     }
 

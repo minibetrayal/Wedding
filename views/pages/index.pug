@@ -19,5 +19,6 @@ block content
       | Answers to common questions.
     +cardLink('/guestbook', 'journal-richtext', 'Guestbook')
       | Whether or not you can attend, you can read messages from other guests and leave a note, memory, or photo for us.
-    +cardLink('/details', 'calendar-event', 'Wedding details')
-      | Everything you need for the day — when and where, dress code, getting there, and more.
+    if isRSVP
+      +cardLink('/details', 'calendar-event', 'Wedding details')
+        | Everything you need for the day — when and where, dress code, getting there, and more.

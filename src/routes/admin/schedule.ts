@@ -121,6 +121,11 @@ router.post('/', async (req, res, next) => {
         if (!date) {
             throw new Error('Event date is required.');
         }
+        const rsvpCloseDate = typeof req.body.rsvpCloseDate === 'string' ? req.body.rsvpCloseDate.trim() : '';
+        if (!rsvpCloseDate) {
+            throw new Error('RSVP close date is required.');
+        }
+        await dataConnection().settings.set('rsvpCloseDate', rsvpCloseDate);
         await dataConnection().schedule.setDate(date);
         const snapshot = parseScheduleFromBody(req.body);
         await dataConnection().schedule.set(snapshot);

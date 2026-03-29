@@ -75,13 +75,20 @@ router.get('/:inviteId', async (req, res, next) => {
     const inviteId = req.params.inviteId;
     try {
         const invite = await dataConnection().invites.get(inviteId);
+        const closeDate = await dataConnection().settings.get('rsvpCloseDate');
+        let isClosed = false;
+        if (closeDate) {
+            const closeTime = new Date(closeDate);
+            closeTime.setHours(24, 0, 0, 0);
+            isClosed = closeTime < new Date();
+        }
         if (!invite.seen && !hasValidAdminCookie(req)) {
             await dataConnection().invites.updateStatus(inviteId, true, invite.responded);
         }
         if (!hasValidAdminCookie(req)) {
             setRsvpCookie(res, invite.id);
         }
-        res.render('pages/rsvp-edit', { invite });
+        res.render('pages/rsvp-edit', { invite, isClosed });
     } catch (err) {
         if (err instanceof DbNotFoundError) {
             req.flash('error', 'Invitation not found');
@@ -106,10 +113,10 @@ router.post('/:inviteId', async (req, res, next) => {
         }
 
         const phone = typeof req.body.phone === 'string' ? req.body.phone.trim() : '';
-        if (!phone) {
-            req.flash('error', 'Please enter a phone number we can reach you on.');
-            return res.redirect(302, `/rsvp/${encodeURIComponent(inviteId)}`);
-        }
+        // if (!phone) {
+        //     req.flash('error', 'Please enter a phone number we can reach you on.');
+        //     return res.redirect(302, `/rsvp/${encodeURIComponent(inviteId)}`);
+        // }
 
         const email =
             typeof req.body.email === 'string' && req.body.email.trim()
@@ -130,7 +137,9 @@ router.post('/:inviteId', async (req, res, next) => {
         const covered = new Set<string>();
 
         type InviteeRow = (typeof invite.invitees)[number];
-        const parsed: { invitee: InviteeRow; attending: boolean; dietary?: string }[] = [];
+        const parsed: { invitee: InviteeRow; attending?: boolean; dietary?: string }[] = [];
+
+        let anyAttending = false;
 
         for (const row of rows) {
             if (!row || typeof row !== 'object') {
@@ -150,16 +159,16 @@ router.post('/:inviteId', async (req, res, next) => {
             covered.add(id);
 
             const att = row.attending;
-            if (att !== 'true' && att !== 'false') {
-                req.flash('error', 'Please choose whether each guest is attending or not.');
-                return res.redirect(302, `/rsvp/${encodeURIComponent(inviteId)}`);
+            if (att === 'true' || att === 'false') {
+                anyAttending = true;
             }
-            const attending = att === 'true';
+            const attending = att === 'true' ? true : att === 'false' ? false : undefined;
             const dietaryRaw = row.dietaryRestrictions;
             const dietary = typeof dietaryRaw === 'string' && dietaryRaw.trim() ? dietaryRaw.trim() : undefined;
 
             parsed.push({ invitee, attending, dietary });
         }
+    
 
         if (covered.size !== invite.invitees.length) {
             req.flash(
@@ -186,8 +195,9 @@ router.post('/:inviteId', async (req, res, next) => {
             carpoolSpotsOffered
         );
 
+        console.log(anyAttending);
         if (!hasValidAdminCookie(req)) {
-            await dataConnection().invites.updateStatus(inviteId, true, true);
+            await dataConnection().invites.updateStatus(inviteId, true, anyAttending);
         }
 
         req.flash(

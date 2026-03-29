@@ -5,7 +5,6 @@ import { PhotoConnection } from "./PhotoConnection";
 import { InviteeConnection } from "./InviteeConnection";
 import { ProjectorConnection } from "./ProjectorConnection";
 import { FerryServiceConnection } from "./FerryServiceConnection";
-import { NamesConnection } from "./NamesConnection";
 import { ScheduleConnection } from "./ScheduleConnection";
 import { LocationConnection } from "./LocationConnection";
 import { TimesConnection } from "./TimesConnection";
@@ -22,7 +21,6 @@ export interface ConnectionSupplier {
     getInviteeConnection(): InviteeConnection;
     getProjectorConnection(): ProjectorConnection;
     getFerryServiceConnection(): FerryServiceConnection;
-    getNamesConnection(): NamesConnection;
     getScheduleConnection(): ScheduleConnection;
     getLocationConnection(): LocationConnection;
     getTimesConnection(): TimesConnection;

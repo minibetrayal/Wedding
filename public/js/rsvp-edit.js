@@ -2,28 +2,28 @@
   var form = document.getElementById('rsvp-edit-form');
   if (!form) return;
   form.customValidationFunctions = form.customValidationFunctions || [];
-  form.customValidationFunctions.push(function () {
-    var ok = true;
-    form.querySelectorAll('[data-invitee-row]').forEach(function (row) {
-      var picked = row.querySelector('input.invitee-attending-radio:checked');
-      var grp = row.querySelector('.invitee-attending-group');
-      if (!picked) {
-        ok = false;
-        if (grp) grp.classList.add('is-invalid');
-      } else if (grp) {
-        grp.classList.remove('is-invalid');
-      }
-    });
-    return ok;
-  });
-  form.querySelectorAll('input.invitee-attending-radio').forEach(function (radio) {
-    radio.addEventListener('change', function () {
-      var row = radio.closest('[data-invitee-row]');
-      if (!row) return;
-      var grp = row.querySelector('.invitee-attending-group');
-      if (grp) grp.classList.remove('is-invalid');
-    });
-  });
+  // form.customValidationFunctions.push(function () {
+  //   var ok = true;
+  //   form.querySelectorAll('[data-invitee-row]').forEach(function (row) {
+  //     var picked = row.querySelector('input.invitee-attending-radio:checked');
+  //     var grp = row.querySelector('.invitee-attending-group');
+  //     if (!picked) {
+  //       ok = false;
+  //       if (grp) grp.classList.add('is-invalid');
+  //     } else if (grp) {
+  //       grp.classList.remove('is-invalid');
+  //     }
+  //   });
+  //   return ok;
+  // });
+  // form.querySelectorAll('input.invitee-attending-radio').forEach(function (radio) {
+  //   radio.addEventListener('change', function () {
+  //     var row = radio.closest('[data-invitee-row]');
+  //     if (!row) return;
+  //     var grp = row.querySelector('.invitee-attending-group');
+  //     if (grp) grp.classList.remove('is-invalid');
+  //   });
+  // });
 
   var carpoolRequest = document.getElementById('rsvp-carpool-requested');
   var carpoolSpots = document.getElementById('rsvp-carpool-spots');

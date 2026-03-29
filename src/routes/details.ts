@@ -21,16 +21,15 @@ router.get('/', async (req, res) => {
     const db = dataConnection();
     const [
         eventDate, toIsland, toMainland, cost, link, contactName, 
-        contactPhone, contactEmail,schedule, locations, travelTimes, menu] =
+        contactPhone, schedule, locations, travelTimes, menu] =
         await Promise.all([
             db.schedule.getDate(),
             db.ferryServices.getAll('island'),
             db.ferryServices.getAll('mainland'),
             db.ferryServices.getCost(),
             db.ferryServices.getLink(),
-            db.names.getContactName(),
-            db.names.getContactPhone(),
-            db.names.getContactEmail(),
+            db.settings.get('contactName'),
+            db.settings.get('contactPhone'),
             db.schedule.get(),
             db.locations.getAll(),
             db.times.getAll(),
@@ -54,7 +53,6 @@ router.get('/', async (req, res) => {
         },
         contactName,
         contactPhone,
-        contactEmail,
         locations,
         schedule,
         travelTimes,

@@ -11,10 +11,11 @@ import { ScheduledEvent, ScheduleSnapshot } from '../def/types/ScheduledEvent';
 import { Location, LocationType } from '../def/types/Location';
 import { Time, TimeType } from '../def/types/Time';
 import { MenuItem, MenuTag } from '../def/types/MenuItem';
+import { Faq } from '../def/types/Faq';
+import { Settings } from '../def/types/Settings';
 
 import { heroFocusYToCaptionOrStyle } from '../../util/heroPhotoStyle';
 import { evaluateGuestbookAutomoderation, formatAutomoderationReason } from '../../util/guestbookAutomoderation';
-import { Faq } from '../def/types/Faq';
 
 type InviteSeedJson = {
     name: string;
@@ -26,6 +27,7 @@ type InviteSeedJson = {
     email?: string;
     carpoolRequested?: boolean;
     carpoolSpotsOffered?: number;
+    islandLiftRequested?: boolean;
 };
 
 /** Keeps seen/responded aligned with guest rows: any boolean `attending` ⇒ responded (and seen). Strips notes if not responded. */
@@ -88,6 +90,10 @@ type FaqJson = {
     faqs: Array<{ question: string; answer: string }>;
 }
 
+type SettingsJson = {
+    [key in keyof Settings]: Settings[key];
+}
+
 type NamesJson = {
     names: string;
     namesShort: string;
@@ -133,6 +139,7 @@ export class DummyDataPopulator implements DataPopulator {
     private static readonly timesJsonPath = path.join(getDummyDataFileOrDir('times.json'));
     private static readonly menuJsonPath = path.join(getDummyDataFileOrDir('menu.json'));
     private static readonly faqJsonPath = path.join(getDummyDataFileOrDir('faq.json'));
+    private static readonly settingsJsonPath = path.join(getDummyDataFileOrDir('settings.json'));
     private static readonly dummyPhotoFilenameRe = /\.(jpe?g|png|gif|webp)$/i;
     private static readonly professionalDummyPhotoMax = 5;
 
@@ -142,12 +149,21 @@ export class DummyDataPopulator implements DataPopulator {
         await this.createHeroPhotosFromHeroImagesDir(connection);
         await this.createProfessionalPhotosFromDummyPhotosDir(connection);
         await this.createGuestbookEntries(connection);
-        await this.loadNames(connection);
         await this.loadSchedule(connection);
         await this.loadLocations(connection);
         await this.loadTimes(connection);
         await this.loadMenu(connection);
         await this.loadFaq(connection);
+        await this.loadSettings(connection);
+    }
+
+    async loadSettings(connection: DataConnection): Promise<void> {
+        const data = await DummyDataPopulator.readSettingsJson();
+        if (!data) return;
+
+        for (const key of Object.keys(data)) {
+            await connection.settings.set(key as keyof Settings, data[key as keyof Settings]);
+        }
     }
 
     async loadFaq(connection: DataConnection): Promise<void> {
@@ -196,15 +212,6 @@ export class DummyDataPopulator implements DataPopulator {
             }
             await connection.times.set(type, new Time(min, max));
         }   
-    }
-
-    async loadNames(connection: DataConnection): Promise<void> {
-        const names = await DummyDataPopulator.readNamesJson();
-        await connection.names.setNames(names.names);
-        await connection.names.setNamesShort(names.namesShort);
-        await connection.names.setContactName(names.contactName);
-        await connection.names.setContactPhone(names.contactPhone);
-        await connection.names.setContactEmail(names.contactEmail);
     }
 
     async loadLocations(connection: DataConnection): Promise<void> {
@@ -283,6 +290,20 @@ export class DummyDataPopulator implements DataPopulator {
             return null;
         }
         throw err;
+    }
+
+    private static async readSettingsJson(): Promise<SettingsJson | null> {
+        try {
+            const raw = await fs.promises.readFile(DummyDataPopulator.settingsJsonPath, 'utf8');
+            const parsed = JSON.parse(raw) as unknown;
+            if (!parsed || typeof parsed !== 'object') {
+                throw new Error(`${dummyDataPathForLog(DummyDataPopulator.settingsJsonPath)} must contain a JSON object`);
+            }
+            return parsed as SettingsJson;
+        }
+        catch (err) {
+            return DummyDataPopulator.handleNotFound(err, DummyDataPopulator.settingsJsonPath, 'settings');
+        }
     }
 
     private static async readFaqJson(): Promise<FaqJson | null> {
@@ -594,6 +615,7 @@ export class DummyDataPopulator implements DataPopulator {
                 row.notes,
                 row.carpoolRequested === true,
                 row.carpoolSpotsOffered !== undefined ? row.carpoolSpotsOffered : 0,
+                row.islandLiftRequested !== undefined ? row.islandLiftRequested : false,
             );
         }
     }

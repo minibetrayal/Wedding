@@ -6,7 +6,7 @@ export interface InviteConnection {
     getAll(): Promise<Invite[]>;
     create(name: string, invitees: Invitee[]): Promise<Invite>;
     delete(inviteId: string): Promise<void>;
-    update(inviteId: string, phone?: string, email?: string, notes?: string, carpoolRequested?: boolean, carpoolSpotsOffered?: number): Promise<void>;
+    update(inviteId: string, phone?: string, email?: string, notes?: string, carpoolRequested?: boolean, carpoolSpotsOffered?: number, islandLiftRequested?: boolean): Promise<void>;
     updateInvite(inviteId: string, name: string, invitees: Invitee[]): Promise<void>
     updateStatus(inviteId: string, seen: boolean, responded: boolean): Promise<void>;
 }

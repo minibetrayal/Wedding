@@ -127,7 +127,7 @@ block content
               .form-text.small Message or notes the guest leaves when responding.
 
             fieldset.mt-3.mb-0.border-0.p-0
-              label.form-label Carpooling
+              label.form-label Travel arrangements
               .form-check.mb-2
                 input#invite-carpool-requested.form-check-input(
                   type="checkbox",
@@ -136,7 +136,7 @@ block content
                   checked=!!inv.carpoolRequested
                 )
                 label.form-check-label(for="invite-carpool-requested") Carpooling Requested
-              .mb-0
+              .mb-2
                 label.form-label.small(for="invite-carpool-spots") Carpooling seats offered
                 input#invite-carpool-spots.form-control(
                   type="number",
@@ -152,6 +152,14 @@ block content
                   | Not applicable while carpooling is requested.
                 .form-text.small#invite-carpool-spots-form-text(class=inv.carpoolRequested ? 'd-none' : '')
                   | Spare seats this party can offer for others (0 if none). Disabled while “Carpooling requested” is checked.
+              .form-check.mb-2
+                input#invite-island-lift-requested.form-check-input(
+                  type="checkbox",
+                  name="islandLiftRequested",
+                  value="1",
+                  checked=!!inv.islandLiftRequested
+                )
+                label.form-check-label(for="invite-island-lift-requested") Island lift requested
 
             fieldset.mt-3.mb-0.border-0.p-0
               legend.form-label RSVP status

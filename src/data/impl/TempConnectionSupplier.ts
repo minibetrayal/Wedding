@@ -9,7 +9,6 @@ import { Photo, PhotoType } from "../def/types/Photo";
 import { Invitee } from "../def/types/Invitee";
 import { Projector, ProjectorMode } from "../def/types/Projector";
 import { FerryService, FerryServiceTo } from "../def/types/FerryService";
-import { Names } from "../def/types/Names";
 import { DEFAULT_SCHEDULE_SNAPSHOT, ScheduleSnapshot } from "../def/types/ScheduledEvent";
 import { Location, LocationType } from "../def/types/Location";
 import { Time, TimeType } from "../def/types/Time";
@@ -25,7 +24,6 @@ import { InviteeConnection } from "../def/interfaces/InviteeConnection";
 import { PhotoConnection } from "../def/interfaces/PhotoConnection";
 import { ProjectorConnection } from "../def/interfaces/ProjectorConnection";
 import { FerryServiceConnection } from "../def/interfaces/FerryServiceConnection";
-import { NamesConnection } from "../def/interfaces/NamesConnection";
 import { ScheduleConnection } from "../def/interfaces/ScheduleConnection";
 import { LocationConnection } from "../def/interfaces/LocationConnection";
 import { TimesConnection } from "../def/interfaces/TimesConnection";
@@ -51,7 +49,6 @@ let ferryServices: FerryService[] = [];
 let ferryServiceLink: string = '';
 let ferryServiceCost: string = '';
 let projector: Projector = new Projector('home', '', 30_000, false);
-let names: Names = new Names('', '', '', '', '');
 
 let eventDate: string = formatYYYYMMDD(new Date());
 let schedule: ScheduleSnapshot = {...DEFAULT_SCHEDULE_SNAPSHOT};
@@ -102,7 +99,8 @@ class TempInviteConnection implements InviteConnection {
         email?: string,
         notes?: string,
         carpoolRequested?: boolean,
-        carpoolSpotsOffered?: number
+        carpoolSpotsOffered?: number,
+        islandLiftRequested?: boolean,
     ): Promise<void> {
         const existingInvite = invites.find(i => i.id === inviteId);
         if (!existingInvite) throw new DbNotFoundError('Invite');
@@ -111,6 +109,7 @@ class TempInviteConnection implements InviteConnection {
         existingInvite.notes = notes;
         if (carpoolRequested !== undefined) existingInvite.carpoolRequested = carpoolRequested;
         if (carpoolSpotsOffered !== undefined) existingInvite.carpoolSpotsOffered = carpoolSpotsOffered;
+        if (islandLiftRequested !== undefined) existingInvite.islandLiftRequested = islandLiftRequested;
     }
 
     async updateInvite(
@@ -374,40 +373,6 @@ class TempFerryServiceConnection implements FerryServiceConnection {
     }
 }
 
-class TempNamesConnection implements NamesConnection {
-    async getNames(): Promise<string> {
-        return names.names;
-    }
-    async setNames(newNames: string): Promise<void> {
-        names.names = newNames;
-    }
-    async getNamesShort(): Promise<string> {
-        return names.namesShort;
-    }
-    async setNamesShort(namesShort: string): Promise<void> {
-        names.namesShort = namesShort;
-    }
-    async getContactName(): Promise<string> {
-        return names.contactName;
-    }
-    async setContactName(contactName: string): Promise<void> {
-        names.contactName = contactName;
-    }
-    async getContactPhone(): Promise<string> {
-        return names.contactPhone;
-    }
-    async setContactPhone(contactPhone: string): Promise<void> {
-        names.contactPhone = contactPhone;
-    }
-
-    async getContactEmail(): Promise<string> {
-        return names.contactEmail;
-    }
-    async setContactEmail(contactEmail: string): Promise<void> {
-        names.contactEmail = contactEmail;
-    }
-}
-
 class TempScheduleConnection implements ScheduleConnection {
     async get(): Promise<ScheduleSnapshot> {
         return schedule;
@@ -549,7 +514,6 @@ export class TempConnectionSupplier implements ConnectionSupplier {
         ferryServiceLink = '';
         ferryServiceCost = '';
         projector = new Projector('home', '', 30_000, false);
-        names = new Names('', '', '', '', '');
         schedule = {...DEFAULT_SCHEDULE_SNAPSHOT};
         locations = {};
         times = {};
@@ -579,9 +543,6 @@ export class TempConnectionSupplier implements ConnectionSupplier {
     }
     getFerryServiceConnection(): FerryServiceConnection {
         return new TempFerryServiceConnection();
-    }
-    getNamesConnection(): NamesConnection {
-        return new TempNamesConnection();
     }
     getScheduleConnection(): ScheduleConnection {
         return new TempScheduleConnection();

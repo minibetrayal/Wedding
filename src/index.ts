@@ -107,6 +107,7 @@ import { TempConnectionSupplier } from './data/impl/TempConnectionSupplier';
 import { PgConnectionSupplier, SqliteConnectionSupplier } from './data/impl/KnexConnectionSupplier';
 import { DummyDataPopulator } from './data/impl/DummyDataPopulator';
 import { ConnectionSupplier } from './data/def/interfaces/ConnectionSupplier';
+import { getRsvpCookie } from './middleware/rsvpCookie';
 
 async function start(): Promise<void> {
 

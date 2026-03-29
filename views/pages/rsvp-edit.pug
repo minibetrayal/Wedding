@@ -1,5 +1,6 @@
 //-
   Guest RSVP form. Locals:
+  - isClosed: when true, form is read-only; submit is replaced with contact message.
   - invite: Invite (id, name, phone?, email?, notes?, invitees[] with id, name, attending?, dietaryRestrictions?)
   Recipient and guest names are read-only; guests cannot add/remove people or change the invitation title.
   POST target: /rsvp/:inviteId.
@@ -21,6 +22,8 @@ block content
   -
     const inv = typeof invite !== 'undefined' && invite ? invite : {}
     const guestRows = inv.invitees && inv.invitees.length ? inv.invitees : []
+    const closed = typeof isClosed !== 'undefined' && isClosed
+    const accordionOpen = inv.seen && !isClosed
 
   +hero(inv.name)
 
@@ -31,15 +34,15 @@ block content
       h2.accordion-header
         button.accordion-button(
           type="button",
-          class=inv.seen ? '' : 'collapsed',
+          class=accordionOpen ? '' : 'collapsed',
           data-bs-toggle="collapse",
           data-bs-target="#rsvp-accordion-panel",
-          aria-expanded=inv.seen ? 'true' : 'false',
+          aria-expanded=accordionOpen ? 'true' : 'false',
           aria-controls="rsvp-accordion-panel"
         )
           strong.ms-auto.h1 RSVP
 
-      #rsvp-accordion-panel.accordion-collapse.collapse(class=inv.seen ? 'show' : '', data-bs-parent="#rsvp-accordion")
+      #rsvp-accordion-panel.accordion-collapse.collapse(class=accordionOpen ? 'show' : '', data-bs-parent="#rsvp-accordion")
         .accordion-body        
           if inv.id
             p.small.text-muted.text-center.mb-0.mt-3
@@ -48,158 +51,170 @@ block content
               | . Keep it handy if you need to return to this page on another device.
 
           +validationForm.suppress-enter-submit#rsvp-edit-form(
-            method="post",
-            action='/rsvp/' + inv.id
+            method=closed ? undefined : 'post',
+            action=closed ? undefined : '/rsvp/' + inv.id,
+            onsubmit=closed ? 'return false' : undefined
           )
-            .card.border.shadow-sm.mb-4
-              .card-body
-                h2.h6.text-uppercase.text-muted.mb-2 Guests
-                p.small.text-muted.mb-3
-                  | For each person listed, let us know if they can attend. Add dietary details only if needed.
-
-                .invitee-rows.d-flex.flex-column.gap-3
-                  each invitee, index in guestRows
-                    - const dietaryFilled = typeof invitee.dietaryRestrictions === 'string' && invitee.dietaryRestrictions.trim().length > 0
-                    .invitee-row.card.card-body.py-3.px-3.border(data-invitee-row)
-                      input(type="hidden", name=`invitees[${index}][id]`, value=invitee.id || '')
-                      input(type="hidden", name=`invitees[${index}][name]`, value=invitee.name || '')
-                      .row.align-items-lg-center.g-3
-                        .col-12.col-lg-4
-                          p.small.text-muted.mb-1 Guest
-                          h3.mb-0.vibes-script #{invitee.name || '—'}
-                        .col-12.col-lg-8
-                          fieldset.p-0.m-0.border-0
-                            legend.form-label.small.mb-2
-                              | Will you attend?
-                              span.text-danger(aria-hidden="true") &nbsp;*
-                            .btn-group.invitee-attending-group.w-100.w-sm-auto.rounded-pill.overflow-hidden(
-                              role="group",
-                              aria-label=`Attendance for ${invitee.name || 'guest ' + (index + 1)}`
+            fieldset.p-0.m-0.border-0.min-w-0&attributes(closed ? { disabled: true } : {})
+              .card.border.shadow-sm.mb-4
+                .card-body
+                  h2.h6.text-uppercase.text-muted.mb-2 Guests
+                  p.small.text-muted.mb-3
+                    | For each person listed, let us know if they can attend. Add dietary details only if needed.
+  
+                  .invitee-rows.d-flex.flex-column.gap-3
+                    each invitee, index in guestRows
+                      - const dietaryFilled = typeof invitee.dietaryRestrictions === 'string' && invitee.dietaryRestrictions.trim().length > 0
+                      .invitee-row.card.card-body.py-3.px-3.border(data-invitee-row)
+                        input(type="hidden", name=`invitees[${index}][id]`, value=invitee.id || '')
+                        input(type="hidden", name=`invitees[${index}][name]`, value=invitee.name || '')
+                        .row.align-items-lg-center.g-3
+                          .col-12.col-lg-4
+                            p.small.text-muted.mb-1 Guest
+                            h3.mb-0.vibes-script #{invitee.name || '—'}
+                          .col-12.col-lg-8
+                            fieldset.p-0.m-0.border-0
+                              legend.form-label.small.mb-2
+                                | Will you attend?
+                                unless closed
+                                  span.text-danger(aria-hidden="true") &nbsp;*
+                              .btn-group.invitee-attending-group.w-100.w-sm-auto.rounded-pill.overflow-hidden(
+                                role="group",
+                                aria-label=`Attendance for ${invitee.name || 'guest ' + (index + 1)}`
+                              )
+                                input.btn-check.invitee-attending-radio(
+                                  type="radio",
+                                  name=`invitees[${index}][attending]`,
+                                  id=`rsvp-invitee-${index}-attend-no`,
+                                  value="false",
+                                  checked=invitee.attending === false,
+                                  autocomplete="off"
+                                )
+                                label.btn.btn-outline-danger(for=`rsvp-invitee-${index}-attend-no`) Not Attending
+                                input.btn-check.invitee-attending-radio(
+                                  type="radio",
+                                  name=`invitees[${index}][attending]`,
+                                  id=`rsvp-invitee-${index}-attend-yes`,
+                                  value="true",
+                                  checked=invitee.attending === true,
+                                  autocomplete="off"
+                                )
+                                label.btn.btn-outline-primary(for=`rsvp-invitee-${index}-attend-yes`) Attending
+                              .attending-invalid-feedback.invalid-feedback
+                                | Please choose whether this guest is attending or not.
+  
+                        .mt-3.pt-3.border-top
+                          - const dietToggleId = `rsvp-dietary-toggle-${index}`
+                          - const dietCollapseId = `rsvp-dietary-${index}`
+                          unless closed
+                            button.btn.btn-sm.btn-link.text-decoration-none.d-inline-flex.align-items-center.gap-1.px-0(
+                              id=dietToggleId,
+                              type="button",
+                              class=dietaryFilled ? '' : 'collapsed',
+                              data-bs-toggle="collapse",
+                              data-bs-target=`#${dietCollapseId}`,
+                              aria-expanded=dietaryFilled ? 'true' : 'false',
+                              aria-controls=dietCollapseId
                             )
-                              input.btn-check.invitee-attending-radio(
-                                type="radio",
-                                name=`invitees[${index}][attending]`,
-                                id=`rsvp-invitee-${index}-attend-no`,
-                                value="false",
-                                checked=invitee.attending === false,
-                                autocomplete="off"
-                              )
-                              label.btn.btn-outline-danger(for=`rsvp-invitee-${index}-attend-no`) Not Attending
-                              input.btn-check.invitee-attending-radio(
-                                type="radio",
-                                name=`invitees[${index}][attending]`,
-                                id=`rsvp-invitee-${index}-attend-yes`,
-                                value="true",
-                                checked=invitee.attending === true,
-                                autocomplete="off"
-                              )
-                              label.btn.btn-outline-primary(for=`rsvp-invitee-${index}-attend-yes`) Attending
-                            .attending-invalid-feedback.invalid-feedback
-                              | Please choose whether this guest is attending or not.
-
-                      .mt-3.pt-3.border-top
-                        - const dietToggleId = `rsvp-dietary-toggle-${index}`
-                        - const dietCollapseId = `rsvp-dietary-${index}`
-                        button.btn.btn-sm.btn-link.text-decoration-none.d-inline-flex.align-items-center.gap-1.px-0(
-                          id=dietToggleId,
-                          type="button",
-                          class=dietaryFilled ? '' : 'collapsed',
-                          data-bs-toggle="collapse",
-                          data-bs-target=`#${dietCollapseId}`,
-                          aria-expanded=dietaryFilled ? 'true' : 'false',
-                          aria-controls=dietCollapseId
-                        )
-                          span.text-secondary Dietary requirements
-                          span.text-muted.fw-normal (optional)
-                          i.bi.bi-chevron-down.small.collapse-chevron(aria-hidden="true")
-                        .collapse(id=dietCollapseId class=dietaryFilled ? 'show' : '')
-                          label.form-label.small.mt-2(for=`rsvp-invitee-${index}-dietary`) Allergies or requirements for this guest
-                          textarea.form-control(
-                            id=`rsvp-invitee-${index}-dietary`,
-                            name=`invitees[${index}][dietaryRestrictions]`,
-                            rows="2",
-                            placeholder="Leave blank if none."
-                          ) #{invitee.dietaryRestrictions || ''}
-
-            .card.border.shadow-sm.mb-4
-              .card-body
-                h2.h6.text-uppercase.text-muted.mb-2 Ceremony to reception
-                p.small.text-muted.mb-3
-                  | There is a short journey from the ceremony to the reception. If you require assistance to travel from one to the other, 
-                  | or if you can offer a lift to someone else, please let us know here to help us get everyone there safely.
-
-                .form-check.mb-3
-                  input#rsvp-carpool-requested.form-check-input(
-                    type="checkbox",
-                    name="carpoolRequested",
-                    value="1",
-                    checked=!!inv.carpoolRequested
-                  )
-                  label.form-check-label(for="rsvp-carpool-requested")
-                    | We will need carpooling from the ceremony to the reception
-
-                .mb-0
-                  label.form-label(for="rsvp-carpool-spots") Spare seats offered
-                  input#rsvp-carpool-spots.form-control(
-                    type="number",
-                    name="carpoolSpotsOffered",
-                    min="0",
-                    max="50",
-                    step="1",
-                    value=inv.carpoolRequested ? 0 : (inv.carpoolSpotsOffered != null ? inv.carpoolSpotsOffered : 0),
-                    readonly=inv.carpoolRequested || false,
-                    aria-disabled=inv.carpoolRequested ? 'true' : false
-                  )
-                  p#rsvp-carpool-spots-hint.small.text-muted.mb-0(class=inv.carpoolRequested ? '' : 'd-none')
-                    | Not applicable while you have requested a lift.
-                  .form-text.small#rsvp-carpool-spots-form-text(class=inv.carpoolRequested ? 'd-none' : '')
-                    | Example: if two of you are coming in a five-seat car, you might enter 3. Enter 0 if you cannot offer a lift.
-
-            .card.border.shadow-sm.mb-4
-              .card-body
-                h2.h6.text-uppercase.text-muted.mb-3 Other Information
-
-                .row.g-3
-                  .col-md-6
-                    label.form-label(for="rsvp-phone") Phone
-                      span.text-danger(aria-hidden="true") &nbsp;*
-                    input#rsvp-phone.form-control(
-                      type="tel",
-                      name="phone",
-                      autocomplete="tel",
-                      placeholder="Required",
-                      value=inv.phone || '',
-                      required
+                              span.text-secondary Special requirements
+                              span.text-muted.fw-normal (optional)
+                              i.bi.bi-chevron-down.small.collapse-chevron(aria-hidden="true")
+                          .collapse(id=dietCollapseId class=(dietaryFilled || closed) ? 'show' : '')
+                            label.form-label.small.mt-2(for=`rsvp-invitee-${index}-dietary`) Allergies, dietary requirements, or other special requirements
+                            textarea.form-control(
+                              id=`rsvp-invitee-${index}-dietary`,
+                              name=`invitees[${index}][dietaryRestrictions]`,
+                              rows="2",
+                              placeholder="Leave blank if none."
+                            ) #{invitee.dietaryRestrictions || ''}
+  
+              .card.border.shadow-sm.mb-4
+                .card-body
+                  h2.h6.text-uppercase.text-muted.mb-2 Travel arrangements
+                  p.small.text-muted.mb-3
+                    | There is a short journey from the ceremony to the reception. If you require assistance to travel from one to the other, 
+                    | or if you can offer a lift to someone else, please let us know here to help us get everyone there safely.
+  
+                  .form-check.mb-3
+                    input#rsvp-carpool-requested.form-check-input(
+                      type="checkbox",
+                      name="carpoolRequested",
+                      value="1",
+                      checked=!!inv.carpoolRequested
                     )
-                    .invalid-feedback Please enter your phone number.
+                    label.form-check-label(for="rsvp-carpool-requested")
+                      | We will need carpooling from the ceremony to the reception
+  
+                  .mb-3
+                    .d-flex.flex-wrap
+                      label.me-2.text-nowrap.form-label.mb-0.align-self-center(for="rsvp-carpool-spots") Spare seats offered:
+                      input#rsvp-carpool-spots.form-control.w-unset.min-w-50.flex-grow-1(
+                        type="number",
+                        name="carpoolSpotsOffered",
+                        min="0",
+                        max="50",
+                        step="1",
+                        value=inv.carpoolRequested ? 0 : (inv.carpoolSpotsOffered != null ? inv.carpoolSpotsOffered : 0),
+                        readonly=inv.carpoolRequested || false,
+                        aria-disabled=inv.carpoolRequested ? 'true' : false
+                      )
+                    p#rsvp-carpool-spots-hint.small.text-muted.mb-0(class=inv.carpoolRequested ? '' : 'd-none')
+                      | Not applicable while you have requested a lift.
+                    .form-text.small#rsvp-carpool-spots-form-text(class=inv.carpoolRequested ? 'd-none' : '')
+                      | Example: if two of you are coming in a five-seat car, you might enter 3. Enter 0 if you cannot offer a lift.
+  
+                  p.small.text-muted.mb-3 
+                    | There is a short walk on the island to get to the ceremony. We encourage people to enjoy the island ambience on this walk,
+                    | but it does include a steep hill. If you are unable to make this journey by foot, please indicate here so we can make alternative arrangements.
+                  .form-check.mb-3
+                    input#rsvp-island-lift-requested.form-check-input(
+                      type="checkbox",
+                      name="islandLiftRequested",
+                      value="1",
+                      checked=!!inv.islandLiftRequested
+                    )
+                    label.form-check-label(for="rsvp-island-lift-requested")
+                      | We will need a lift on the island 
+  
+              .card.border.shadow-sm.mb-4
+                .card-body
+                  h2.h6.text-uppercase.text-muted.mb-3 Other Information
+  
+                  .row.g-3
+                    .col-md-6
+                      label.form-label(for="rsvp-phone") Phone
+                      input#rsvp-phone.form-control(
+                        type="tel",
+                        name="phone",
+                        autocomplete="tel",
+                        placeholder="Required",
+                        value=inv.phone || ''
+                      )
+                    .col-md-6
+                      label.form-label(for="rsvp-email") Email
+                      input#rsvp-email.form-control(
+                        type="email",
+                        name="email",
+                        autocomplete="email",
+                        placeholder="Optional",
+                        value=inv.email || ''
+                      )
                     .form-text.small 
-                      | Please enter a mobile phone number we can use to reach you on the day. We will not use 
-                      | this for any other purpose. 
+                      | We will use this contact information only to reach out with questions or updates about the wedding.
+                      | If your have a non-Australian phone number, please include the country code.
+                  .mb-0.mt-3
+                    label.form-label(for="rsvp-notes") Other information or questions
+                    textarea#rsvp-notes.form-control(
+                      name="notes",
+                      rows="3",
+                      placeholder="Optional"
+                    ) #{inv.notes || ''}
+                    .form-text.small 
+                      | Please let us know anything else you think we should know about to help us organise the day.
                       br
-                      | If your have a non-Australian number, please include the country code.
-                  .col-md-6
-                    label.form-label(for="rsvp-email") Email
-                    input#rsvp-email.form-control(
-                      type="email",
-                      name="email",
-                      autocomplete="email",
-                      placeholder="Optional",
-                      value=inv.email || ''
-                    )
-                    .form-text.small Optional — for confirmations or updates.
-                .mb-0.mt-3
-                  label.form-label(for="rsvp-notes") Other information or questions
-                  textarea#rsvp-notes.form-control(
-                    name="notes",
-                    rows="3",
-                    placeholder="Optional"
-                  ) #{inv.notes || ''}
-                  .form-text.small 
-                    | Please let us know anything else you think we should know about to help us organise the day.
-                    br
-                    | If you want to leave a thoughtful message for us, write it in the 
-                    a.fw-semibold.link-primary(href="/guestbook") Guestbook
-                    |  rather than here.
+                      | If you want to leave a thoughtful message for us, write it in the 
+                      a.fw-semibold.link-primary(href="/guestbook") Guestbook
+                      |  rather than here.
 
             .d-flex.flex-wrap.align-items-center.gap-2
               button.btn.btn-outline-primary.d-inline-flex.align-items-center.gap-2(type="submit")
@@ -210,10 +225,15 @@ block content
                   | Submit RSVP
 
               p.small.text-muted.mb-0
-                | Once submitted, you can edit your RSVP by re-scanning your QR code or entering your invitation code manually 
-                | on the 
+                | You can edit your RSVP at any time until #{rsvpCloseDateFormatted} by re-scanning your QR code or entering 
+                | your invitation code manually on the 
                 a.fw-semibold.link-primary(href="/rsvp") RSVP page
                 | .
+  if closed
+    p.mb-0.mt-3.text-muted.text-center
+      | RSVP is closed. If you need to make changes, please contact us directly at 
+      a.link-primary(href=`mailto:${contactEmail}`) #{contactEmail}
+      | .
 
 
   .py-4

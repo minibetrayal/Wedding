@@ -79,7 +79,7 @@ block content
           .fs-2.fw-semibold.text-body #{invites.reduce((acc, invite) => acc + invite.attending(), 0)}
           .small.text-muted Attending guests
 
-  .row.row-cols-1.row-cols-sm-2.g-3.mb-4
+  .row.row-cols-2.row-cols-md-3.g-3.mb-4
     .col
       .card.h-100.border.shadow-sm
         .card-body.text-center.py-3.px-2
@@ -100,6 +100,16 @@ block content
             }, 0)
           .fs-2.fw-semibold.text-body #{totalCarpoolSeatsRequested}
           .small.text-muted Carpool seats requested
+    .col.flex-grow-1
+      .card.h-100.border.shadow-sm
+        .card-body.text-center.py-3.px-2
+          -
+            const totalIslandLiftRequested = invites.reduce(function (acc, inv) {
+              if (!inv.islandLiftRequested || !inv.responded) return acc
+              return acc + inv.attending()
+            }, 0)
+          .fs-2.fw-semibold.text-body #{totalIslandLiftRequested}
+          .small.text-muted Island Lifts requested
 
   h2.h6.text-muted.text-uppercase.mb-2 All invitations
   if invites.length
@@ -165,6 +175,13 @@ block content
         )
           i.bi.bi-car-front.me-1(aria-hidden="true")
           | Carpool spots offered
+        button.invite-filter-legend.text-warning.me-2.text-nowrap(
+          type="button"
+          data-invite-filter="island-lift-requested"
+          aria-pressed="false"
+        )
+          i.bi.bi-taxi-front.me-1(aria-hidden="true")
+          | Island lift requested
 
     .list-group.shadow-sm(data-invite-list)
       - 
@@ -173,6 +190,7 @@ block content
           ['Seen', 'info', 'envelope-open'],
           ['Declined', 'warning', 'x-lg'],
           ['Attending', 'success', 'people-fill'],
+          ['Island lift requested', 'warning', 'taxi-front'],
         ]
       each invite in invites
         - const index = invite.seen ? (invite.responded ? (invite.attending() > 0 ? 3 : 2) : 1) : 0;
@@ -183,10 +201,12 @@ block content
         - const carpoolSpotsN = Number(invite.carpoolSpotsOffered)
         - const hasCarpoolOffered = Number.isFinite(carpoolSpotsN) && carpoolSpotsN > 0
         - const hasCarpoolRequested = !!invite.carpoolRequested
+        - const hasIslandLiftRequested = !!invite.islandLiftRequested
         - if (hasGuestNote) inviteFilterTags.push('guest-note');
         - if (hasAttendingDietary) inviteFilterTags.push('dietary');
         - if (hasCarpoolRequested) inviteFilterTags.push('carpool-requested');
         - if (hasCarpoolOffered) inviteFilterTags.push('carpool-offered');
+        - if (hasIslandLiftRequested) inviteFilterTags.push('island-lift-requested');
         - const carpoolRequestedSeatsLabel = invite.responded ? String(invite.attending()) : '—'
         - const carpoolRequestedTitle = invite.responded ? ('Carpool requested — seats (attending guests): ' + invite.attending()) : 'Carpool requested — RSVP not yet submitted; seat count shown after they respond'
         - const carpoolOfferedTitle = 'Offering ' + carpoolSpotsN + ' spare carpool seat' + (carpoolSpotsN === 1 ? '' : 's')
@@ -229,6 +249,11 @@ block content
                     i.bi.bi-car-front(aria-hidden="true")
                     span.visually-hidden #{carpoolOfferedTitle}
                     span.ms-1(aria-hidden="true") #{carpoolSpotsN}
+                if hasIslandLiftRequested
+                  span.badge.rounded-pill.text-bg-warning.border.border-warning(title="Island lift requested")
+                    i.bi.bi-taxi-front(aria-hidden="true")
+                    span.visually-hidden Island lift requested
+                    span.d-none.d-sm-inline.ms-1(aria-hidden="true") Island lift
             .small.text-muted.mt-2.mt-sm-0 #{invite.attending()} attending · #{invite.invitees.length} invited
           .flex-shrink-0.small.text-muted.text-end
             span.visually-hidden Status:&nbsp;
