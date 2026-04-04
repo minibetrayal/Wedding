@@ -1,7 +1,6 @@
 import type { Request, Response } from 'express';
 
 import { getDataConnection as dataConnection } from '../data/def/DataConnection';
-import type { ProjectorMode } from '../data/def/types/Projector';
 
 const clients = new Set<Response>();
 setInterval(() => {
@@ -22,6 +21,7 @@ export async function broadcast() {
         message: projector.message,
         dwellMs: projector.dwellMs,
         paused: projector.paused,
+        darkMode: projector.darkMode,
         entryIds,
     };
     const line = `event: state\ndata: ${JSON.stringify(state)}\n\n`;

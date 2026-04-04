@@ -48,7 +48,7 @@ let invitees: Invitee[] = [];
 let ferryServices: FerryService[] = [];
 let ferryServiceLink: string = '';
 let ferryServiceCost: string = '';
-let projector: Projector = new Projector('home', '', 30_000, false);
+let projector: Projector = new Projector('home', '', 30_000, false, false);
 
 let eventDate: string = formatYYYYMMDD(new Date());
 let schedule: ScheduleSnapshot = {...DEFAULT_SCHEDULE_SNAPSHOT};
@@ -327,7 +327,8 @@ class TempProjectorConnection implements ProjectorConnection {
             projector.mode, 
             projector.message, 
             projector.dwellMs, 
-            projector.paused);
+            projector.paused,
+            projector.darkMode);
     }
     async setMode(mode: ProjectorMode): Promise<void> {
         projector.mode = mode;
@@ -343,6 +344,12 @@ class TempProjectorConnection implements ProjectorConnection {
     }
     async getGuestbookEntryIds(): Promise<string[]> {
         return guestbook.filter(e => e.visible && !e.moderated).map(e => e.id);
+    }
+    async getDarkMode(): Promise<boolean> {
+        return projector.darkMode;
+    }
+    async setDarkMode(darkMode: boolean): Promise<void> {
+        projector.darkMode = darkMode;
     }
 }
 
@@ -513,7 +520,7 @@ export class TempConnectionSupplier implements ConnectionSupplier {
         ferryServices.length = 0;
         ferryServiceLink = '';
         ferryServiceCost = '';
-        projector = new Projector('home', '', 30_000, false);
+        projector = new Projector('home', '', 30_000, false, false);
         schedule = {...DEFAULT_SCHEDULE_SNAPSHOT};
         locations = {};
         times = {};

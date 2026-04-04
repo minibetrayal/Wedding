@@ -158,6 +158,8 @@
     }
 
     function applyState(state) {
+        document.body.dataset.bsTheme = state.darkMode ? 'dark' : 'light';
+
         document.querySelectorAll('.projector-section').forEach(section => {
             section.classList.toggle('d-none', section.dataset.amMode !== state.mode);
             section.classList.toggle('d-flex', section.dataset.amMode === state.mode);

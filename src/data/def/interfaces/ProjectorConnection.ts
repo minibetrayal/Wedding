@@ -7,4 +7,6 @@ export interface ProjectorConnection {
     setDwellMs(dwellMs: number): Promise<void>;
     setPaused(paused: boolean): Promise<void>;
     getGuestbookEntryIds(): Promise<string[]>;
+    getDarkMode(): Promise<boolean>;
+    setDarkMode(darkMode: boolean): Promise<void>;
 }

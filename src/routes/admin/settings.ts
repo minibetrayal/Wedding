@@ -30,7 +30,6 @@ router.get('/', async (req, res) => {
             value,
         ];
     })));
-    console.log(settings);
     res.render('pages/admin/settings', { settings });
 });
 

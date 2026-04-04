@@ -17,9 +17,11 @@ block content
     data-mode-url="/admin/projector/mode",
     data-dwell-url="/admin/projector/dwell",
     data-paused-url="/admin/projector/pause",
+    data-darkmode-url="/admin/projector/darkmode",
     data-initial-mode=projector.mode,
     data-initial-dwell-sec=dwellSecondsSnapped,
-    data-initial-paused=projector.paused ? 'true' : 'false'
+    data-initial-paused=projector.paused ? 'true' : 'false',
+    data-initial-darkmode=projector.darkMode ? 'dark' : 'light'
   )
     nav.mb-3(aria-label="Breadcrumb")
       ol.breadcrumb.mb-0
@@ -79,6 +81,27 @@ block content
             )
               | #{guestbookEntryCount} eligible post#{guestbookEntryCount === 1 ? '' : 's'} (visible, not moderated).
         p#projector-mode-status.small.text-muted.mb-0.mt-2(role="status", aria-live="polite")
+
+    .card.border.shadow-sm.mb-3
+      .card-body
+        legend.form-label.fw-semibold.mb-3 Dark mode
+        .vstack.gap-2
+          .btn-group(role="group")
+            input.btn-check#darkmode-light(
+              type="radio",
+              name="projector-darkmode",
+              value="light",
+              checked=projector.darkMode === false
+            )
+            label.btn.btn-outline-secondary(for="darkmode-light") Light mode
+            input.btn-check#darkmode-dark(
+              type="radio",
+              name="projector-darkmode",
+              value="dark",
+              checked=projector.darkMode === true
+            )
+            label.btn.btn-outline-dark(for="darkmode-dark") Dark mode
+        p#darkmode-status.small.text-muted.mb-0.mt-2(role="status", aria-live="polite")
 
     .card.border.shadow-sm.mb-3
       .card-body

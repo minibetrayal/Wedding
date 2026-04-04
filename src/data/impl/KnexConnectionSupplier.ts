@@ -631,13 +631,14 @@ class KnexProjectorConnection implements ProjectorConnection {
     async get(): Promise<Projector> {
         const row = await this.knex('projector').where('id', SINGLETON_ID).first();
         if (!row) {
-            return new Projector('home', '', 30_000, false);
+            return new Projector('home', '', 30_000, false, false);
         }
         return new Projector(
             row.mode as ProjectorMode,
             String(row.message ?? ''),
             Number(row.dwell_ms ?? 30_000),
             toBool(row.paused),
+            toBool(row.dark_mode),
         );
     }
 
@@ -655,6 +656,15 @@ class KnexProjectorConnection implements ProjectorConnection {
 
     async setPaused(paused: boolean): Promise<void> {
         await this.knex('projector').where('id', SINGLETON_ID).update({ paused });
+    }
+
+    async getDarkMode(): Promise<boolean> {
+        const row = await this.knex('projector').where('id', SINGLETON_ID).first();
+        return toBool(row?.dark_mode ?? false);
+    }
+
+    async setDarkMode(darkMode: boolean): Promise<void> {
+        await this.knex('projector').where('id', SINGLETON_ID).update({ dark_mode: darkMode });
     }
 
     async getGuestbookEntryIds(): Promise<string[]> {
@@ -983,15 +993,6 @@ async function ensureColumn(
     await knex.schema.alterTable(tableName, build);
 }
 
-async function sqliteTableColumns(knex: Knex, table: string): Promise<{ name: string; type: string }[]> {
-    const r = await knex.raw(`PRAGMA table_info(${table})`);
-    if (Array.isArray(r)) return r as { name: string; type: string }[];
-    if (r && typeof r === 'object' && 'rows' in r && Array.isArray((r as { rows: unknown }).rows)) {
-        return (r as { rows: { name: string; type: string }[] }).rows;
-    }
-    return [];
-}
-
 async function ensureKnexSchema(knex: Knex): Promise<void> {
     const c = knex.client.config.client;
     const isSqlite = c === 'better-sqlite3' || c === 'sqlite3';
@@ -1066,6 +1067,10 @@ async function ensureKnexSchema(knex: Knex): Promise<void> {
         t.text('message').notNullable().defaultTo('');
         t.integer('dwell_ms').notNullable();
         t.boolean('paused').notNullable().defaultTo(false);
+    });
+
+    await ensureColumn(knex, 'projector', 'dark_mode', (t) => {
+        t.boolean('dark_mode').notNullable().defaultTo(false);
     });
 
     await ensureTable(knex, 'ferry_meta', (t) => {
@@ -1171,6 +1176,7 @@ async function ensureSingletonDefaults(knex: Knex): Promise<void> {
             message: '',
             dwell_ms: 30_000,
             paused: false,
+            dark_mode: false,
         })
         .onConflict('id')
         .ignore();

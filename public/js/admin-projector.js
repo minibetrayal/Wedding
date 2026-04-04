@@ -5,12 +5,14 @@
     const modeUrl = root.dataset.modeUrl;
     const dwellUrl = root.dataset.dwellUrl;
     const pauseUrl = root.dataset.pausedUrl;
-    if (!modeUrl || !dwellUrl || !pauseUrl) return;
+    const darkModeUrl = root.dataset.darkmodeUrl;
+    if (!modeUrl || !dwellUrl || !pauseUrl || !darkModeUrl) return;
 
     let lastMode = root.dataset.initialMode || 'home';
     let lastSavedDwell = parseInt(root.dataset.initialDwellSec || '30', 10);
 
     const modeStatus = document.getElementById('projector-mode-status');
+    const darkModeStatus = document.getElementById('darkmode-status');
     const messageModeRadio = document.getElementById('mode-message');
     const messageTextarea = document.getElementById('projector-message');
     const messageSaveHint = document.getElementById('projector-message-save-hint');
@@ -114,6 +116,20 @@
         messageTextarea.addEventListener('input', syncMessageSaveButtons);
         syncMessageSaveButtons();
     }
+
+    root.querySelectorAll('input[name="projector-darkmode"]').forEach(function (radio) {
+        radio.addEventListener('change', async function () {
+            if (!radio.checked) return;
+            radio.closest('.card').dataset.bsTheme = radio.value;
+            const body = { darkMode: radio.value };
+            try {
+                await postJson(darkModeUrl, body);
+                showStatus(darkModeStatus, 'Dark mode updated', false);
+            } catch (err) {
+                showStatus(darkModeStatus, err.message || 'Could not save dark mode', true);
+            }
+        });
+    });
 
     root.querySelectorAll('input[name="projector-mode"]').forEach(function (radio) {
         radio.addEventListener('change', async function () {

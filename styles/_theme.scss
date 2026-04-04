@@ -6,14 +6,14 @@ $dark: #6c757d;
 $primary:   $emerald;
 $secondary: $sapphire;
 
-$font-family-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-$headings-font-family:   "Playfair Display", Georgia, "Times New Roman", serif;
-
 $body-bg: #f6f4ef;
 $body-color:  #142026;
 
 $link-color: $sapphire;
 $link-hover-color: darken($sapphire, 8%);
+
+$font-family-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+$headings-font-family:   "Playfair Display", Georgia, "Times New Roman", serif;
 
 // Softer, modern feel
 $border-radius-lg: 1rem;

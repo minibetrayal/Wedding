@@ -140,4 +140,16 @@ router.post('/message', async (req, res, next) => {
     }
 });
 
+router.post('/darkmode', express.json(), async (req, res, next) => {
+    try {
+        const darkMode = req.body?.darkMode === 'dark';
+        await dataConnection().projector.setDarkMode(darkMode);
+        await broadcast();
+        res.json({ ok: true });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+
 export default router;

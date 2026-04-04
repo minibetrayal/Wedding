@@ -195,7 +195,6 @@ router.post('/:inviteId', async (req, res, next) => {
             carpoolSpotsOffered
         );
 
-        console.log(anyAttending);
         if (!hasValidAdminCookie(req)) {
             await dataConnection().invites.updateStatus(inviteId, true, anyAttending);
         }
