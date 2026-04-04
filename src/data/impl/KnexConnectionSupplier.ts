@@ -2,7 +2,6 @@ import knex, { type Knex } from 'knex';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import AWS from 'aws-sdk';
 
 import { ConnectionSupplier } from '../def/interfaces/ConnectionSupplier';
 import type { AuthorConnection } from '../def/interfaces/AuthorConnection';

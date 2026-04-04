@@ -8,7 +8,6 @@ import { STATUS_CODES } from 'http';
 
 import locals from './middleware/locals';
 import flashMiddleware from './middleware/flashMiddleware';
-import sessionMiddleware from './middleware/sessionMiddleware';
 import { requireLocked } from './middleware/lockedCookie';
 
 import adminRoutes from './routes/admin/admin';
@@ -35,7 +34,6 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(sessionMiddleware);
 app.use(flashMiddleware);
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
