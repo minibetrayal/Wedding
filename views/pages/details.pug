@@ -29,7 +29,9 @@ block content
         +mapButton(locations.ceremony.mapLine())
 
       p.small.mb-2
-        | We welcome you to arrive from #{schedule.arrival().formatted(eventDateRaw)} onwards.
+        | We welcome you to arrive from 
+        strong #{schedule.arrival().formatted(eventDateRaw)}
+        |  onwards.
 
     //- Dress Code
     +detailsCard('Dress Code', 'person-check')
@@ -178,13 +180,11 @@ block content
       ul.small 
         li.mb-2
           | When you arrive, please feel free to introduce yourself to the other guests and mingle.
-          | We'll have some drinks and nibbles available, but please feel free to bring your own if you'd like.
+          | We'll have some drinks and nibbles available.
         li.mb-2
           | The ceremony will commence at&nbsp;
           strong #{schedule.ceremony().formatted(eventDateRaw)}
           | .&nbsp;Please arrive at the ceremony location by this time.
-        li.mb-2
-          | After the ceremony, we'll be taking some photos, so please stick around for this.
 
     //- Dinner and Reception
     +detailsCard('Dinner and Reception', 'cake')
@@ -208,12 +208,13 @@ block content
           | It's about a #{travelTimes.mainlandToReception} minute drive from #{locations.mainland.name} to #{locations.reception.name}.
         li.mb-2
           | There is parking available at #{locations.reception.name}, as well as roadside parking nearby.
-          | If you have trouble finding parking, we suggest a nearby carpark at the nearby 
-          strong #{locations.receptionParking.name}
-          | , from which there is a short walk up a grassy path to the reception.
-          +mapButton(locations.receptionParking.mapLine())
+          if locations.receptionParking.name
+            | If you have trouble finding parking, we suggest a nearby carpark at the nearby 
+            strong #{locations.receptionParking.name}
+            | , from which there is a short walk up a grassy path to the reception.
+            +mapButton(locations.receptionParking.mapLine())
         li.mb-2
-          | After #{coupleNames} arrive, there will be more photos before dinner is served.
+          | After #{coupleNames} arrive, photos will be taken before dinner is served.
         li.mb-2
           | Stick around after dinner for dancing and fun!
 
