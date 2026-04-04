@@ -8,7 +8,7 @@ export default session({
     name: 'sid',
     secret: SESSION_SECRET,
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
       httpOnly: true,
       secure: IS_PRODUCTION,
