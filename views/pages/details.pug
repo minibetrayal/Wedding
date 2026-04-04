@@ -263,7 +263,9 @@ block content
     +detailsCard('Gifts', 'gift')
       p.small.mb-2
         | We already have a home full of everything we need. If you'd like to give something, a cash 
-        | contribution towards our future together would be very much appreciated.
+        | contribution towards our future together would be very much appreciated. To arrange this, contact Alex or Martin directly,
+        | or email us at 
+        a.link-primary(href=`mailto:${contactEmail}`) #{contactEmail}.
     
     //- ON THE DAY
     +detailsCard('Contact us', 'telephone')
