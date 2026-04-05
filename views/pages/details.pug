@@ -148,19 +148,18 @@ block content
         
     //- Accommodation
     +detailsCard('Accommodation', 'house')
-      p.small.mb-2 
-        | If you'd like to stay on #{locations.island.name}, there are a handful of holiday rentals available.
-
-      ul.small 
-        li.mb-2
-          | Search for&nbsp;
-          strong “#{locations.island.name}”
-          | &nbsp;on Airbnb, Stayz, Booking.com, or similar.
-        li.mb-2
-          | If you plan to stay overnight, we suggest booking early — options on the island can be limited.
-        li.mb-2
-          | If you’re staying on the island, keep ferry times in mind for your return to the island after the reception.
-          | You don't want to miss the last boat and get stuck on the mainland!
+      p.small.mb-2
+        | If you need accommodation in the area, we recommend looking for options in #{locations.suburb.name}.
+        | Search for&nbsp;
+        strong “#{locations.suburb.name}”
+        | &nbsp;on Airbnb, Stayz, Booking.com, or similar.
+      p.small.mb-2
+        | We suggest booking early — options can be limited.
+      p.small.mb-2
+        | There are also a small number of rental properties available on #{locations.island.name}. If you choose to stay 
+        | on the island, be sure to pay careful attention to the 
+        a.link-primary(href=`${ferryServices.link}`, target="_blank", rel="noopener") ferry timetable
+        |  to ensure you are not stranded on the mainland overnight after the reception.
 
     //- On the Island
     +detailsCard('On the Island', 'person-walking')

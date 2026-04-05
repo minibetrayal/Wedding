@@ -16,6 +16,7 @@ export class Location {
 export enum LocationType {
     island = 'island',
     islandFerry = 'islandFerry',
+    suburb = 'suburb',
     ceremony = 'ceremony',
     reception = 'reception',
     receptionParking = 'receptionParking',

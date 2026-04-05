@@ -21,7 +21,7 @@ block content
           if isAuthor
             a.btn.btn-outline-secondary(href=`/guestbook/${entry.id}/edit`)
               i.bi.bi-pencil-square.me-1(aria-hidden="true")
-              | Edit post
+              | Edit or delete
           if isAdmin && (!entry.moderated || entry.pendingRemoderation)
             button.btn.btn-outline-danger.d-inline-flex.align-items-center.gap-2(
               type="button",

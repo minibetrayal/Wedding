@@ -5,6 +5,9 @@
     "islandFerry": {
         "name": "Example Island Ferry Terminal"
     },
+    "suburb": {
+        "name": "Example Suburb"
+    },
     "ceremony": {
         "name": "123 Sample Street",
         "address": "123 Sample Street, Example Island, State 4000"
