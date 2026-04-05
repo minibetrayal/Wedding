@@ -63,7 +63,7 @@ async function nextEntryId(): Promise<string> {
     const weights = entryIds.map(id => 1 / (entryDisplayMap.get(id) ?? 1));
     const total = weights.reduce((a, b) => a + b, 0);
 
-    let nextEntryId = lastEntryId ?? entryIds[0];
+    let nextEntryId = lastEntryId || entryIds[0];
     while (entryIds.length > 1 && lastEntryId === nextEntryId) {
         let r = Math.random() * total;
         for (let i = 0; i < entryIds.length; i++) {
@@ -164,4 +164,9 @@ export async function broadcastPaused(): Promise<void> {
     const projector = await dataConnection().projector.get();
     if (projector.paused) cancelUpdate();
     else await sendUpdate();
+}
+
+export async function entryMade(): Promise<void> {
+    const entries = await dataConnection().projector.getGuestbookEntryIds();
+    if (entries.length === 1) await sendUpdate();
 }

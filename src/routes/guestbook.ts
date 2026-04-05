@@ -12,7 +12,7 @@ import {
     formatAutomoderationReason,
     isGuestbookAutomaticModerationReason,
 } from '../util/guestbookAutomoderation';
-import { broadcastEntry } from '../util/projectorSse';
+import { broadcastEntry, entryMade } from '../util/projectorSse';
 
 const router = express.Router();
 
@@ -139,6 +139,7 @@ router.post('/new', Upload.single('photo', '/guestbook/new'), async (req, res, n
         }
         setDisplayNameCookie(res, displayNameRaw);
         req.flash('success', 'Your message was posted.');
+        entryMade();
         res.redirect(302, `/guestbook/${encodeURIComponent(entry.id)}`);
     } catch (err) {
         if (err instanceof DbNotFoundError) {
