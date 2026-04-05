@@ -139,7 +139,7 @@ router.post('/new', Upload.single('photo', '/guestbook/new'), async (req, res, n
         }
         setDisplayNameCookie(res, displayNameRaw);
         req.flash('success', 'Your message was posted.');
-        entryUpdated();
+        entryUpdated(entry.id);
         res.redirect(302, `/guestbook/${encodeURIComponent(entry.id)}`);
     } catch (err) {
         if (err instanceof DbNotFoundError) {
@@ -248,7 +248,7 @@ router.post('/:entryId/edit',
             );
         }
         setDisplayNameCookie(res, displayNameRaw);
-        entryUpdated();
+        entryUpdated(entryId);
         req.flash('success', 'Your message was updated.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
     } catch (err) {
@@ -272,7 +272,7 @@ router.post('/:entryId/delete', async (req, res, next) => {
             await dataConnection().photos.delete(entry.photo.id);
         }
         await dataConnection().guestbook.delete(entryId);
-        entryUpdated();
+        entryUpdated(entryId, true);
         req.flash('success', 'Your message was deleted.');
         res.redirect(302, '/guestbook/mine');
     } catch (err) {
@@ -295,7 +295,7 @@ router.post('/:entryId/hide', async (req, res, next) => {
         const reasonRaw = typeof req.body.reason === 'string' ? req.body.reason.trim() : '';
         const reason = reasonRaw.length > 0 ? reasonRaw.slice(0, MODERATION_REASON_MAX) : undefined;
         await dataConnection().guestbook.hide(entryId, reason);
-        entryUpdated();
+        entryUpdated(entryId, true);
         req.flash('success', 'This message is now hidden from the public guestbook.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
     } catch (err) {
@@ -316,7 +316,7 @@ router.post('/:entryId/unhide', async (req, res, next) => {
         const entryId = req.params.entryId;
         await dataConnection().guestbook.get(entryId);
         await dataConnection().guestbook.show(entryId);
-        entryUpdated();
+        entryUpdated(entryId);
         req.flash('success', 'This message is visible on the public guestbook again.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
     } catch (err) {

@@ -166,8 +166,8 @@ export async function broadcastPaused(): Promise<void> {
     else await sendUpdate();
 }
 
-export async function entryUpdated(): Promise<void> {
+export async function entryUpdated(entryId: string, removed: boolean = false): Promise<void> {
     const entries = await dataConnection().projector.getGuestbookEntryIds();
-    if (entries.length === 1) await sendUpdate();
-    else if (entries.length === 0) await sendUpdate('');
+    if (removed && lastEntryId === entryId) await sendUpdate();
+    else if (entries.length <= 1) await sendUpdate();
 }
