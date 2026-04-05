@@ -4,6 +4,7 @@ include /mixins/guestbookCard
 include /mixins/textareaCounter
 include /mixins/gradientRule
 include /mixins/validationForm
+include /mixins/inclusions
 
 block title
   | #{coupleNamesShort} — Guestbook message
@@ -33,6 +34,13 @@ block content
                 | Confirm moderated
               else
                 | Hide from public
+          if isAdmin && !entry.moderated && !entry.pendingRemoderation
+            button#guestbook-feature-btn.btn.btn-outline-secondary.d-inline-flex.align-items-center(
+              type="button",
+              data-feature-url=`/guestbook/${entry.id}/feature`
+            )
+              i.bi.bi-display.me-1(aria-hidden="true")
+              | Show on projector
           if isAdmin && entry.moderated
             button.btn.btn-outline-success.d-inline-flex.align-items-center.gap-2(
               type="button",
@@ -40,7 +48,9 @@ block content
               data-bs-target="#guestbook-unhide-modal"
             )
               i.bi.bi-eye(aria-hidden="true")
-              | Show on public
+              | Show on public guestbook
+      .d-inline-flex.flex-column.align-items-stretch.gap-1
+        small#guestbook-feature-status.text-muted(role="status", aria-live="polite")
 
       article.card.border-0.shadow-sm
         .card-body.p-4.p-md-5
@@ -159,4 +169,8 @@ block modal
               | This message will appear again on the main guestbook for everyone. Any moderator note will be cleared.
           .modal-footer
             button.btn.btn-outline-secondary(type="button", data-bs-dismiss="modal") Cancel
-            button.btn.btn-success(type="submit") Show on public
+            button.btn.btn-success(type="submit") Show on public guestbook
+
+block append script
+  if isAdmin && (!entry.moderated && !entry.pendingRemoderation)
+    +script('guestbook-view-feature')

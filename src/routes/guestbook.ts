@@ -12,7 +12,7 @@ import {
     formatAutomoderationReason,
     isGuestbookAutomaticModerationReason,
 } from '../util/guestbookAutomoderation';
-import { broadcast } from '../util/projectorSse';
+import { broadcastEntry } from '../util/projectorSse';
 
 const router = express.Router();
 
@@ -138,7 +138,6 @@ router.post('/new', Upload.single('photo', '/guestbook/new'), async (req, res, n
             );
         }
         setDisplayNameCookie(res, displayNameRaw);
-        await broadcast();
         req.flash('success', 'Your message was posted.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entry.id)}`);
     } catch (err) {
@@ -248,7 +247,6 @@ router.post('/:entryId/edit',
             );
         }
         setDisplayNameCookie(res, displayNameRaw);
-        await broadcast();
         req.flash('success', 'Your message was updated.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
     } catch (err) {
@@ -272,7 +270,6 @@ router.post('/:entryId/delete', async (req, res, next) => {
             await dataConnection().photos.delete(entry.photo.id);
         }
         await dataConnection().guestbook.delete(entryId);
-        await broadcast();
         req.flash('success', 'Your message was deleted.');
         res.redirect(302, '/guestbook/mine');
     } catch (err) {
@@ -295,7 +292,6 @@ router.post('/:entryId/hide', async (req, res, next) => {
         const reasonRaw = typeof req.body.reason === 'string' ? req.body.reason.trim() : '';
         const reason = reasonRaw.length > 0 ? reasonRaw.slice(0, MODERATION_REASON_MAX) : undefined;
         await dataConnection().guestbook.hide(entryId, reason);
-        await broadcast();
         req.flash('success', 'This message is now hidden from the public guestbook.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
     } catch (err) {
@@ -316,11 +312,48 @@ router.post('/:entryId/unhide', async (req, res, next) => {
         const entryId = req.params.entryId;
         await dataConnection().guestbook.get(entryId);
         await dataConnection().guestbook.show(entryId);
-        await broadcast();
         req.flash('success', 'This message is visible on the public guestbook again.');
         res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
     } catch (err) {
         if (err instanceof DbNotFoundError) {
+            req.flash('error', 'Guestbook entry not found');
+            return res.redirect(302, '/guestbook');
+        }
+        next(err);
+    }
+});
+
+function wantsJsonFeature(req: express.Request): boolean {
+    const accept = req.get('Accept');
+    return typeof accept === 'string' && accept.includes('application/json');
+}
+
+router.post('/:entryId/feature', async (req, res, next) => {
+    const entryId = req.params.entryId;
+    const json = wantsJsonFeature(req);
+    try {
+        if (!hasValidAdminCookie(req)) {
+            if (json) {
+                res.status(403).json({ ok: false, error: 'Admin sign-in required.' });
+                return;
+            }
+            req.flash('error', 'You must be signed in as an admin to feature guestbook posts.');
+            return res.redirect(302, '/guestbook');
+        }
+        await dataConnection().guestbook.get(entryId);
+        await broadcastEntry(entryId);
+        if (json) {
+            res.json({ ok: true });
+            return;
+        }
+        req.flash('success', 'This message is now featured on the projector.');
+        res.redirect(302, `/guestbook/${encodeURIComponent(entryId)}`);
+    } catch (err) {
+        if (err instanceof DbNotFoundError) {
+            if (json) {
+                res.status(404).json({ ok: false, error: 'Guestbook entry not found.' });
+                return;
+            }
             req.flash('error', 'Guestbook entry not found');
             return res.redirect(302, '/guestbook');
         }

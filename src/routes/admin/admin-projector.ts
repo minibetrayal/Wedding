@@ -2,7 +2,7 @@ import express from 'express';
 
 import { getDataConnection as dataConnection } from '../../data/def/DataConnection';
 import type { ProjectorMode } from '../../data/def/types/Projector';
-import { broadcast } from '../../util/projectorSse';
+import { broadcastDarkMode, broadcastMessage, broadcastMode, broadcastPaused, broadcastDwell } from '../../util/projectorSse';
 
 const router = express.Router();
 
@@ -70,7 +70,7 @@ router.post('/mode', express.json(), async (req, res, next) => {
             await dataConnection().projector.setMessage(trimmed);
         }
         await dataConnection().projector.setMode(mode);
-        await broadcast();
+        await broadcastMode();
         res.json({ ok: true });
     } catch (err) {
         next(err);
@@ -85,7 +85,7 @@ router.post('/pause', express.json(), async (req, res, next) => {
             return;
         }
         await dataConnection().projector.setPaused(raw);
-        await broadcast();
+        await broadcastPaused();
         res.json({ ok: true });
     } catch (err) {
         next(err);
@@ -103,7 +103,7 @@ router.post('/dwell', express.json(), async (req, res, next) => {
             return;
         }
         await dataConnection().projector.setDwellMs(dwellSec * 1000);
-        await broadcast();
+        await broadcastDwell();
         res.json({ ok: true });
     } catch (err) {
         next(err);
@@ -126,14 +126,15 @@ router.post('/message', async (req, res, next) => {
         }
 
         await dataConnection().projector.setMessage(message);
+        await broadcastMessage();
         if (showOnProjector) {
             await dataConnection().projector.setMode('message');
+            await broadcastMode();
             req.flash('success', 'Message saved and the projector is now in message mode.');
         } else {
             req.flash('success', 'Message saved.');
         }
 
-        await broadcast();
         res.redirect(302, '/admin/projector');
     } catch (err) {
         next(err);
@@ -144,7 +145,7 @@ router.post('/darkmode', express.json(), async (req, res, next) => {
     try {
         const darkMode = req.body?.darkMode === 'dark';
         await dataConnection().projector.setDarkMode(darkMode);
-        await broadcast();
+        await broadcastDarkMode();
         res.json({ ok: true });
     }
     catch (err) {

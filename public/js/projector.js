@@ -1,65 +1,31 @@
-(function () {
-    const guestbookEntries = {};
-
-    async function getGuestbookInfo(entryId) {
-        return await fetch(`/projector/guestbook/${entryId}`)
-            .then(response => response.json());
+(function() {
+    function setConnStatus(status) {
+        document.querySelector('.projector-connected').dataset.amConn = status;
     }
 
-    let previousGuestbookId = null;
-    function getRandomGuestbook() {
-        const state = JSON.parse(document.querySelector('.projector-state').textContent);
-        const entryIds = state.entryIds || [];
-        if (entryIds.length === 0) {
-            return null;
-        }
-        const weights = entryIds.map(entry => 1 / (guestbookEntries[entry] || 1));
-        const total = weights.reduce((a, b) => a + b, 0);
-        let nextGuestbookId = previousGuestbookId;
-        while (entryIds.length > 1 && previousGuestbookId === nextGuestbookId) {
-            let r = Math.random() * total;
-            for (let i = 0; i < entryIds.length; i++) {
-              r -= weights[i];
-              if (r <= 0) {
-                nextGuestbookId = entryIds[i];
-                break;
-              }
-            }
-        }
-        if (!nextGuestbookId) {
-            if (entryIds.length > 0) {
-                nextGuestbookId = entryIds[0];
-            } else {
-                return null;
-            }
-        }
-        previousGuestbookId = nextGuestbookId;
-        if (Object.keys(guestbookEntries).includes(nextGuestbookId)) {
-            guestbookEntries[nextGuestbookId]++;
-        } else {
-            guestbookEntries[nextGuestbookId] = 2;
-        }
-        return nextGuestbookId;
+    function setMode(mode) {
+        document.querySelectorAll('.projector-section').forEach(section => {
+            section.classList.toggle('d-none', section.dataset.amMode !== mode);
+            section.classList.toggle('d-flex', section.dataset.amMode === mode);
+        });
     }
 
-    function syncGuestbookEmptyState(entryIds) {
-        const ids = Array.isArray(entryIds) ? entryIds : [];
+    function setMessage(message) {
+        document.querySelector('.projector-message').textContent = message || '';
+    }
+
+    function setDarkMode(darkMode) {
+        document.body.dataset.bsTheme = darkMode ? 'dark' : 'light';
+    }
+
+    async function setEntry(entryId) {
         const wrap = document.querySelector('.projector-guestbook-wrap');
         if (!wrap) return;
         const emptyEl = wrap.querySelector('.projector-guestbook-empty');
         const cardEl = wrap.querySelector('.projector-guestbook-card');
-        const isEmpty = ids.length === 0;
+        const isEmpty = !entryId;
         if (emptyEl) emptyEl.classList.toggle('d-none', !isEmpty);
         if (cardEl) cardEl.classList.toggle('d-none', isEmpty);
-    }
-
-    let previousGuestbookTime;
-    let changeGuestbookTimeout = null;
-    let lastPaused = false;
-
-    function setGuestbookMessage(entryInfo) {
-        const wrap = document.querySelector('.projector-guestbook-wrap');
-        if (!wrap) return;
 
         const authorRow = wrap.querySelector('.projector-guestbook-author-name');
         const authorEl = wrap.querySelector('.projector-guestbook-author');
@@ -68,15 +34,14 @@
         const truncatedNote = wrap.querySelector('.projector-guestbook-truncated-note');
         const photoWrap = wrap.querySelector('.projector-guestbook-photo-wrap');
         const photoEl = wrap.querySelector('.projector-guestbook-photo');
-
-        const previewMaxChars = 240;
+        const quickLink = document.querySelector('.projector-footer .projector-guestbook-url');
 
         function clearPhoto() {
             photoEl.removeAttribute('src');
             photoWrap.classList.add('d-none');
         }
 
-        if (!entryInfo || entryInfo.error) {
+        function noContent() {
             wrap.classList.remove('projector-guestbook-wrap--photo-only');
             authorRow.classList.remove('projector-guestbook-author--anonymous');
             authorEl.textContent = '';
@@ -86,7 +51,22 @@
             textEl.classList.remove('d-none');
             truncatedNote.classList.add('d-none');
             clearPhoto();
-            return;
+        }
+
+        if (!entryId) {
+            return noContent();
+        }
+
+        quickLink.href = `/guestbook/${entryId}`;
+
+        const entryInfo = await fetch(`/projector/guestbook/${entryId}`)
+            .then(response => {
+                if (response.ok) return response.json();
+                else throw new Error('Failed to fetch guestbook entry');
+            });
+
+        if (!entryInfo || entryInfo.error) {
+            return noContent();
         }
 
         const hasDisplayName = Boolean(entryInfo.displayName && String(entryInfo.displayName).trim());
@@ -103,7 +83,7 @@
         }
         const hasPhoto = Boolean(entryInfo.photo && entryInfo.photo.id);
 
-        const maxChars = hasPhoto ? previewMaxChars / 2 : previewMaxChars;
+        const maxChars = hasPhoto ? 120 : 240;
 
         const fullText = typeof entryInfo.content === 'string' ? entryInfo.content : '';
         const isTruncated = fullText.length > maxChars;
@@ -122,105 +102,15 @@
         if (hasPhoto) {
             photoWrap.classList.remove('d-none');
             photoEl.src = '/photos/' + entryInfo.photo.id;
-            photoEl.alt = hasDisplayName
-                ? 'Guestbook photo from ' + String(entryInfo.displayName).trim()
-                : 'Guestbook photo';
+            photoEl.alt = hasDisplayName ? 'Guestbook photo from ' + String(entryInfo.displayName).trim() : 'Guestbook photo';
         } else {
             clearPhoto();
         }
 
-        wrap.classList.toggle(
-            'projector-guestbook-wrap--photo-only',
-            hasPhoto && fullText.trim().length === 0
-        );
-    }
-
-    async function changeGuestbook() {
-        clearTimeout(changeGuestbookTimeout);
-        const state = JSON.parse(document.querySelector('.projector-state').textContent);
-        const entryIds = state.entryIds || [];
-        syncGuestbookEmptyState(entryIds);
-
-        if (entryIds.length === 0) {
-            changeGuestbookTimeout = null;
-            return;
-        }
-
-        previousGuestbookTime = Date.now();
-        const entryId = getRandomGuestbook();
-        const entryInfo = await getGuestbookInfo(entryId);
-        setGuestbookMessage(entryInfo);
-
-        const dwellMs = state.dwellMs;
-        if (state.paused) {
-            changeGuestbookTimeout = null;
-            return;
-        }
-        changeGuestbookTimeout = setTimeout(changeGuestbook, dwellMs);
-    }
-
-    function applyState(state) {
-        document.body.dataset.bsTheme = state.darkMode ? 'dark' : 'light';
-
-        document.querySelectorAll('.projector-section').forEach(section => {
-            section.classList.toggle('d-none', section.dataset.amMode !== state.mode);
-            section.classList.toggle('d-flex', section.dataset.amMode === state.mode);
-        });
-
-        document.querySelector('.projector-message').textContent = state.message || '';
-        document.querySelector('.projector-state').textContent = JSON.stringify(state).replace(/</g, '\\u003c');
-        const entryIdsForWeights = state.entryIds || [];
-        syncGuestbookEmptyState(entryIdsForWeights);
-        Array.from(Object.keys(guestbookEntries)).forEach(entryId => {
-            if (!entryIdsForWeights.includes(entryId)) {
-                delete guestbookEntries[entryId];
-            }
-        });
-
-        clearTimeout(changeGuestbookTimeout);
-        changeGuestbookTimeout = null;
-
-        const resumeFromPaused = state.mode === 'guestbook' && !state.paused && lastPaused;
-        lastPaused = Boolean(state.paused);
-
-        if (state.mode !== 'guestbook') {
-            previousGuestbookTime = undefined;
-            return;
-        }
-
-        const entryIds = state.entryIds || [];
-        if (entryIds.length === 0) {
-            return;
-        }
-
-        if (state.paused) {
-            if (!previousGuestbookTime) {
-                changeGuestbook();
-            }
-            return;
-        }
-
-        if (resumeFromPaused) {
-            changeGuestbookTimeout = setTimeout(changeGuestbook, state.dwellMs);
-            return;
-        }
-
-        if (!previousGuestbookTime || Date.now() - previousGuestbookTime >= state.dwellMs) {
-            changeGuestbook();
-        } else {
-            const elapsed = Date.now() - previousGuestbookTime;
-            changeGuestbookTimeout = setTimeout(changeGuestbook, Math.max(0, state.dwellMs - elapsed));
-        }
-    }
-
-    applyState(JSON.parse(document.querySelector('.projector-state').textContent));
-
-    function setConnStatus(status) {
-        document.querySelector('.projector-connected').dataset.amConn = status;
+        wrap.classList.toggle('projector-guestbook-wrap--photo-only', hasPhoto && fullText.trim().length === 0);
     }
 
     setConnStatus('connecting');
-
     const source = new EventSource('/projector/stream');
 
     source.addEventListener('open', function () {
@@ -235,9 +125,20 @@
         }
     });
 
-    source.addEventListener('state', function (ev) {
-        try {
-            applyState(JSON.parse(ev.data));
-        } catch {}
+    source.addEventListener('mode', function(event) {
+        setMode(JSON.parse(event.data));
+    });
+
+    source.addEventListener('message', function(event) {
+        setMessage(JSON.parse(event.data));
+    });
+
+    source.addEventListener('darkMode', function(event) {
+        setDarkMode(JSON.parse(event.data));
+    });
+
+    source.addEventListener('entry', function(event) {
+        if (event.data) setEntry(JSON.parse(event.data));
+        else setEntry();
     });
 })();

@@ -105,7 +105,7 @@ import { TempConnectionSupplier } from './data/impl/TempConnectionSupplier';
 import { PgConnectionSupplier, SqliteConnectionSupplier } from './data/impl/KnexConnectionSupplier';
 import { DummyDataPopulator } from './data/impl/DummyDataPopulator';
 import { ConnectionSupplier } from './data/def/interfaces/ConnectionSupplier';
-import { getRsvpCookie } from './middleware/rsvpCookie';
+import { init as initProjectorPage } from './util/projectorSse';
 
 async function start(): Promise<void> {
 
@@ -122,7 +122,8 @@ async function start(): Promise<void> {
     connectionSupplier = new PgConnectionSupplier(dbUrl);
   }
 
-  await DataConnection.init(connectionSupplier);
+  await DataConnection.init(connectionSupplier, dummyDataPopulator);
+  await initProjectorPage();
 
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);

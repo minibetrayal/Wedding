@@ -51,7 +51,7 @@ html(lang="en-AU")
                 .card-body.p-4
                   header.projector-guestbook-card__header.d-flex.flex-wrap.align-items-baseline.justify-content-between.gap-2.mb-2
                     .fw-semibold
-                      span.projector-guestbook-author-name
+                      h5.projector-guestbook-author-name
                         i.bi.bi-person(aria-hidden="true")
                         span.projector-guestbook-author
                     time.projector-guestbook-time.small.text-muted
@@ -67,7 +67,7 @@ html(lang="en-AU")
         .card-body
           p.projector-footer-text.mb-0.text-center
             | Write to our digital guestbook at
-            span.projector-guestbook-url(translate="no") #{websiteUrl}/guestbook
+            a.projector-guestbook-url(translate="no") #{websiteUrl}/guestbook
 
     +script('bootstrap.bundle.min')
     +script('projector')
