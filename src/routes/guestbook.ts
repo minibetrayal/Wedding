@@ -210,6 +210,7 @@ router.post('/:entryId/edit',
         const contentRaw = trimGuestbookContent(typeof req.body.content === 'string' ? req.body.content : '');
         const visible = req.body.visible === '1' || req.body.visible === 'on';
         const file = req.file;
+        const photoRemove = req.body.photoRemove === '1' || req.body.photoRemove === 'on';
 
         let photo = entry.photo;
         if (file) {
@@ -217,6 +218,11 @@ router.post('/:entryId/edit',
                 await dataConnection().photos.delete(entry.photo.id);
             }
             photo = await dataConnection().photos.create(file.originalname || 'photo', file.mimetype, file.buffer);
+        } else if (photoRemove) {
+            if (entry.photo) {
+                await dataConnection().photos.delete(entry.photo.id);
+            }
+            photo = undefined;
         }
 
         const hasContent = contentRaw.length > 0;

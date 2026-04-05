@@ -56,9 +56,9 @@ body[data-bs-theme="dark"] {
   flex-shrink: 0;
   align-self: center;
   width: 100%;
-  max-width: min(96vw, 72rem);
+  max-width: min(96dvw, 72rem);
   margin-top: 0;
-  margin-inline: clamp(0.75rem, 3vw, 1.5rem);
+  margin-inline: clamp(0.75rem, 3dvw, 1.5rem);
   margin-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
   border-color: var(--bs-border-color-translucent);
 
@@ -103,20 +103,20 @@ body[data-bs-theme="dark"] {
     min-height: 0;
     align-items: center;
     justify-content: center;
-    padding: clamp(1rem, 3vw, 2.5rem);
+    padding: clamp(1rem, 3dvw, 2.5rem);
     box-sizing: border-box;
   }
 
   .projector-panel {
     width: 100%;
-    max-width: min(96vw, 72rem);
+    max-width: min(96dvw, 72rem);
     max-height: 100%;
     overflow: hidden;
   }
 
   .projector-guestbook-wrap {
     width: 90%;
-    // max-width: min(96vw, 42rem);
+    // max-width: min(96dvw, 42rem);
     margin-inline: 5dvw;
 
     .projector-guestbook-empty .card {
@@ -128,16 +128,16 @@ body[data-bs-theme="dark"] {
     }
 
     .projector-guestbook-empty .bi-journal-richtext {
-      font-size: clamp(3rem, 8vw, 4.5rem);
+      font-size: clamp(3rem, 8dvw, 4.5rem);
     }
 
     .projector-guestbook-empty .lead {
-      font-size: clamp(1.35rem, 2.5vw + 0.85rem, 2.25rem);
+      font-size: clamp(1.35rem, 2.5dvw + 0.85rem, 2.25rem);
       color: var(--bs-secondary-color);
     }
 
     .projector-guestbook-empty .small {
-      font-size: clamp(1.05rem, 1.5vw + 0.75rem, 1.35rem);
+      font-size: clamp(1.05rem, 1.5dvw + 0.75rem, 1.35rem);
     }
 
     .projector-guestbook-card {
@@ -167,6 +167,17 @@ body[data-bs-theme="dark"] {
     .projector-guestbook-content {
       font-size: 2rem;
       line-height: 1.45;
+      overflow: hidden;
+      max-height: 50dvh;
+
+      // has a photo
+      &:has(~ .projector-guestbook-photo-wrap:not(.d-none)) {
+        max-height: 12rem; // 4-ish lines
+
+        &~ .projector-guestbook-photo-wrap img {
+          max-height: 25dvh;
+        }
+      }
     }
 
     .projector-guestbook-photo-wrap {
@@ -192,15 +203,15 @@ body[data-bs-theme="dark"] {
       }
 
       .projector-guestbook-photo {
-        max-height: min(62dvh, 48rem);
-        max-width: min(100%, 96vw);
+        max-height: 50dvh !important;
+        max-width: min(100%, 96dvw);
       }
     }
   }
 
   .projector-message-wrap {
     text-align: center;
-    padding: clamp(1.75rem, 5vw, 4.5rem);
+    padding: clamp(1.75rem, 5dvw, 4.5rem);
     margin-inline: auto;
     border-radius: var(--bs-border-radius-lg);
     background:

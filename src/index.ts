@@ -122,7 +122,7 @@ async function start(): Promise<void> {
     connectionSupplier = new PgConnectionSupplier(dbUrl);
   }
 
-  await DataConnection.init(connectionSupplier, dummyDataPopulator);
+  await DataConnection.init(connectionSupplier);
 
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);

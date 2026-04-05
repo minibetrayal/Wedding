@@ -90,7 +90,14 @@ block content
                   .min-w-0
                     p.small.fw-semibold.text-body-secondary.mb-1 Current photo
                     p.small.text-muted.text-break.mb-1.font-monospace(title=ent.photo.name) #{ent.photo.name}
-                    p.small.text-muted.mb-0 Upload a new file above to replace it.
+                    p.small.text-muted.mb-0 Upload a new file above to replace it, or check the box to remove it.
+                    p.small.text-muted.mb-0
+                      input#guestbook-photo-remove.form-check-input(
+                        type="checkbox",
+                        name="photoRemove",
+                        value="1"
+                      )
+                      label.form-check-label.ms-1(for="guestbook-photo-remove") Remove photo
               input#guestbook-photo.form-control(
                 type="file",
                 name="photo",

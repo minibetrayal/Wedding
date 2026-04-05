@@ -101,10 +101,13 @@
             timeEl.textContent = '';
             timeEl.removeAttribute('datetime');
         }
+        const hasPhoto = Boolean(entryInfo.photo && entryInfo.photo.id);
+
+        const maxChars = hasPhoto ? previewMaxChars / 2 : previewMaxChars;
 
         const fullText = typeof entryInfo.content === 'string' ? entryInfo.content : '';
-        const isTruncated = fullText.length > previewMaxChars;
-        const previewText = isTruncated ? fullText.slice(0, previewMaxChars).trimEnd() + '\u2026' : fullText;
+        const isTruncated = fullText.length > maxChars;
+        const previewText = isTruncated ? fullText.slice(0, maxChars).trimEnd() + '\u2026' : fullText;
 
         if (fullText.length > 0) {
             textEl.textContent = previewText;
@@ -116,7 +119,6 @@
 
         truncatedNote.classList.toggle('d-none', !(fullText.length > 0 && isTruncated));
 
-        const hasPhoto = Boolean(entryInfo.photo && entryInfo.photo.id);
         if (hasPhoto) {
             photoWrap.classList.remove('d-none');
             photoEl.src = '/photos/' + entryInfo.photo.id;
