@@ -99,6 +99,9 @@ block content
           | Messages from me
         else
           | Pending re-moderation
+      if isMine 
+        p.small.text-muted.mb-3 
+          | Messages that were submitted from this device will appear here.
       if isModeration
         p.small.text-muted.mb-3
           | If a post has been hidden by a moderator and subsequently edited, it will be shown here until the moderator confirms it should stay hidden or be shown publicly.

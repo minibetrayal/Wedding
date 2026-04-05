@@ -82,7 +82,7 @@ block content
               | #{guestbookEntryCount} eligible post#{guestbookEntryCount === 1 ? '' : 's'} (visible, not moderated).
         p#projector-mode-status.small.text-muted.mb-0.mt-2(role="status", aria-live="polite")
 
-    .card.border.shadow-sm.mb-3
+    .card.border.shadow-sm.mb-3(data-bs-theme=projector.darkMode ? 'dark' : 'light')
       .card-body
         legend.form-label.fw-semibold.mb-3 Dark mode
         .vstack.gap-2
