@@ -275,7 +275,7 @@ class KnexGuestbookConnection implements GuestbookConnection {
     }
 
     async getRemoderationCount(): Promise<number> {
-        const count = await this.knex('guestbook_entries').where('pending_remoderation', true).count('*');
+        const count = await this.knex('guestbook_entries').where('pending_remoderation', true).count('*', { as: 'count' });
         return Number(count[0].count);
     }
 
