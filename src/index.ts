@@ -9,6 +9,7 @@ import { STATUS_CODES } from 'http';
 import locals from './middleware/locals';
 import flashMiddleware from './middleware/flashMiddleware';
 import { requireLocked } from './middleware/lockedCookie';
+import { refreshCookies } from './middleware/refreshCookieMiddleware';
 
 import adminRoutes from './routes/admin/admin';
 import detailsRoutes from './routes/details';
@@ -40,6 +41,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use(locals);
 
+app.use(refreshCookies);
 
 // Routes
 app.use('/locked', lockRouter);

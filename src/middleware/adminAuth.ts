@@ -8,12 +8,17 @@ const ADMIN_COOKIE_VALUE = '1';
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
-const adminCookieOptions = {
+const adminCookieOptionsClear = {
     signed: true,
     httpOnly: true,
     sameSite: 'lax' as const,
     secure: process.env.NODE_ENV === 'production',
-};
+}
+
+const adminCookieOptionsSet = {
+    ...adminCookieOptionsClear,
+    maxAge: TWELVE_HOURS_MS,
+}
 
 /**
  * Compare password to env using SHA-256 so we can use timingSafeEqual (fixed-length digests).
@@ -89,13 +94,15 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
  * Set the admin cookie.
  */
 export function setAdminAuthCookie(res: Response): void {
-    res.cookie(ADMIN_COOKIE_NAME, ADMIN_COOKIE_VALUE, {
-        ...adminCookieOptions,
-        maxAge: TWELVE_HOURS_MS,
-    });
+    res.cookie(ADMIN_COOKIE_NAME, ADMIN_COOKIE_VALUE, adminCookieOptionsSet);
 }
 
 /** Clear the admin session cookie (same path/options as when set). */
 export function clearAdminAuthCookie(res: Response): void {
-    res.clearCookie(ADMIN_COOKIE_NAME, adminCookieOptions);
+    res.clearCookie(ADMIN_COOKIE_NAME, adminCookieOptionsClear);
+}
+
+export function refreshAdminAuthCookie(req: Request, res: Response, next: NextFunction) {
+    if (hasValidAdminCookie(req)) setAdminAuthCookie(res);
+    next();
 }

@@ -2,22 +2,27 @@ import type { NextFunction, Request, Response } from 'express';
 import { getDataConnection } from '../data/def/DataConnection';
 
 const LOCKED_COOKIE_NAME = 'locked';
+const FOUR_HUNDRED_DAYS_MS = 400 * 24 * 60 * 60 * 1000;
 
-const lockedCookieOptions = {
+const lockedCookieOptionsClear = {
     signed: true,
     httpOnly: true,
     sameSite: 'lax' as const,
     path: '/',
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
+};
+
+const lockedCookieOptionsSet = {
+    ...lockedCookieOptionsClear,
+    maxAge: FOUR_HUNDRED_DAYS_MS,
 };
 
 export function setLockedCookie(res: Response): void {
-    res.cookie(LOCKED_COOKIE_NAME, true, lockedCookieOptions);
+    res.cookie(LOCKED_COOKIE_NAME, true, lockedCookieOptionsSet);
 }
 
 export function clearLockedCookie(res: Response): void {
-    res.clearCookie(LOCKED_COOKIE_NAME, lockedCookieOptions);
+    res.clearCookie(LOCKED_COOKIE_NAME, lockedCookieOptionsClear);
 }
 
 export function hasLockedCookie(req: Request): boolean {
@@ -35,4 +40,9 @@ export async function requireLocked(req: Request, res: Response, next: NextFunct
     if (nextParam === '/') return res.redirect(302, '/locked');
     const q = new URLSearchParams({ next: nextParam });
     return res.redirect(302, `/locked/login?${q.toString()}`);
+}
+
+export function refreshLockedCookie(req: Request, res: Response, next: NextFunction) {
+    if (hasLockedCookie(req)) setLockedCookie(res);
+    next();
 }
