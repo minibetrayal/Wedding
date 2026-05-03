@@ -34,7 +34,6 @@
         const truncatedNote = wrap.querySelector('.projector-guestbook-truncated-note');
         const photoWrap = wrap.querySelector('.projector-guestbook-photo-wrap');
         const photoEl = wrap.querySelector('.projector-guestbook-photo');
-        const quickLink = document.querySelector('.projector-footer .projector-guestbook-url');
 
         function clearPhoto() {
             photoEl.removeAttribute('src');
@@ -56,8 +55,6 @@
         if (!entryId) {
             return noContent();
         }
-
-        quickLink.href = `/guestbook/${entryId}`;
 
         const entryInfo = await fetch(`/projector/guestbook/${entryId}`)
             .then(response => {

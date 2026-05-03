@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 
 import { getDataConnection as dataConnection } from '../data/def/DataConnection';
+import { addRecentGuestbookEntryId } from '../routes/admin/admin-projector';
 
 const clients = new Set<Response>();
 
@@ -97,8 +98,14 @@ async function sendUpdate(entryId?: string): Promise<void> {
 
     lastEntryId = entryId ?? await nextEntryId();
     sendAll('entry', lastEntryId);
+    addRecentGuestbookEntryId(lastEntryId);
     previousBroadcastTime = Date.now();
     updateTimeout = setTimeout(sendUpdate, projector.dwellMs);
+}
+
+async function updateCount(): Promise<void> {
+    const entries = await dataConnection().projector.getGuestbookEntryIds();
+    sendAll('count', entries.length);
 }
 
 // connect client to projector
@@ -147,6 +154,10 @@ export async function broadcastEntry(entryId: string): Promise<void> {
     await sendUpdate(entryId);
 }
 
+export async function skipEntry(): Promise<void> {
+    await sendUpdate();
+}
+
 // set dwell time and send update to all clients
 export async function broadcastDwell(): Promise<void> {
     const projector = await dataConnection().projector.get();
@@ -166,8 +177,9 @@ export async function broadcastPaused(): Promise<void> {
     else await sendUpdate();
 }
 
-export async function entryUpdated(entryId: string, removed: boolean = false): Promise<void> {
+export async function entryUpdated(entryId: string, state: 'new' | 'removed' | 'updated'): Promise<void> {
     const entries = await dataConnection().projector.getGuestbookEntryIds();
-    if (removed && lastEntryId === entryId) await sendUpdate();
+    if (state === 'removed' && lastEntryId === entryId) await sendUpdate();
     else if (entries.length <= 1) await sendUpdate();
+    await updateCount();
 }

@@ -1,0 +1,47 @@
+
+a.projector-recent-guestbook-item {
+    &:focus-visible {
+        outline: 0.2rem solid var(--bs-focus-ring-color, var(--bs-primary));
+        outline-offset: 0.15rem;
+    }
+}
+
+.projector-recent-guestbook-item {
+    interpolate-size: allow-keywords;
+    transition: height 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out;
+    height: fit-content;
+    padding: 1rem !important;
+    overflow: hidden;
+
+    &:nth-child(n+6) {
+        height: 0;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        border: none !important;
+    }
+
+    &.new-element {
+        height: 0;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    &:first-child {
+        .guestbook-author-name::after {
+            content: "(Displaying Now)";
+            margin-left: 0.5em;
+            color: var(--bs-secondary-color);
+            font-size: 0.875em;
+            font-weight: 400;
+            text-decoration: none;
+            text-underline-offset: 0.1em;
+            text-decoration-thickness: 0.05em;
+        }
+    }
+
+    .guestbook-content:empty::after {
+        content: "[Photo only]";
+        color: var(--bs-secondary-color);
+        font-style: italic;
+    }
+}

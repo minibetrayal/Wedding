@@ -2,7 +2,7 @@ import express from 'express';
 
 import { getDataConnection as dataConnection } from '../../data/def/DataConnection';
 import type { ProjectorMode } from '../../data/def/types/Projector';
-import { broadcastDarkMode, broadcastMessage, broadcastMode, broadcastPaused, broadcastDwell } from '../../util/projectorSse';
+import { broadcastDarkMode, broadcastMessage, broadcastMode, broadcastPaused, broadcastDwell, skipEntry } from '../../util/projectorSse';
 
 const router = express.Router();
 
@@ -10,6 +10,15 @@ const MIN_DWELL_SEC = 5;
 const MAX_DWELL_SEC = 60;
 const DWELL_STEP_SEC = 5;
 const PROJECTOR_MESSAGE_MAX = 100;
+
+const RECENT_GUESTBOOK_ENTRY_IDS_MAX = 5;
+
+const recentGuestbookEntryIds: string[] = [];
+export function addRecentGuestbookEntryId(entryId: string): void {
+    recentGuestbookEntryIds.push(entryId);
+    while (recentGuestbookEntryIds.length > RECENT_GUESTBOOK_ENTRY_IDS_MAX) recentGuestbookEntryIds.shift();
+}
+
 
 function parseMode(raw: unknown): ProjectorMode | null {
     if (raw === 'home' || raw === 'guestbook' || raw === 'message') {
@@ -45,13 +54,14 @@ router.get('/', async (req, res, next) => {
             dwellMaxSec: MAX_DWELL_SEC,
             dwellStepSec: DWELL_STEP_SEC,
             dwellSecondsSnapped: snapDwellSeconds(projector.dwellMs),
+            recentGuestbookEntryIds,
         });
     } catch (err) {
         next(err);
     }
 });
 
-router.post('/mode', express.json(), async (req, res, next) => {
+router.post('/mode', async (req, res, next) => {
     try {
         const mode = parseMode(req.body?.mode);
         if (!mode) {
@@ -77,7 +87,7 @@ router.post('/mode', express.json(), async (req, res, next) => {
     }
 });
 
-router.post('/pause', express.json(), async (req, res, next) => {
+router.post('/pause', async (req, res, next) => {
     try {
         const raw = req.body?.paused;
         if (typeof raw !== 'boolean') {
@@ -92,7 +102,7 @@ router.post('/pause', express.json(), async (req, res, next) => {
     }
 });
 
-router.post('/dwell', express.json(), async (req, res, next) => {
+router.post('/dwell', async (req, res, next) => {
     try {
         const dwellSec = parseDwellSeconds(req.body?.dwellSeconds);
         if (dwellSec === null) {
@@ -141,7 +151,7 @@ router.post('/message', async (req, res, next) => {
     }
 });
 
-router.post('/darkmode', express.json(), async (req, res, next) => {
+router.post('/darkmode', async (req, res, next) => {
     try {
         const darkMode = req.body?.darkMode === 'dark';
         await dataConnection().projector.setDarkMode(darkMode);
@@ -152,5 +162,10 @@ router.post('/darkmode', express.json(), async (req, res, next) => {
         next(err);
     }
 });
+
+router.post('/skip', async (req, res, next) => {
+    skipEntry();
+    res.json({ ok: true });
+})
 
 export default router;
