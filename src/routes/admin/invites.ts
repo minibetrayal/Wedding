@@ -117,12 +117,12 @@ router.get('/:inviteId/image', async (req, res, next) => {
         const eventDateRaw = await dataConnection().schedule.getDate();
         const ymd = eventDateRaw.split('-');
         const dateLine = `${islandName}     ·     ${ymd[2]} · ${ymd[1]} · ${ymd[0]}`;
-        let urlLine = `${process.env.WEBSITE_URL}`.replace(/(?:https?:\/\/)?(?:www\.)?/, '').replace(/\/+$/, '');
-        for (let name of ['and', ...namesLine.split(' ')]) {
+        const baseUrl = process.env.WEBSITE_URL?.replace(/\/+$/, '') ?? '';
+        let urlLine = baseUrl.toLowerCase().replace(/(?:https?:\/\/)?(?:www\.)?/, '');
+        for (let name of ['and', ...namesLine.split(/\s+/).map(n => n.toLowerCase())]) {
             urlLine = urlLine.replace(name, name.toUpperCase().charAt(0) + name.toLowerCase().slice(1));
         }
 
-        const baseUrl = process.env.WEBSITE_URL?.replace(/\/+$/, '') ?? '';
         const targetUrl = `${baseUrl}/rsvp/${inviteId}`;
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?margin=15&size=1000x1000&ecc=M&data=${encodeURIComponent(targetUrl)}`;
 
