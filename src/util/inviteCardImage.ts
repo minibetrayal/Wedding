@@ -82,8 +82,8 @@ function resolveFontsDir(): string {
 
 const FONTS_DIR = resolveFontsDir();
 const GREAT_VIBES = path.join(FONTS_DIR, 'GreatVibes-Regular.ttf');
-const PLAYFAIR_BOLD = path.join(FONTS_DIR, 'PlayfairDisplay-Bold.ttf');
-const CASCADIA_REGULAR = path.join(FONTS_DIR, 'CascadiaCode-Regular.ttf');
+const PLAYFAIR = path.join(FONTS_DIR, 'PlayfairDisplay-Bold.ttf');
+const CASCADIA = path.join(FONTS_DIR, 'CascadiaCode-Bold.ttf');
 
 let fontsCache: { great: FontkitFont; playfair: FontkitFont; code: FontkitFont } | null = null;
 
@@ -94,15 +94,15 @@ function loadFonts(): { great: FontkitFont; playfair: FontkitFont; code: Fontkit
     if (!fs.existsSync(GREAT_VIBES)) {
         throw new Error(`Missing font file: ${GREAT_VIBES}`);
     }
-    if (!fs.existsSync(PLAYFAIR_BOLD)) {
-        throw new Error(`Missing font file: ${PLAYFAIR_BOLD}`);
+    if (!fs.existsSync(PLAYFAIR)) {
+        throw new Error(`Missing font file: ${PLAYFAIR}`);
     }
-    if (!fs.existsSync(CASCADIA_REGULAR)) {
-        throw new Error(`Missing font file: ${CASCADIA_REGULAR}`);
+    if (!fs.existsSync(CASCADIA)) {
+        throw new Error(`Missing font file: ${CASCADIA}`);
     }
     const great = fontkitOpenSync(GREAT_VIBES);
-    const playfair = fontkitOpenSync(PLAYFAIR_BOLD);
-    const code = fontkitOpenSync(CASCADIA_REGULAR);
+    const playfair = fontkitOpenSync(PLAYFAIR);
+    const code = fontkitOpenSync(CASCADIA);
     fontsCache = { great, playfair, code };
     return fontsCache;
 }
@@ -199,8 +199,9 @@ export async function renderInviteCardPng(
 
     const bodyParts: string[] = [];
 
-    const gapSm = 15;
-    const gapMd = 30;
+    const gapSm = 10;
+    const gapMd = 20;
+    const gapLg = 30;
     let y = 0;
     let extentBottom = 0;
 
@@ -208,19 +209,19 @@ export async function renderInviteCardPng(
         extentBottom = Math.max(extentBottom, bottom);
     };
 
-    y += gapMd;
+    y += gapLg;
 
     recordExtent((y = appendCenteredRun(bodyParts, great, content.inviteName, 150, centerX, y)));
     y += gapSm;
 
-    recordExtent((y = appendCenteredRun(bodyParts, playfair, content.inviteLine, 50, centerX, y)));
-    y += gapMd;
+    recordExtent((y = appendCenteredRun(bodyParts, playfair, content.inviteLine, 60, centerX, y)));
+    y += gapSm;
 
     recordExtent((y = appendCenteredRun(bodyParts, playfair, content.namesLine, 130, centerX, y)));
     y += gapMd;
 
-    recordExtent((y = appendCenteredRun(bodyParts, playfair, content.dateLine, 43, centerX, y, 8)));
-    y += gapMd;
+    recordExtent((y = appendCenteredRun(bodyParts, playfair, content.dateLine, 55, centerX, y, 4)));
+    y += gapLg;
 
     const qrX = (px - qrSize) / 2;
     bodyParts.push(
@@ -229,10 +230,10 @@ export async function renderInviteCardPng(
     recordExtent(y + qrSize);
     y += qrSize + gapMd;
 
-    recordExtent((y = appendCenteredRun(bodyParts, playfair, content.urlLine, 60, centerX, y)));
-    y += gapSm;
+    recordExtent((y = appendCenteredRun(bodyParts, playfair, content.urlLine, 70, centerX, y, 6)));
+    y += gapMd;
 
-    recordExtent(appendCenteredRun(bodyParts, code, content.inviteId, 50, centerX, y, 16));
+    recordExtent(appendCenteredRun(bodyParts, code, content.inviteId, 70, centerX, y, 16));
 
     const contentHeight = extentBottom;
     const bodyOffsetY = (px - contentHeight) / 2;

@@ -40,7 +40,15 @@ import { LocalPhotoStorageConnection } from './LocalPhotoStorageConnection';
 import { SettingsConnection } from '../def/interfaces/SettingsConnection';
 
 const SINGLETON_ID = '1';
-const INVITE_ID_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+// remove all visually-indistinct combinations: 
+// 0 and O
+// 1 and I and L
+// 2 and Z
+// 5 and S
+// 6 and G
+// 7 and T
+// 8 and B
+const INVITE_ID_CHARS = 'ACDEFHJKMNPQRUVWXY349'; 
 
 function toBool(v: unknown): boolean {
     return v === true || v === 1 || v === '1';
