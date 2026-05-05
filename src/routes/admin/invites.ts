@@ -4,6 +4,7 @@ import { getDataConnection as dataConnection } from '../../data/def/DataConnecti
 import { DbNotFoundError } from '../../data/dbErrors';
 import { parseCarpoolSpotsOffered } from '../../util/inviteCarpool';
 import { stringify } from 'csv-stringify/sync';
+import { LocationType } from '../../data/def/types/Location';
 
 const router = express.Router();
 
@@ -92,6 +93,42 @@ router.get('/:inviteId/edit', async (req, res, next) => {
     try {
         const invite = await dataConnection().invites.get(inviteId);
         res.render('pages/admin/invite-edit', { invite, isNew: false });
+    } catch (err) {
+        if (err instanceof DbNotFoundError) {
+            req.flash('error', 'Invitation not found');
+            return res.redirect(302, '/admin/invites');
+        }
+        next(err);
+    }
+});
+
+router.get('/:inviteId/image', async (req, res, next) => {
+    try {
+        const inviteId = req.params.inviteId;
+        const invite = await dataConnection().invites.get(inviteId);
+        
+        const inviteName = invite.name;
+        const isPlural = inviteName.startsWith('The ') && inviteName.endsWith('s') ||
+            inviteName.includes(' and ') || inviteName.includes(' & ');
+        const inviteLine = `${inviteName} ${isPlural ? 'Are' : 'Is'} invited to celebrate the wedding of`;
+        const namesLine = await dataConnection().settings.get('names');
+        const islandName = (await dataConnection().locations.get(LocationType.island)).name;
+        const eventDateRaw = await dataConnection().schedule.getDate();
+        const ymd = eventDateRaw.split('-');
+        const dateLine = `${islandName}     ·     ${ymd[2]} · ${ymd[1]} · ${ymd[0]}`;
+        let urlLine = `${process.env.WEBSITE_URL}`;
+        for (let name of ['and', ...namesLine.split(' ')]) {
+            urlLine = urlLine.replace(name, name.toUpperCase().charAt(0) + name.toLowerCase().slice(1));
+        }
+
+        const targetUrl = process.env.WEBSITE_URL?.replace(/\/+$/, '') + `/rsvp/${inviteId}`;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?margin=15&size=1000x1000&ecc=M&data=${encodeURIComponent(targetUrl)}`;
+
+        const inviteNameFont = 'Great Vibes';
+        const font = 'Playfair Display';
+        const inviteCodeFont = 'Cascadia Code';
+
+        res.type('text/plain').send('Invite image (stub)');
     } catch (err) {
         if (err instanceof DbNotFoundError) {
             req.flash('error', 'Invitation not found');

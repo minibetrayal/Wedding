@@ -57,6 +57,11 @@ block content
               i.bi.bi-qr-code(aria-hidden="true")
               | RSVP QR code
             a.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.gap-1(
+              href=`/admin/invites/${inv.id}/image`
+            )
+              i.bi.bi-image(aria-hidden="true")
+              | RSVP Image
+            a.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.gap-1(
               href=`/rsvp/${inv.id}`
             )
               i.bi.bi-eye(aria-hidden="true")
