@@ -1,4 +1,8 @@
 extends /layout
+include /mixins/inclusions
+
+block append styles
+  +style('inviteView')
 
 block title
   | #{invite.name || 'Invitation'} — Admin
@@ -57,15 +61,52 @@ block content
               i.bi.bi-qr-code(aria-hidden="true")
               | RSVP QR code
             a.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.gap-1(
-              href=`/admin/invites/${inv.id}/image`
-            )
-              i.bi.bi-image(aria-hidden="true")
-              | RSVP Image
-            a.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.gap-1(
               href=`/rsvp/${inv.id}`
             )
               i.bi.bi-eye(aria-hidden="true")
               | Go to RSVP page
+            .dropdown.d-inline-block
+              button.btn.btn-sm.btn-outline-secondary.dropdown-toggle.d-inline-flex.align-items-center.gap-1(
+                type="button",
+                id="invite-image-dropdown",
+                data-bs-toggle="dropdown",
+                aria-expanded="false",
+                aria-haspopup="true",
+                aria-label="Invite image export options"
+              )
+                i.bi.bi-image(aria-hidden="true")
+                | Invite image
+              ul.dropdown-menu.dropdown-menu-end(
+                aria-labelledby="invite-image-dropdown"
+              )
+                li
+                  a.dropdown-item.d-flex.align-items-center.gap-2(
+                    href=`/admin/invites/${inv.id}/image`
+                  )
+                    i.bi.bi-type(aria-hidden="true")
+                    | Normal
+                li
+                  a.dropdown-item.d-flex.align-items-center.gap-2(
+                    href=`/admin/invites/${inv.id}/image?flip=1`
+                  )
+                    i.bi.bi-type.invite-dd-type-flip(aria-hidden="true")
+                    | Transfer
+                li
+                  a.dropdown-item.d-flex.align-items-center.gap-2(
+                    href=`/admin/invites/${inv.id}/image?circle=1`
+                  )
+                    span.invite-dd-icon-wrap(aria-hidden="true")
+                      i.bi.bi-type
+                      i.bi.bi-circle
+                    | Layout
+                li
+                  a.dropdown-item.d-flex.align-items-center.gap-2(
+                    href=`/admin/invites/${inv.id}/image?flip=1&circle=1`
+                  )
+                    span.invite-dd-icon-wrap(aria-hidden="true")
+                      i.bi.bi-type.invite-dd-type-flip
+                      i.bi.bi-circle
+                    | Transfer Layout
         dt.col-sm-3.text-muted.small Recipient name
         dd.col-sm-9.mb-3 #{inv.name || '—'}
         dt.col-sm-3.text-muted.small Phone
@@ -134,7 +175,6 @@ block content
                     span.text-muted None specified
       else
         p.text-muted.small.mb-0 No guests on this invitation.
-
 
 block modal
   #invite-qr-modal.modal.fade(

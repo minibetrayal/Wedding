@@ -1,0 +1,30 @@
+.invite-dd-type-flip {
+  transform: scaleX(-1);
+  display: inline-block;
+  line-height: 1;
+}
+
+.invite-dd-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  width: 1.35em;
+  height: 1em;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+
+  .bi-type {
+    line-height: 1;
+  }
+
+  .bi-circle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.45em;
+    line-height: 1;
+    pointer-events: none;
+  }
+}

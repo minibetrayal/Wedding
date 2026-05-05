@@ -4,12 +4,16 @@ import type { NextFunction, Request, Response } from 'express';
 
 const FLASH_COOKIE_NAME = 'flash';
 
-const flashCookieOptions = {
+const flashCookieOptionsClear = {
     signed: true,
     httpOnly: true,
     sameSite: 'lax' as const,
     path: '/',
     secure: process.env.NODE_ENV === 'production',
+};
+
+const flashCookieOptionsSet = {
+    ...flashCookieOptionsClear,
     maxAge: 1000 * 10, // 10 seconds
 };
 
@@ -28,7 +32,7 @@ export default function flashMiddleware(req: Request, res: Response, next: NextF
     req.flash = (type: string, message: string) => {
         const uid = crypto.randomUUID();
         const payload = JSON.stringify({ type, message });
-        res.cookie(`${FLASH_COOKIE_NAME}-${uid}`, payload, flashCookieOptions);
+        res.cookie(`${FLASH_COOKIE_NAME}-${uid}`, payload, flashCookieOptionsSet);
     };
 
     const flashLocals: Record<FlashBucket, string[]> = {
@@ -42,7 +46,7 @@ export default function flashMiddleware(req: Request, res: Response, next: NextF
         if (!name.startsWith(`${FLASH_COOKIE_NAME}-`)) continue;
         const raw = signed[name];
         if (typeof raw !== 'string') {
-            res.clearCookie(name, flashCookieOptions);
+            res.clearCookie(name, flashCookieOptionsClear);
             continue;
         }
         try {
@@ -53,7 +57,7 @@ export default function flashMiddleware(req: Request, res: Response, next: NextF
         } catch {
             // ignore malformed payload
         }
-        res.clearCookie(name, flashCookieOptions);
+        res.clearCookie(name, flashCookieOptionsClear);
     }
 
     res.locals.flash = flashLocals;
